@@ -1696,3 +1696,12 @@ Migrasi `20261009000004_trial_promo_calendar.sql`.
 - **start_trial()**: RPC security definer untuk pengguna masuk; menolak bila trial mati (`TRIAL_DISABLED`), sudah dipakai (`TRIAL_ALREADY_USED`), atau akun pernah punya lisensi (`ALREADY_HAS_LICENSE`).
 - **project_access_state()**: ditambah `is_trial`.
 - **google_calendar_links** (`user_id` PK, `google_email`, `refresh_token_enc`), **google_calendar_syncs** (`user_id, project_id` PK, `calendar_id`, `auto_sync`, status terakhir), **google_event_links** (`user_id, project_id, source, source_id` PK, `google_event_id`, `fingerprint`). RLS aktif tanpa policy: hanya server.
+
+## 13. Tambahan gelombang B
+
+- `wedding_projects.slug` (unik) dan `storage_prefix` (permanen, awalan kunci berkas).
+- `plans.tier`, `plans.storage_quota_mb` (bawaan 50); `orders.upgrade_from_license_id`, `orders.credit_idr`; `licenses.status` menambah `superseded`.
+- `profiles.language` (`id` | `en`).
+- `support_tickets` (user_id, project_id, subject, message, status, timestamps), RLS pemilik; admin membaca lewat service role.
+- Fungsi: `can_upgrade_to`, `lifetime_tier`; `grant_license_for_order` dan `issue_license` mendukung upgrade.
+- Migrasi: `20261009000004_trial_promo_calendar.sql`, `20261009000005_slug_tier_quota.sql`.

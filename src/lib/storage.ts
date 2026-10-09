@@ -2,14 +2,14 @@ import "server-only";
 import { DeleteObjectsCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { filesWorkerConfigured, signFileUrl } from "@/lib/files-token";
 
-// Penyimpanan berkas proyek. Kunci objek: {project_id}/{documents|gifts|cover}/{uuid}-{nama}.{ext}
+// Penyimpanan berkas proyek. Kunci objek: {storage_prefix}/{documents|gifts|cover}/{nama}-{id-pendek}.{ext}
 // Driver "r2" (Cloudflare R2, S3-compatible) dipakai bila kredensial R2 lengkap,
 // selain itu "supabase" (Supabase Storage) sebagai cadangan untuk development.
 // Bucket selalu privat: akses hanya lewat URL bertanda tangan yang dibuat server setelah cek izin.
 
-export const MAX_FILE_BYTES = 10 * 1024 * 1024;
-export const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+export { MAX_FILE_BYTES, ALLOWED_MIME } from "@/lib/limits";
 const SUPABASE_BUCKET = "project-files";
 
 export type StorageDriver = "r2" | "supabase";
@@ -45,6 +45,10 @@ export type UploadTicket =
 
 // URL unggah sekali pakai. Untuk R2, tipe dan ukuran ikut ditandatangani sehingga tidak bisa diganti klien.
 export async function createUploadTicket(key: string, contentType: string, size: number): Promise<UploadTicket> {
+  // Domain sendiri lewat Worker: tipe dan ukuran ikut ditandatangani dan diperiksa ulang di Worker
+  if (storageDriver() === "r2" && filesWorkerConfigured()) {
+    return { driver: "r2", key, url: signFileUrl("PUT", key, { ttl: 300, contentType, size }), headers: { "Content-Type": contentType } };
+  }
   if (storageDriver() === "r2") {
     const url = await getSignedUrl(r2(), new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType, ContentLength: size }), {
       expiresIn: 300,
@@ -76,6 +80,9 @@ export async function objectSize(key: string): Promise<number | null> {
 
 export async function getDownloadUrl(key: string, opts: { expiresIn?: number; downloadName?: string } = {}): Promise<string | null> {
   const expiresIn = opts.expiresIn ?? 60;
+  if (storageDriver() === "r2" && filesWorkerConfigured()) {
+    return signFileUrl("GET", key, { ttl: expiresIn, name: opts.downloadName?.replace(/["\\\r\n]/g, "") });
+  }
   if (storageDriver() === "r2") {
     return getSignedUrl(r2(), new GetObjectCommand({
       Bucket: bucket(),
@@ -125,6 +132,9 @@ export async function deletePrefix(prefix: string) {
   }
 }
 
-export function isProjectKey(key: string | null | undefined, projectId: string, folder: "documents" | "gifts" | "cover") {
-  return !!key && key.startsWith(`${projectId}/${folder}/`) && !key.includes("..");
+// Awalan jalur berkas sebuah proyek: nama terbaca (mis. raka-nadia-3f9a2c) untuk proyek baru, UUID untuk proyek lama
+export const storagePrefix = (p: { id: string; storage_prefix?: string | null }) => p.storage_prefix || p.id;
+
+export function isProjectKey(key: string | null | undefined, project: { id: string; storage_prefix?: string | null }, folder: "documents" | "gifts" | "cover") {
+  return !!key && key.startsWith(`${storagePrefix(project)}/${folder}/`) && !key.includes("..");
 }

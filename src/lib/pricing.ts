@@ -44,3 +44,33 @@ export function priceFor(plan: { id: string; price_idr: number }, promos: Promo[
     ? { original, discount: best.discount, final: original - best.discount, promo: best.promo }
     : { original, discount: 0, final: original, promo: null };
 }
+
+// ---------- Upgrade antar tingkat paket ----------
+
+export type OwnedLifetime = { licenseId: string; tier: number; planName: string; creditIdr: number };
+
+export type Quote = Priced & { credit: number; payable: number; upgradeFromLicenseId: string | null };
+
+// Kredit upgrade = total yang sudah dibayar untuk lisensi selamanya sekarang: nominal order lisensi itu
+// ditambah kredit yang dulu dipakai untuk mencapainya. Lisensi dari kode akses atau pemberian admin tanpa kredit.
+export function creditOf(license: { source: string }, order: { amount_idr: number; credit_idr?: number | null } | null): number {
+  if (license.source !== "payment" || !order) return 0;
+  return Math.max(0, Number(order.amount_idr) + Number(order.credit_idr ?? 0));
+}
+
+// Harga yang harus dibayar untuk paket tujuan. Mengembalikan null bila paket itu bukan peningkatan
+// (tier sama atau lebih rendah dari yang sudah dimiliki). Tanpa kepemilikan selamanya, tidak ada kredit.
+export function upgradeQuote(
+  target: { id: string; price_idr: number; tier: number },
+  owned: OwnedLifetime | null,
+  promos: Promo[],
+  promoEnabled: boolean,
+  now = Date.now(),
+): Quote | null {
+  if (owned && target.tier <= owned.tier) return null;
+  const base = priceFor(target, promos, promoEnabled, now);
+  if (!owned) return { ...base, credit: 0, payable: base.final, upgradeFromLicenseId: null };
+  // Kredit tidak boleh menurunkan total di bawah batas minimum Midtrans
+  const credit = Math.max(0, Math.min(owned.creditIdr, base.final - Math.min(base.final, MIN_CHARGE_IDR)));
+  return { ...base, credit, payable: base.final - credit, upgradeFromLicenseId: owned.licenseId };
+}

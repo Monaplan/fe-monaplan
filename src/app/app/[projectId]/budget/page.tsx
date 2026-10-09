@@ -1,11 +1,15 @@
 import { getProjectContext } from "@/lib/access";
 import { BudgetClient } from "./budget-client";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Budgeting" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Budgeting") };
+}
 
 export default async function BudgetPage({ params }: { params: Promise<{ projectId: string }> }) {
-  const { projectId } = await params;
-  const { supabase, project, canWrite } = await getProjectContext(projectId);
+  const { projectId: ref } = await params;
+  const { supabase, project, canWrite, projectId } = await getProjectContext(ref);
   const [{ data: categories }, { data: items }, { data: payments }, { data: vendors }, { data: documents }] = await Promise.all([
     supabase.from("budget_categories").select("*").eq("project_id", projectId).order("sort_order").order("name"),
     supabase.from("budget_items").select("*, vendors(name)").eq("project_id", projectId).order("sort_order").order("created_at"),

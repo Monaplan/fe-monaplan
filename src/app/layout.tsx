@@ -4,6 +4,8 @@ import { ToastProvider } from "@/components/ui/toast";
 import { DialogProvider } from "@/components/ui/dialogs";
 import { ThemeSync } from "@/components/app/theme";
 import { THEME_SCRIPT } from "@/lib/theme-script";
+import { I18nProvider } from "@/i18n/client";
+import { getLang } from "@/i18n/server";
 import { SITE } from "@/lib/seo";
 import "./globals.css";
 
@@ -42,17 +44,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const lang = await getLang();
   return (
-    <html lang="id" className={`${jakarta.variable} ${cormorant.variable}`} suppressHydrationWarning>
+    <html lang={lang} className={`${jakarta.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
-        <ToastProvider>
-          <DialogProvider>{children}</DialogProvider>
-          <ThemeSync />
-        </ToastProvider>
+        <I18nProvider lang={lang}>
+          <ToastProvider>
+            <DialogProvider>{children}</DialogProvider>
+            <ThemeSync />
+          </ToastProvider>
+        </I18nProvider>
       </body>
     </html>
   );

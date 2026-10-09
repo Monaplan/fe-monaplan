@@ -702,3 +702,9 @@ Panel merek di kiri `sticky` setinggi layar sehingga identik pada Masuk, Daftar,
 
 ### 16.4 Halaman fokus
 Aktivasi dan onboarding memakai `FocusHeader` (logo kiri, Keluar kanan).
+
+## 17. Revisi gelombang B: animasi dan bahasa
+
+- Animasi hanya `transform` dan `opacity`, 150 sampai 250 ms: transisi halaman (`template.tsx`), stagger kartu, hover-lift, tekan tombol, shimmer skeleton, bilah progres, hitung naik KPI. Semuanya mati pada `prefers-reduced-motion`.
+- Pengalih bahasa ID/EN ada di landing, halaman auth, menu pengguna, bottom sheet, dan Akun. Teks Inggris biasanya lebih pendek; layout tidak boleh bergantung pada panjang teks Indonesia.
+- Teks antarmuka dibuat singkat: tanpa slogan dan tanpa kalimat yang mengulang label.

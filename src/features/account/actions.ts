@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, type ActionResult } from "@/lib/result";
 import { normalizePhone } from "@/lib/format";
-import { deletePrefix } from "@/lib/storage";
+import { deletePrefix, storagePrefix } from "@/lib/storage";
 
 export async function updateProfile(fd: FormData): Promise<ActionResult> {
   const { user } = await requireUser();
@@ -30,8 +30,8 @@ export async function deleteAccount(fd: FormData): Promise<ActionResult> {
     return fail("Ketik email akunmu persis untuk konfirmasi.");
   }
   const admin = createAdminClient();
-  const { data: projects } = await admin.from("wedding_projects").select("id").eq("owner_id", user.id);
-  for (const p of projects ?? []) await deletePrefix(`${p.id}/`).catch(() => {});
+  const { data: projects } = await admin.from("wedding_projects").select("*").eq("owner_id", user.id);
+  for (const p of projects ?? []) await deletePrefix(`${storagePrefix(p)}/`).catch(() => {});
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return fail(error.message);
   const supabase = await createClient();

@@ -9,10 +9,13 @@ import { Field, FormGrid, Input, Select } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
 import { cn } from "@/components/ui/cn";
 import { createProject } from "@/features/project/actions";
+import { projectPath } from "@/lib/paths";
+import { useT } from "@/i18n/client";
 
 const STEPS = ["Nama pasangan", "Tanggal dan kota", "Budget dan tamu"];
 
 export function OnboardingForm() {
+  const t = useT();
   const router = useRouter();
   const [step, setStep] = useState(0);
 
@@ -27,41 +30,41 @@ export function OnboardingForm() {
         ))}
       </ol>
 
-      <ActionForm action={createProject} onSuccess={(r) => r.ok && router.push(`/w/${r.data.id}`)}>
+      <ActionForm action={createProject} onSuccess={(r) => r.ok && router.push(projectPath(r.data))}>
         <div className={cn("flex flex-col gap-4", step !== 0 && "hidden")}>
           <FormGrid>
-            <Field label="Nama lengkap mempelai pria" htmlFor="p1"><Input id="p1" name="partner_one_name" required placeholder="Raka Pratama" /></Field>
-            <Field label="Panggilan" htmlFor="p1n"><Input id="p1n" name="partner_one_nickname" placeholder="Raka" /></Field>
-            <Field label="Nama lengkap mempelai wanita" htmlFor="p2"><Input id="p2" name="partner_two_name" required placeholder="Nadia Putri" /></Field>
-            <Field label="Panggilan" htmlFor="p2n"><Input id="p2n" name="partner_two_nickname" placeholder="Nadia" /></Field>
+            <Field label={t("Nama lengkap mempelai pria")} htmlFor="p1"><Input id="p1" name="partner_one_name" required placeholder={t("Raka Pratama")} /></Field>
+            <Field label={t("Panggilan")} htmlFor="p1n"><Input id="p1n" name="partner_one_nickname" placeholder={t("Raka")} /></Field>
+            <Field label={t("Nama lengkap mempelai wanita")} htmlFor="p2"><Input id="p2" name="partner_two_name" required placeholder={t("Nadia Putri")} /></Field>
+            <Field label={t("Panggilan")} htmlFor="p2n"><Input id="p2n" name="partner_two_nickname" placeholder={t("Nadia")} /></Field>
           </FormGrid>
         </div>
         <div className={cn("flex flex-col gap-4", step !== 1 && "hidden")}>
-          <Field label="Tanggal pernikahan" htmlFor="date" help="Dipakai untuk menghitung due date checklist. Boleh dikosongkan dulu.">
+          <Field label={t("Tanggal pernikahan")} htmlFor="date" help={t("Untuk menghitung due date checklist. Boleh dikosongkan.")}>
             <Input id="date" type="date" name="wedding_date" />
           </Field>
           <FormGrid>
-            <Field label="Kota" htmlFor="city"><Input id="city" name="city" placeholder="Bandung" /></Field>
-            <Field label="Zona waktu" htmlFor="tz">
+            <Field label={t("Kota")} htmlFor="city"><Input id="city" name="city" placeholder={t("Bandung")} /></Field>
+            <Field label={t("Zona waktu")} htmlFor="tz">
               <Select id="tz" name="timezone" defaultValue="Asia/Jakarta">
-                <option value="Asia/Jakarta">WIB</option>
-                <option value="Asia/Makassar">WITA</option>
-                <option value="Asia/Jayapura">WIT</option>
+                <option value="Asia/Jakarta">{t("WIB")}</option>
+                <option value="Asia/Makassar">{t("WITA")}</option>
+                <option value="Asia/Jayapura">{t("WIT")}</option>
               </Select>
             </Field>
           </FormGrid>
         </div>
         <div className={cn("flex flex-col gap-4", step !== 2 && "hidden")}>
-          <Field label="Total budget" htmlFor="budget"><CurrencyInput id="budget" name="total_budget_idr" placeholder="150.000.000" /></Field>
-          <Field label="Perkiraan jumlah tamu" htmlFor="guests"><Input id="guests" type="number" min={0} name="guest_target" placeholder="300" /></Field>
+          <Field label={t("Total budget")} htmlFor="budget"><CurrencyInput id="budget" name="total_budget_idr" placeholder="150.000.000" /></Field>
+          <Field label={t("Perkiraan jumlah tamu")} htmlFor="guests"><Input id="guests" type="number" min={0} name="guest_target" placeholder="300" /></Field>
         </div>
 
         <div className="flex items-center justify-between gap-2 pt-2">
           {step > 0 ? (
-            <Button variant="ghost" icon={<ArrowLeft />} onClick={() => setStep(step - 1)}>Kembali</Button>
+            <Button variant="ghost" icon={<ArrowLeft />} onClick={() => setStep(step - 1)}>{t("Kembali")}</Button>
           ) : <span />}
           <div className="flex gap-2">
-            {step > 0 && step < 2 && <Button variant="secondary" onClick={() => setStep(step + 1)}>Lewati</Button>}
+            {step > 0 && step < 2 && <Button variant="secondary" onClick={() => setStep(step + 1)}>{t("Lewati")}</Button>}
             {step < 2 ? (
               <Button
                 icon={<ArrowRight />}
@@ -70,11 +73,9 @@ export function OnboardingForm() {
                   if (step === 0 && !form.reportValidity()) return;
                   setStep(step + 1);
                 }}
-              >
-                Lanjut
-              </Button>
+              >{t("Lanjut")}</Button>
             ) : (
-              <SubmitButton>Mulai Merencanakan</SubmitButton>
+              <SubmitButton>{t("Mulai Merencanakan")}</SubmitButton>
             )}
           </div>
         </div>

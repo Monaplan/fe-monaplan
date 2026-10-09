@@ -5,8 +5,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardHeader, PageHeader, StatCard } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { formatIDR } from "@/lib/format";
+import { ProductTour } from "@/components/app/product-tour";
+import { TOURS } from "@/content/tours";
+import { getI18n } from "@/i18n/server";
 
 export default async function AdminHome() {
+  const { t } = await getI18n();
   await requireAdmin();
   const admin = createAdminClient();
   const nowIso = new Date().toISOString();
@@ -25,23 +29,24 @@ export default async function AdminHome() {
 
   return (
     <>
-      <PageHeader title="Ringkasan" />
+      <ProductTour id="admin" steps={TOURS["admin"]!} />
+      <PageHeader tour="admin" title={t("Ringkasan")} />
       <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<Wallet />} title="Pendapatan" value={formatIDR(revenue)} footer={<>Bulan ini {formatIDR(revenueMonth)}</>} />
-        <StatCard icon={<ReceiptText />} title="Order Lunas" value={byStatus.paid ?? 0} footer={<>{byStatus.pending ?? 0} menunggu · {byStatus.expired ?? 0} kedaluwarsa</>} />
-        <StatCard icon={<BadgeCheck />} title="Lisensi Aktif" value={activeLic ?? 0} />
-        <StatCard icon={<KeyRound />} title="Perlu Ditinjau" value={review ?? 0} footer={<Link className="text-plum-600 underline" href="/admin/order?review=1">Lihat order</Link>} />
+        <StatCard icon={<Wallet />} title={t("Pendapatan")} value={formatIDR(revenue)} footer={<>{t("Bulan ini {v1}", { v1: formatIDR(revenueMonth) })}</>} />
+        <StatCard icon={<ReceiptText />} title={t("Order Lunas")} value={byStatus.paid ?? 0} footer={<>{t("{v1} menunggu · {v2} kedaluwarsa", { v1: byStatus.pending ?? 0, v2: byStatus.expired ?? 0 })}</>} />
+        <StatCard icon={<BadgeCheck />} title={t("Lisensi Aktif")} value={activeLic ?? 0} />
+        <StatCard icon={<KeyRound />} title={t("Perlu Ditinjau")} value={review ?? 0} footer={<Link className="text-plum-600 underline" href="/admin/order?review=1">{t("Lihat order")}</Link>} />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Order per Status" />
+        <Card tour="admin-main">
+          <CardHeader title={t("Order per Status")} />
           <ul className="space-y-2 text-sm">
-            {Object.entries(byStatus).map(([k, v]) => <li key={k} className="flex justify-between"><span>{({paid:"Lunas",pending:"Menunggu",failed:"Gagal",expired:"Kedaluwarsa",cancelled:"Dibatalkan",refunded:"Refund"} as Record<string,string>)[k] ?? k}</span><span className="tabular font-semibold">{v}</span></li>)}
-            {!orders?.length && <li className="text-neutral-500">Belum ada order.</li>}
+            {Object.entries(byStatus).map(([k, v]) => <li key={k} className="flex justify-between"><span>{t(({paid:"Lunas",pending:"Menunggu",failed:"Gagal",expired:"Kedaluwarsa",cancelled:"Dibatalkan",refunded:"Refund"} as Record<string,string>)[k] ?? k)}</span><span className="tabular font-semibold">{v}</span></li>)}
+            {!orders?.length && <li className="text-neutral-500">{t("Belum ada order.")}</li>}
           </ul>
         </Card>
         <Card>
-          <CardHeader title="Kode Tertebus per Batch" />
+          <CardHeader title={t("Kode Tertebus per Batch")} />
           <ul className="space-y-3">
             {(batches ?? []).map((b: any) => {
               const used = (b.access_codes ?? []).reduce((s: number, c: any) => s + c.redemption_count, 0);
@@ -52,7 +57,7 @@ export default async function AdminHome() {
                 </li>
               );
             })}
-            {!batches?.length && <li className="text-sm text-neutral-500">Belum ada batch.</li>}
+            {!batches?.length && <li className="text-sm text-neutral-500">{t("Belum ada batch.")}</li>}
           </ul>
         </Card>
       </div>

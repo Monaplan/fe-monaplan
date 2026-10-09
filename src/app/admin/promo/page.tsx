@@ -3,8 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSettings } from "@/lib/settings";
 import type { Promo } from "@/lib/pricing";
 import { PromoClient } from "./promo-client";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Promo" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Promo") };
+}
 
 export default async function PromoPage() {
   await requireAdmin();

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { dbError, fail, type ActionResult } from "@/lib/result";
+import { dbError, fail, okm, type ActionResult } from "@/lib/result";
 import { parseIDR } from "@/lib/format";
 import { adminContext as ctx } from "./context";
 
@@ -108,7 +108,7 @@ export async function setUserRole(userId: string, role: "user" | "admin"): Promi
   if (error) return dbError(error);
   await audit("user.role", "user", userId, { email: target.email, from: target.role, to: role });
   revalidatePath("/admin/pengguna");
-  return { ok: true, message: `${target.email} sekarang ${role === "admin" ? "admin" : "pengguna biasa"}.` };
+  return okm(role === "admin" ? "{email} sekarang admin." : "{email} sekarang pengguna biasa.", { email: target.email });
 }
 
 // Akses diatur per pengguna: beri selamanya, beri trial, cabut semua, atau pulihkan yang dicabut
@@ -131,7 +131,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
     if (error) return fail(error.message.includes("ALREADY_LIFETIME") ? "Pengguna ini sudah punya akses selamanya." : error.message);
     await audit("access.lifetime", "user", userId, { email: target.email, license_id: (data as { id: string }).id });
     revalidatePath("/admin", "layout");
-    return { ok: true, message: `${target.email} mendapat akses selamanya.` };
+    return okm("{email} mendapat akses selamanya.", { email: target.email });
   }
 
   if (input.op === "trial") {
@@ -148,7 +148,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
     if (error) return dbError(error);
     await audit("access.trial", "user", userId, { email: target.email, days });
     revalidatePath("/admin", "layout");
-    return { ok: true, message: `${target.email} mendapat trial ${days} hari.` };
+    return okm("{email} mendapat trial {days} hari.", { email: target.email, days });
   }
 
   if (input.op === "revoke") {
@@ -161,7 +161,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
     if (!data?.length) return fail("Pengguna ini tidak punya akses aktif untuk dicabut.");
     await audit("access.revoke", "user", userId, { email: target.email, reason, licenses: data.length });
     revalidatePath("/admin", "layout");
-    return { ok: true, message: `Akses ${target.email} dicabut.` };
+    return okm("Akses {email} dicabut.", { email: target.email });
   }
 
   const { data, error } = await admin.from("licenses")
@@ -171,5 +171,5 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
   if (!data?.length) return fail("Tidak ada akses yang dicabut untuk dipulihkan.");
   await audit("access.restore", "user", userId, { email: target.email, licenses: data.length });
   revalidatePath("/admin", "layout");
-  return { ok: true, message: `Akses ${target.email} dipulihkan.` };
+  return okm("Akses {email} dipulihkan.", { email: target.email });
 }

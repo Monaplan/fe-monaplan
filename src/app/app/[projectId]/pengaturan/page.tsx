@@ -3,13 +3,17 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { appUrl } from "@/lib/constants";
 import { SettingsClient } from "./settings-client";
 import { getDownloadUrl } from "@/lib/storage";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Pengaturan Pernikahan" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Pengaturan Pernikahan") };
+}
 
 export default async function SettingsPage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ tab?: string }> }) {
-  const { projectId } = await params;
+  const { projectId: ref } = await params;
   const { tab } = await searchParams;
-  const { supabase, project, members, canWrite, isOwner, session } = await getProjectContext(projectId);
+  const { supabase, project, members, canWrite, isOwner, session, projectId } = await getProjectContext(ref);
 
   const [{ data: events }, { data: invitations }, lic, coverUrl] = await Promise.all([
     supabase.from("wedding_events").select("*").eq("project_id", projectId).order("sort_order").order("starts_at"),

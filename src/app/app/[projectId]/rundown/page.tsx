@@ -3,13 +3,19 @@ import { getProjectContext } from "@/lib/access";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { RundownClient } from "./rundown-client";
+import { getI18n } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Rundown Hari H" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Rundown Hari H") };
+}
 
 export default async function RundownPage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ acara?: string }> }) {
-  const { projectId } = await params;
+  const { t } = await getI18n();
+  const { projectId: ref } = await params;
   const { acara } = await searchParams;
-  const { supabase, project, canWrite } = await getProjectContext(projectId);
+  const { supabase, project, canWrite, projectId } = await getProjectContext(ref);
   // Acara, seluruh butir rundown, dan vendor diambil serentak; butir difilter per acara di memori
   const [{ data: events }, { data: allItems }, { data: vendors }] = await Promise.all([
     supabase.from("wedding_events").select("id, name, type, starts_at, venue_name").eq("project_id", projectId).order("sort_order").order("starts_at"),
@@ -20,10 +26,10 @@ export default async function RundownPage({ params, searchParams }: { params: Pr
   if (!events?.length) {
     return (
       <>
-        <PageHeader title="Rundown Hari H" />
+        <PageHeader title={t("Rundown Hari H")} />
         <Card>
-          <EmptyState icon={<CalendarDays />} title="Belum ada acara" text="Tambahkan acara seperti akad atau resepsi di Pengaturan Pernikahan, lalu susun rundown-nya di sini."
-            action={<ButtonLink href={`/w/${projectId}/pengaturan?tab=acara`}>Atur Acara</ButtonLink>} />
+          <EmptyState icon={<CalendarDays />} title={t("Belum ada acara")} text={t("Tambahkan acara di Pengaturan Pernikahan dulu.")}
+            action={<ButtonLink href={`/app/${ref}/pengaturan?tab=acara`}>{t("Atur Acara")}</ButtonLink>} />
         </Card>
       </>
     );

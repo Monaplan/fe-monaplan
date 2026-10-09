@@ -3,8 +3,8 @@
 import { createClient } from "@/lib/supabase/client";
 import { requestUpload } from "@/features/storage/actions";
 
-export const MAX_FILE_BYTES = 10 * 1024 * 1024;
-export const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+import { withI18n } from "@/i18n/translate";
+import { ALLOWED_MIME, MAX_FILE_BYTES, MAX_FILE_MB } from "@/lib/limits";
 
 // Kompres gambar ke WebP sebelum unggah (hemat kuota penyimpanan)
 async function compressImage(file: File, maxSide = 1600): Promise<Blob> {
@@ -25,8 +25,8 @@ async function compressImage(file: File, maxSide = 1600): Promise<Blob> {
 
 // Unggah langsung dari browser ke penyimpanan (Cloudflare R2 atau Supabase) memakai URL dari server
 export async function uploadProjectFile(projectId: string, folder: "documents" | "gifts" | "cover", file: File) {
-  if (!ALLOWED_MIME.includes(file.type)) throw new Error("Format file harus PDF, JPG, PNG, atau WEBP.");
-  if (file.size > MAX_FILE_BYTES) throw new Error("Ukuran file maksimal 10 MB.");
+  if (!(ALLOWED_MIME as readonly string[]).includes(file.type)) throw new Error("Format file harus PDF, JPG, PNG, atau WEBP.");
+  if (file.size > MAX_FILE_BYTES) throw new Error(withI18n("Ukuran file maksimal {mb} MB.", { mb: MAX_FILE_MB }));
   const body = await compressImage(file);
   const mime = body !== file ? "image/webp" : file.type;
   const fileName = body !== file ? file.name.replace(/\.[^.]+$/, "") + ".webp" : file.name;
@@ -37,7 +37,7 @@ export async function uploadProjectFile(projectId: string, folder: "documents" |
 
   if (t.driver === "r2") {
     const put = await fetch(t.url, { method: "PUT", headers: t.headers, body });
-    if (!put.ok) throw new Error(`Unggah gagal (${put.status}). Cek pengaturan CORS bucket R2.`);
+    if (!put.ok) throw new Error(withI18n("Unggah gagal ({status}). Cek pengaturan CORS bucket R2.", { status: put.status }));
   } else {
     const { error } = await createClient().storage.from("project-files").uploadToSignedUrl(t.key, t.token, body, { contentType: mime });
     if (error) throw new Error(error.message);

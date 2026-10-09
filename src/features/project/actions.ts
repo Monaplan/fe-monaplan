@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { SLUG_RE } from "@/lib/paths";
 import { scheduleCalendarSync } from "@/lib/google/schedule";
 import { z } from "zod";
 import { getMyAccess, getProjectContext, isActive, requireUser } from "@/lib/access";
@@ -10,8 +11,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, type ActionResult } from "@/lib/result";
 import { addDaysISO, diffDays, localToISO, parseIDR } from "@/lib/format";
 import { appUrl, EVENT_TYPES } from "@/lib/constants";
-import { emailButton, emailLayout, sendEmail } from "@/lib/email";
-import { deleteObjects, deletePrefix, isProjectKey } from "@/lib/storage";
+import { sendTemplated } from "@/lib/email";
+import { deleteObjects, deletePrefix, isProjectKey, storagePrefix } from "@/lib/storage";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
@@ -70,25 +71,34 @@ export async function createProject(fd: FormData): Promise<ActionResult> {
   const { error: seedErr } = await supabase.rpc("seed_project_defaults", { p_project_id: id });
   if (seedErr) return dbError(seedErr);
   await supabase.from("profiles").update({ last_active_project_id: id }).eq("id", user.id);
-  return { ok: true, data: { id } };
+  const { data: created } = await supabase.from("wedding_projects").select("*").eq("id", id).maybeSingle();
+  return { ok: true, data: { id, slug: (created as { slug?: string } | null)?.slug ?? null } };
 }
 
 // ---------- Pengaturan Pernikahan ----------
 
 export async function updateCouple(projectId: string, fd: FormData): Promise<ActionResult> {
-  const { supabase } = await getProjectContext(projectId);
+  const { supabase, project, isOwner } = await getProjectContext(projectId);
   const p1 = str(fd.get("partner_one_name"));
   const p2 = str(fd.get("partner_two_name"));
   if (!p1 || !p2) return fail("Nama kedua mempelai wajib diisi.");
+  // Slug hanya diubah pemilik, dan hanya bila diisi serta berbeda dari yang sekarang
+  const slug = str(fd.get("slug"))?.toLowerCase();
+  const changeSlug = isOwner && !!slug && !!project.slug && slug !== project.slug;
+  if (changeSlug && !SLUG_RE.test(slug!)) return fail("Alamat hanya boleh huruf kecil, angka, dan tanda hubung (3 sampai 60 karakter).");
+  if (changeSlug && (slug!.length < 3 || slug!.length > 60)) return fail("Alamat harus 3 sampai 60 karakter.");
   const { error } = await supabase.from("wedding_projects").update({
     partner_one_name: p1,
     partner_two_name: p2,
     partner_one_nickname: str(fd.get("partner_one_nickname")),
     partner_two_nickname: str(fd.get("partner_two_nickname")),
     title: str(fd.get("title")) ?? `${p1} & ${p2}`,
+    ...(changeSlug && { slug }),
   }).eq("id", projectId);
-  revalidatePath(`/w/${projectId}`, "layout");
-  return error ? dbError(error) : { ok: true, message: "Data pasangan tersimpan." };
+  revalidatePath("/app/[projectId]", "layout");
+  if (error?.message.includes("SLUG_TAKEN")) return fail("Alamat itu sudah dipakai. Coba yang lain.");
+  if (error?.message.includes("SLUG_INVALID")) return fail("Alamat hanya boleh huruf kecil, angka, dan tanda hubung (3 sampai 60 karakter).");
+  return error ? dbError(error) : { ok: true, message: "Data pasangan tersimpan.", data: { slug: changeSlug ? slug : project.slug } };
 }
 
 export async function updateWeddingInfo(projectId: string, fd: FormData): Promise<ActionResult> {
@@ -118,7 +128,7 @@ export async function updateWeddingInfo(projectId: string, fd: FormData): Promis
     await Promise.all((tasks ?? []).map((t: any) => t.checklist_templates &&
       supabase.from("tasks").update({ due_date: addDaysISO(newDate, -t.checklist_templates.offset_days) }).eq("id", t.id)));
   }
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   return { ok: true, message: "Informasi pernikahan tersimpan." };
 }
 
@@ -145,7 +155,7 @@ export async function saveEvent(projectId: string, fd: FormData): Promise<Action
   const { error } = id
     ? await supabase.from("wedding_events").update(row).eq("id", id).eq("project_id", projectId)
     : await supabase.from("wedding_events").insert(row);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: "Acara tersimpan." };
 }
@@ -153,19 +163,19 @@ export async function saveEvent(projectId: string, fd: FormData): Promise<Action
 export async function deleteEvent(projectId: string, id: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("wedding_events").delete().eq("id", id).eq("project_id", projectId);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: "Acara dihapus." };
 }
 
 export async function updateCover(projectId: string, path: string | null): Promise<ActionResult> {
   const { supabase, project } = await getProjectContext(projectId);
-  if (path && !isProjectKey(path, projectId, "cover")) return fail("Lokasi foto tidak valid.");
+  if (path && !isProjectKey(path, project, "cover")) return fail("Lokasi foto tidak valid.");
   const { error } = await supabase.from("wedding_projects").update({ cover_image_path: path }).eq("id", projectId);
   if (!error && project.cover_image_path && project.cover_image_path !== path) {
     await deleteObjects([project.cover_image_path]);
   }
-  revalidatePath(`/w/${projectId}/pengaturan`);
+  revalidatePath("/app/[projectId]/pengaturan", "page");
   return error ? dbError(error) : { ok: true, message: path ? "Foto sampul diperbarui." : "Foto sampul dihapus." };
 }
 
@@ -186,7 +196,7 @@ export async function inviteCollaborator(projectId: string, fd: FormData): Promi
     supabase.from("project_members").select("*", { count: "exact", head: true }).eq("project_id", projectId).neq("role", "owner"),
     supabase.from("project_invitations").select("*", { count: "exact", head: true }).eq("project_id", projectId).eq("status", "pending").gt("expires_at", new Date().toISOString()),
   ]);
-  if ((members ?? 0) + (pending ?? 0) >= max) return fail(`Kuota kolaborator (${max} orang) sudah penuh.`);
+  if ((members ?? 0) + (pending ?? 0) >= max) return fail("Kuota kolaborator ({max} orang) sudah penuh.", { max });
 
   const { data: inv, error } = await supabase.from("project_invitations")
     .insert({ project_id: projectId, email: email.data, role, invited_by: session.user.id })
@@ -194,33 +204,32 @@ export async function inviteCollaborator(projectId: string, fd: FormData): Promi
   if (error) return dbError(error);
 
   const link = `${appUrl()}/gabung/${inv.token}`;
-  await sendEmail(email.data, `Undangan merencanakan pernikahan ${project.title}`, emailLayout(
-    `Kamu diundang ke ruang kerja ${project.title}`,
-    `<p>${session.profile?.full_name ?? "Pemilik ruang kerja"} mengajakmu ikut merencanakan pernikahan di Monaplan sebagai <b>${role === "editor" ? "Editor" : "Viewer"}</b>.</p>
-     <p>Masuk dengan akun Google yang memakai email ini. Undangan berlaku 7 hari.</p>${emailButton(link, "Terima Undangan")}`,
-  ));
-  revalidatePath(`/w/${projectId}/pengaturan`);
+  await sendTemplated(email.data, "id", {
+    kind: "invitation", name: email.data.split("@")[0]!, inviter: session.profile?.full_name ?? "Pemilik ruang kerja",
+    project: project.title, role: role === "editor" ? "editor" : "viewer", expiresDays: 7, url: link,
+  });
+  revalidatePath("/app/[projectId]/pengaturan", "page");
   return { ok: true, message: "Undangan dibuat. Link juga bisa kamu salin dan kirim sendiri.", data: { link } };
 }
 
 export async function revokeInvitation(projectId: string, id: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("project_invitations").update({ status: "revoked" }).eq("id", id).eq("project_id", projectId);
-  revalidatePath(`/w/${projectId}/pengaturan`);
+  revalidatePath("/app/[projectId]/pengaturan", "page");
   return error ? dbError(error) : { ok: true, message: "Undangan dibatalkan." };
 }
 
 export async function updateMemberRole(projectId: string, userId: string, role: "editor" | "viewer"): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("project_members").update({ role }).eq("project_id", projectId).eq("user_id", userId);
-  revalidatePath(`/w/${projectId}/pengaturan`);
+  revalidatePath("/app/[projectId]/pengaturan", "page");
   return error ? dbError(error) : { ok: true, message: "Peran diperbarui." };
 }
 
 export async function removeMember(projectId: string, userId: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("project_members").delete().eq("project_id", projectId).eq("user_id", userId);
-  revalidatePath(`/w/${projectId}/pengaturan`);
+  revalidatePath("/app/[projectId]/pengaturan", "page");
   return error ? dbError(error) : { ok: true, message: "Kolaborator dikeluarkan." };
 }
 
@@ -236,7 +245,8 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
     };
     return fail(Object.entries(map).find(([k]) => error.message.includes(k))?.[1] ?? error.message);
   }
-  return { ok: true, data: { projectId: data } };
+  const { data: joined } = await supabase.from("wedding_projects").select("*").eq("id", data).maybeSingle();
+  return { ok: true, data: { projectId: data, slug: (joined as { slug?: string } | null)?.slug ?? null } };
 }
 
 // ---------- Arsip dan hapus ----------
@@ -247,16 +257,16 @@ export async function archiveProject(projectId: string, archive: boolean): Promi
   // Proyek terarsip tidak bisa ditulis lewat RLS, jadi status arsip diubah dengan secret key
   const admin = createAdminClient();
   const { error } = await admin.from("wedding_projects").update({ archived_at: archive ? new Date().toISOString() : null }).eq("id", projectId);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   return error ? dbError(error) : { ok: true, message: archive ? "Proyek diarsipkan." : "Proyek diaktifkan kembali." };
 }
 
 export async function deleteProject(projectId: string, fd: FormData): Promise<ActionResult> {
   const { supabase, project, isOwner } = await getProjectContext(projectId);
   if (!isOwner) return fail("Hanya pemilik yang bisa menghapus proyek.");
-  if (str(fd.get("confirm")) !== project.title) return fail(`Ketik "${project.title}" persis untuk konfirmasi.`);
+  if (str(fd.get("confirm")) !== project.title) return fail('Ketik "{title}" persis untuk konfirmasi.', { title: project.title });
   const { error } = await supabase.from("wedding_projects").delete().eq("id", projectId);
-  if (!error) await deletePrefix(`${projectId}/`).catch(() => {});
+  if (!error) await deletePrefix(`${storagePrefix(project)}/`).catch(() => {});
   return error ? dbError(error) : { ok: true };
 }
 

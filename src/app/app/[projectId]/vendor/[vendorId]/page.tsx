@@ -1,12 +1,16 @@
 import { notFound } from "next/navigation";
 import { getProjectContext } from "@/lib/access";
 import { VendorDetailClient } from "./vendor-detail-client";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Detail Vendor" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Detail Vendor") };
+}
 
 export default async function VendorDetailPage({ params }: { params: Promise<{ projectId: string; vendorId: string }> }) {
-  const { projectId, vendorId } = await params;
-  const { supabase, project, canWrite } = await getProjectContext(projectId);
+  const { projectId: ref, vendorId } = await params;
+  const { supabase, project, canWrite, projectId } = await getProjectContext(ref);
   const { data: vendor } = await supabase.from("vendors").select("*").eq("id", vendorId).eq("project_id", projectId).maybeSingle();
   if (!vendor) notFound();
 

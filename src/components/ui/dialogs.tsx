@@ -6,6 +6,7 @@ import { Modal, ModalFooter } from "./modal";
 import { Button } from "./button";
 import { Field, Input, Textarea } from "./form";
 import { cn } from "./cn";
+import { useT } from "@/i18n/client";
 
 // Pengganti window.confirm / window.prompt: modal bergaya aplikasi yang mengembalikan Promise.
 
@@ -70,62 +71,64 @@ function ToneIcon({ tone }: { tone?: "danger" | "default" }) {
 }
 
 function ConfirmDialog({ opts, onClose }: { opts: ConfirmOptions; onClose: (v: boolean) => void }) {
+  const t = useT();
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
   return (
-    <Modal open onClose={() => onClose(false)} title={opts.title} hideHeader>
+    <Modal open onClose={() => onClose(false)} title={t(opts.title)} hideHeader>
       <div className="flex gap-4">
         <ToneIcon tone={opts.tone} />
         <div className="min-w-0 flex-1 pt-0.5">
-          <h2 className="text-[17px] font-semibold text-neutral-900">{opts.title}</h2>
-          {opts.body && <div className="mt-1.5 text-[13.5px] leading-[22px] text-neutral-600">{opts.body}</div>}
+          <h2 className="text-[17px] font-semibold text-neutral-900">{t(opts.title)}</h2>
+          {opts.body && <div className="mt-1.5 text-[13.5px] leading-[22px] text-neutral-600">{typeof opts.body === "string" ? t(opts.body) : opts.body}</div>}
         </div>
       </div>
       <ModalFooter>
-        <Button variant="secondary" onClick={() => onClose(false)}>{opts.cancelLabel ?? "Batal"}</Button>
-        <Button ref={ref} variant={opts.tone === "danger" ? "danger" : "primary"} onClick={() => onClose(true)}>{opts.confirmLabel ?? "Lanjutkan"}</Button>
+        <Button variant="secondary" onClick={() => onClose(false)}>{opts.cancelLabel ? t(opts.cancelLabel) : t("Batal")}</Button>
+        <Button ref={ref} variant={opts.tone === "danger" ? "danger" : "primary"} onClick={() => onClose(true)}>{opts.confirmLabel ? t(opts.confirmLabel) : t("Lanjutkan")}</Button>
       </ModalFooter>
     </Modal>
   );
 }
 
 function PromptDialog({ opts, onClose }: { opts: PromptOptions; onClose: (v: string | null) => void }) {
+  const t = useT();
   const [value, setValue] = useState(opts.defaultValue ?? "");
   const [error, setError] = useState<string | null>(null);
   const formId = useId();
   const submit = () => {
     const v = value.trim();
-    if ((opts.required ?? true) && !v) return setError("Wajib diisi.");
+    if ((opts.required ?? true) && !v) return setError(t("Wajib diisi."));
     if (opts.type === "number") {
       const n = Number(v);
       if (!Number.isFinite(n) || (opts.min != null && n < opts.min) || (opts.max != null && n > opts.max)) {
-        return setError(`Masukkan angka${opts.min != null ? ` ${opts.min}` : ""}${opts.max != null ? ` sampai ${opts.max}` : ""}.`);
+        return setError(t("Masukkan angka{v1}{v2}.", { v1: opts.min != null ? ` ${opts.min}` : "", v2: opts.max != null ? ` sampai ${opts.max}` : "" }));
       }
     }
     onClose(v);
   };
   return (
-    <Modal open onClose={() => onClose(null)} title={opts.title} hideHeader>
+    <Modal open onClose={() => onClose(null)} title={t(opts.title)} hideHeader>
       <form id={formId} onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <div className="flex gap-4">
           <ToneIcon tone={opts.tone} />
           <div className="min-w-0 flex-1 pt-0.5">
-            <h2 className="text-[17px] font-semibold text-neutral-900">{opts.title}</h2>
-            {opts.body && <div className="mt-1.5 text-[13.5px] leading-[22px] text-neutral-600">{opts.body}</div>}
+            <h2 className="text-[17px] font-semibold text-neutral-900">{t(opts.title)}</h2>
+            {opts.body && <div className="mt-1.5 text-[13.5px] leading-[22px] text-neutral-600">{typeof opts.body === "string" ? t(opts.body) : opts.body}</div>}
           </div>
         </div>
-        <Field label={opts.label} htmlFor="prompt-input" error={error} className="mt-5">
+        <Field label={t(opts.label)} htmlFor="prompt-input" error={error} className="mt-5">
           {opts.type === "textarea" ? (
-            <Textarea id="prompt-input" autoFocus value={value} placeholder={opts.placeholder} onChange={(e) => { setValue(e.target.value); setError(null); }} />
+            <Textarea id="prompt-input" autoFocus value={value} placeholder={opts.placeholder ? t(opts.placeholder) : undefined} onChange={(e) => { setValue(e.target.value); setError(null); }} />
           ) : (
             <Input id="prompt-input" autoFocus type={opts.type === "number" ? "number" : "text"} inputMode={opts.type === "number" ? "numeric" : undefined}
-              min={opts.min} max={opts.max} value={value} placeholder={opts.placeholder} onChange={(e) => { setValue(e.target.value); setError(null); }} />
+              min={opts.min} max={opts.max} value={value} placeholder={opts.placeholder ? t(opts.placeholder) : undefined} onChange={(e) => { setValue(e.target.value); setError(null); }} />
           )}
         </Field>
       </form>
       <ModalFooter>
-        <Button variant="secondary" onClick={() => onClose(null)}>Batal</Button>
-        <Button type="submit" form={formId} variant={opts.tone === "danger" ? "danger" : "primary"}>{opts.confirmLabel ?? "Simpan"}</Button>
+        <Button variant="secondary" onClick={() => onClose(null)}>{t("Batal")}</Button>
+        <Button type="submit" form={formId} variant={opts.tone === "danger" ? "danger" : "primary"}>{opts.confirmLabel ? t(opts.confirmLabel) : t("Simpan")}</Button>
       </ModalFooter>
     </Modal>
   );

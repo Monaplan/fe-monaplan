@@ -1,3 +1,4 @@
+import { withI18n, type Params } from "@/i18n/translate";
 export type ActionResult = { ok: true; message?: string; data?: any } | { ok: false; error: string };
 
 export function dbError(error: { code?: string; message?: string } | null): ActionResult {
@@ -10,6 +11,12 @@ export function dbError(error: { code?: string; message?: string } | null): Acti
   return { ok: false, error: error.message ?? "Terjadi kesalahan. Coba lagi, ya." };
 }
 
-export function fail(error: string): ActionResult {
-  return { ok: false, error };
+// error boleh memuat {parameter}; params bila ada ikut dikirim agar klien bisa menerjemahkannya
+export function fail(error: string, params?: Params): ActionResult {
+  return { ok: false, error: params ? withI18n(error, params) : error };
+}
+
+// Hasil sukses dengan pesan dinamis
+export function okm(message: string, params?: Params, data?: unknown): ActionResult {
+  return { ok: true, message: params ? withI18n(message, params) : message, ...(data !== undefined && { data }) };
 }

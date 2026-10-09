@@ -35,7 +35,7 @@ export async function saveAgenda(projectId: string, fd: FormData): Promise<Actio
   const { error } = id
     ? await supabase.from("agenda_items").update(row).eq("id", id).eq("project_id", projectId)
     : await supabase.from("agenda_items").insert({ ...row, created_by: session.user.id });
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: "Agenda tersimpan." };
 }
@@ -43,7 +43,7 @@ export async function saveAgenda(projectId: string, fd: FormData): Promise<Actio
 export async function deleteAgenda(projectId: string, id: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("agenda_items").delete().eq("id", id).eq("project_id", projectId);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: "Agenda dihapus." };
 }

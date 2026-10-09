@@ -11,7 +11,7 @@ const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim()
 const STATUSES = ["prospek", "survei", "negosiasi", "deal", "batal"] as const;
 
 function done(projectId: string, error: { code?: string; message?: string } | null, message: string, data?: any): ActionResult {
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   return error ? dbError(error) : { ok: true, message, data };
 }
 

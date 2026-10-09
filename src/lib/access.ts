@@ -2,6 +2,8 @@ import "server-only";
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { UUID_RE } from "@/lib/paths";
 
 export type LicenseStateKey = "lifetime" | "timed" | "expired" | "revoked" | "none";
 export type AccessState = { state: LicenseStateKey; endsAt: string | null; startsAt: string | null; isTrial?: boolean };
@@ -15,6 +17,7 @@ export type Profile = {
   role: "user" | "admin";
   last_active_project_id: string | null;
   notify_email: boolean;
+  language?: "id" | "en" | null;
 };
 
 export type License = {
@@ -27,7 +30,7 @@ export type License = {
   ends_at: string | null;
   created_at: string;
   revoked_reason: string | null;
-  plans?: { name: string; type: "lifetime" | "timed"; max_collaborators: number; max_projects: number; storage_quota_mb: number } | null;
+  plans?: { name: string; type: "lifetime" | "timed"; tier?: number; max_collaborators: number; max_projects: number; storage_quota_mb: number } | null;
 };
 
 export function computeLicenseState(licenses: (Pick<License, "status" | "starts_at" | "ends_at"> & { source?: License["source"] })[]): AccessState {
@@ -91,7 +94,7 @@ export const getMyLicenses = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("licenses")
-    .select("*, plans(name, type, max_collaborators, max_projects, storage_quota_mb)")
+    .select("*, plans(*)")
     .order("created_at", { ascending: false });
   return (data ?? []) as License[];
 });
@@ -102,15 +105,17 @@ export const getMyProjects = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("project_members")
-    .select("role, wedding_projects(id, title, archived_at, owner_id, onboarding_completed_at)")
+    .select("role, wedding_projects(*)")
     .order("joined_at", { ascending: true });
   return (data ?? [])
     .map((m: any) => ({ role: m.role as string, ...(m.wedding_projects as any) }))
-    .filter((p) => p.id) as { id: string; title: string; role: string; archived_at: string | null; owner_id: string }[];
+    .filter((p) => p.id) as { id: string; slug?: string | null; title: string; role: string; archived_at: string | null; owner_id: string }[];
 });
 
 export type Project = {
   id: string;
+  slug?: string | null;
+  storage_prefix?: string | null;
   owner_id: string;
   title: string;
   partner_one_name: string;
@@ -134,8 +139,50 @@ export type Member = {
   profiles: { full_name: string | null; email: string; avatar_url: string | null } | null;
 };
 
-export const getProjectContext = cache(async (projectId: string) => {
-  if (!/^[0-9a-f-]{36}$/i.test(projectId)) notFound();
+// Pemetaan slug ke ID disimpan di memori proses. Aman karena slug tidak pernah dipakai ulang untuk proyek lain
+// (riwayat slug mencegahnya), dan keanggotaan tetap diperiksa lewat RLS pada setiap permintaan.
+const SLUG_CACHE = new Map<string, string>();
+const SLUG_CACHE_MAX = 1000;
+// Zona waktu proyek, diisi setelah konteks termuat. Dipakai layout untuk memulai query lencana tanpa menunggu konteks.
+const TZ_CACHE = new Map<string, string>();
+
+// Tebakan dari memori proses saja (tanpa ke database): ID dan zona waktu proyek bila sudah pernah dimuat.
+export function peekProject(ref: string): { projectId: string; timezone: string } | null {
+  const projectId = UUID_RE.test(ref) ? ref : SLUG_CACHE.get(ref);
+  const timezone = projectId ? TZ_CACHE.get(projectId) : undefined;
+  return projectId && timezone ? { projectId, timezone } : null;
+}
+
+async function resolveProjectId(ref: string, supabase: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
+  if (UUID_RE.test(ref)) return ref;
+  const hit = SLUG_CACHE.get(ref);
+  if (hit) return hit;
+  const { data } = await supabase.from("wedding_projects").select("id").eq("slug", ref).maybeSingle();
+  if (data?.id) return data.id as string;
+  // Slug lama (sudah diganti pemiliknya): cari di riwayat, lalu halaman mengalihkan ke slug terbaru
+  const { data: old } = await createAdminClient().from("project_slug_history").select("project_id").eq("slug", ref).maybeSingle();
+  return (old?.project_id as string | undefined) ?? null;
+}
+
+// ref boleh berupa slug atau UUID (alamat lama dan pemanggilan dari server action).
+// Muatan konteks di-cache per ID, sehingga pemanggilan dengan slug dan dengan UUID dalam satu permintaan memakai hasil yang sama.
+export async function getProjectContext(ref: string) {
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
+  const supabase = await createClient();
+  const projectId = await resolveProjectId(ref, supabase);
+  if (!projectId) notFound();
+  const ctx = await loadProjectContext(projectId);
+  if (TZ_CACHE.size >= SLUG_CACHE_MAX) TZ_CACHE.clear();
+  TZ_CACHE.set(projectId, ctx.project.timezone);
+  if (ctx.project.slug && !UUID_RE.test(ref)) {
+    if (SLUG_CACHE.size >= SLUG_CACHE_MAX) SLUG_CACHE.clear();
+    SLUG_CACHE.set(ctx.project.slug, projectId);
+  }
+  return ctx;
+}
+
+const loadProjectContext = cache(async (projectId: string) => {
   const user = await getAuthUser();
   if (!user) redirect("/login");
   const supabase = await createClient();
@@ -153,13 +200,12 @@ export const getProjectContext = cache(async (projectId: string) => {
   const session = { user, profile };
   const role = memberList.find((m) => m.user_id === user.id)?.role;
   if (!role) notFound();
-
   const a = (accessRaw ?? { state: "none" }) as { state: LicenseStateKey; ends_at?: string | null; starts_at?: string | null; is_trial?: boolean };
   const access: AccessState = { state: a.state, endsAt: a.ends_at ?? null, startsAt: a.starts_at ?? null, isTrial: !!a.is_trial };
   const p = project as Project;
   const canWrite = (role === "owner" || role === "editor") && isActive(access) && !p.archived_at;
 
-  return { session, supabase, project: p, role, members: memberList, access, canWrite, isOwner: role === "owner" };
+  return { session, supabase, projectId, project: p, role, members: memberList, access, canWrite, isOwner: role === "owner" };
 });
 
 export async function requireAdmin() {

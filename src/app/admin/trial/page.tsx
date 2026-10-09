@@ -2,8 +2,12 @@ import { requireAdmin } from "@/lib/access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSettings } from "@/lib/settings";
 import { TrialClient } from "./trial-client";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Trial" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Trial") };
+}
 
 export default async function TrialPage() {
   await requireAdmin();

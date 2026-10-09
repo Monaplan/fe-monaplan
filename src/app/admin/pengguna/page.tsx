@@ -8,14 +8,22 @@ import { formatDateCompact } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 import { DeleteUserButton } from "./delete-user";
 import { ManageUserButton } from "./manage-user";
+import { ProductTour } from "@/components/app/product-tour";
+import { TOURS } from "@/content/tours";
+import { getI18n } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Pengguna" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Pengguna") };
+}
 
-const LABEL: Record<string, string> = { lifetime: "Selamanya", timed: "Bermasa aktif", expired: "Berakhir", revoked: "Dicabut", none: "Belum aktif" };
+const LABEL: Record<string, string> = { lifetime: "Selamanya", timed: "Berjangka waktu", expired: "Berakhir", revoked: "Dicabut", none: "Belum aktif" };
 const trialLabel = (state: string) => (state === "timed" ? "Trial" : LABEL[state]!);
 
 // ADM-06: lihat lisensi dan daftar proyek tanpa membuka isi data proyek
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { t, lang } = await getI18n();
   const { user: me } = await requireAdmin();
   const { q } = await searchParams;
   const admin = createAdminClient();
@@ -26,25 +34,26 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Pengguna" description="Atur peran dan akses pengguna, lihat proyeknya tanpa membuka isi datanya, dan hapus akun bila diminta pengguna atau karena penyalahgunaan." />
-      <form className="mb-4"><Input name="q" defaultValue={q} placeholder="Cari email" className="max-w-xs" /></form>
-      <Card className="p-0 sm:p-0">
+      <ProductTour id="admin-pengguna" steps={TOURS["admin-pengguna"]!} />
+      <PageHeader tour="admin-pengguna" title={t("Pengguna")} description={t("Atur peran dan akses, lihat proyek, atau hapus akun.")} />
+      <form className="mb-4"><Input name="q" defaultValue={q} placeholder={t("Cari email")} className="max-w-xs" /></form>
+      <Card tour="admin-pengguna-main" className="p-0 sm:p-0">
         {(users ?? []).map((u: any) => {
           const s = computeLicenseState(u.licenses ?? []);
           return (
             <div key={u.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 px-5 py-3 last:border-0">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{u.email}{u.role === "admin" && <span className="ml-2 text-xs text-plum-600">admin</span>}</p>
+                <p className="truncate text-sm font-medium">{u.email}{u.role === "admin" && <span className="ml-2 text-xs text-plum-600">{t("admin")}</span>}</p>
                 <p className="truncate text-xs text-neutral-500">
-                  {u.full_name ?? "-"} · daftar {formatDateCompact(u.created_at)} · proyek: {(u.wedding_projects ?? []).map((p: any) => `${p.title}${p.archived_at ? " (arsip)" : ""}`).join(", ") || "-"}
+                  {u.full_name ?? "-"}{" "}{t("· daftar")}{" "}{formatDateCompact(u.created_at, undefined, lang)}{" "}{t("· proyek:")}{" "}{(u.wedding_projects ?? []).map((p: any) => `${p.title}${p.archived_at ? " (arsip)" : ""}`).join(", ") || "-"}
                 </p>
               </div>
               <StatusPill tone={s.state === "lifetime" || s.state === "timed" ? "positive" : s.state === "revoked" ? "danger" : "neutral"}>
-                {s.isTrial ? trialLabel(s.state) : LABEL[s.state]}{s.state === "timed" && s.endsAt ? ` s/d ${formatDateCompact(s.endsAt)}` : ""}
+                {t(s.isTrial ? trialLabel(s.state) : LABEL[s.state]!)}{s.state === "timed" && s.endsAt ? ` ${t("s/d {date}", { date: formatDateCompact(s.endsAt, undefined, lang) })}` : ""}
               </StatusPill>
               <ManageUserButton
                 user={{ id: u.id, email: u.email, full_name: u.full_name, role: u.role }}
-                access={{ state: s.state, isTrial: !!s.isTrial, label: LABEL[s.state]! + (s.state === "timed" && s.endsAt ? ` s/d ${formatDateCompact(s.endsAt)}` : "") }}
+                access={{ state: s.state, isTrial: !!s.isTrial, label: t(LABEL[s.state]!) + (s.state === "timed" && s.endsAt ? ` ${t("s/d {date}", { date: formatDateCompact(s.endsAt, undefined, lang) })}` : "") }}
                 isSelf={u.id === me.id}
                 defaultTrialDays={settings.trial.days}
               />
@@ -56,7 +65,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             </div>
           );
         })}
-        {!users?.length && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">Tidak ada pengguna.</p>}
+        {!users?.length && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">{t("Tidak ada pengguna.")}</p>}
       </Card>
     </>
   );

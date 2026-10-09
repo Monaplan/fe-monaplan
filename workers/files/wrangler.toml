@@ -1,0 +1,16 @@
+# Deploy: cd workers/files && npx wrangler deploy
+# Rahasia penandatangan (sama dengan FILES_SIGNING_SECRET di aplikasi):  npx wrangler secret put FILES_SIGNING_SECRET
+name = "monaplan-files"
+main = "index.js"
+compatibility_date = "2026-01-01"
+
+# Hubungkan ke domain sendiri: ganti domainmu.com dengan domain yang sudah ada di Cloudflare
+routes = [{ pattern = "files.domainmu.com", custom_domain = true }]
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "planner-media"
+
+[vars]
+# Alamat aplikasi yang boleh mengunggah dari browser (pisahkan koma)
+ALLOWED_ORIGINS = "https://domainmu.com,http://localhost:3000"

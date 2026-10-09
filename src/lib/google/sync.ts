@@ -5,6 +5,7 @@ import { appUrl } from "@/lib/constants";
 import { decryptToken } from "./crypto";
 import { GoogleAuthError, refreshAccessToken } from "./oauth";
 import { calendarExists, createCalendar, deleteEvent, upsertEvent } from "./api";
+import { withI18n } from "@/i18n/translate";
 import { buildDesiredEvents, planSync, type SourceKind } from "./events";
 
 export type SyncResult =
@@ -54,7 +55,7 @@ export async function syncProject(userId: string, projectId: string): Promise<Sy
   }
 
   try {
-    const { data: project } = await admin.from("wedding_projects").select("title, timezone").eq("id", projectId).single();
+    const { data: project } = await admin.from("wedding_projects").select("*").eq("id", projectId).single();
     if (!project) return stop("Proyek tidak ditemukan.");
 
     // Kalender sekunder "Monaplan"; dibuat ulang bila pengguna menghapusnya di Google
@@ -80,7 +81,7 @@ export async function syncProject(userId: string, projectId: string): Promise<Sy
 
     const desired = buildDesiredEvents(
       { tasks: (tasks.data ?? []) as any, payments: (payments.data ?? []).map((p) => ({ ...p, amount_idr: Number(p.amount_idr) })) as any, events: (events.data ?? []) as any, agenda: (agenda.data ?? []) as any },
-      { projectId, tz: project.timezone, appUrl: appUrl() },
+      { ref: (project as { slug?: string | null }).slug || projectId, tz: project.timezone, appUrl: appUrl() },
     ).map((d) => ({ ...d, fingerprint: createHash("sha256").update(JSON.stringify([calendarId, d.body])).digest("hex").slice(0, 32) }));
 
     const existing = new Map((links.data ?? []).map((l) => [`${l.source}:${l.source_id}`, { fingerprint: l.fingerprint as string, eventId: l.google_event_id as string }]));
@@ -124,7 +125,9 @@ export async function syncProject(userId: string, projectId: string): Promise<Sy
       await admin.from("google_event_links").delete().eq("user_id", userId).eq("project_id", projectId).eq("source", source!).eq("source_id", sourceId!);
     }
 
-    const message = `${plan.create.length} baru, ${plan.update.length} diperbarui, ${removed.length} dihapus` + (failed ? `, ${failed} gagal (${firstError})` : "");
+    const message = failed
+      ? withI18n("{created} baru, {updated} diperbarui, {removed} dihapus, {failed} gagal ({error})", { created: plan.create.length, updated: plan.update.length, removed: removed.length, failed, error: firstError })
+      : withI18n("{created} baru, {updated} diperbarui, {removed} dihapus", { created: plan.create.length, updated: plan.update.length, removed: removed.length });
     await record({ last_status: failed ? "error" : "ok", last_message: message, last_synced_at: new Date().toISOString() });
     return { ok: true, created: plan.create.length, updated: plan.update.length, removed: removed.length, unchanged: plan.unchanged, failed, message };
   } catch (e) {

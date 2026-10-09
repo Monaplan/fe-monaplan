@@ -7,10 +7,16 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { formatDateCompact } from "@/lib/format";
 import { BatchCodes, RevokeBatchButton } from "./batch-codes";
+import { getI18n } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Detail Batch" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Detail Batch") };
+}
 
 export default async function BatchPage({ params }: { params: Promise<{ batchId: string }> }) {
+  const { t, lang } = await getI18n();
   const { batchId } = await params;
   await requireAdmin();
   const admin = createAdminClient();
@@ -25,13 +31,13 @@ export default async function BatchPage({ params }: { params: Promise<{ batchId:
 
   return (
     <>
-      <Link href="/admin/kode" className="mb-3 inline-flex items-center gap-1 text-[13px] text-neutral-600 hover:text-plum-700"><ArrowLeft className="size-4" />Semua batch</Link>
+      <Link href="/admin/kode" className="mb-3 inline-flex items-center gap-1 text-[13px] text-neutral-600 hover:text-plum-700"><ArrowLeft className="size-4" />{t("Semua batch")}</Link>
       <PageHeader
         title={batch.name}
-        description={`${batch.channel} · ${(batch as any).plans?.name} · ${batch.quantity} kode · dibuat ${formatDateCompact(batch.created_at)}${batch.valid_until ? ` · berlaku sampai ${formatDateCompact(batch.valid_until)}` : ""}`}
+        description={t("{channel} · {plan} · {quantity} kode · dibuat {date}", { channel: batch.channel, plan: (batch as any).plans?.name, quantity: batch.quantity, date: formatDateCompact(batch.created_at, undefined, lang) }) + (batch.valid_until ? ` · ${t("berlaku sampai {date}", { date: formatDateCompact(batch.valid_until, undefined, lang) })}` : "")}
         actions={
           <>
-            <ButtonLink href={`/api/admin/batches/${batchId}/csv`} prefetch={false} variant="outline" icon={<Download />}>Ekspor CSV</ButtonLink>
+            <ButtonLink href={`/api/admin/batches/${batchId}/csv`} prefetch={false} variant="outline" icon={<Download />}>{t("Ekspor CSV")}</ButtonLink>
             {!batch.revoked_at && <RevokeBatchButton batchId={batchId} />}
           </>
         }

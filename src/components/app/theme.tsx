@@ -6,6 +6,7 @@ import { cn } from "@/components/ui/cn";
 
 export type ThemePref = "light" | "dark" | "system";
 import { THEME_KEY as KEY } from "@/lib/theme-script";
+import { useT } from "@/i18n/client";
 
 
 function apply(pref: ThemePref) {
@@ -56,16 +57,17 @@ const OPTIONS: { key: ThemePref; label: string; icon: React.ReactNode }[] = [
 
 // Pilihan tema tiga opsi (dipakai di menu akun dan halaman Akun)
 export function ThemeSwitcher({ className, compact }: { className?: string; compact?: boolean }) {
+  const t = useT();
   const [pref, set] = useTheme();
   return (
-    <div role="radiogroup" aria-label="Tema tampilan" className={cn("flex rounded-full bg-neutral-100 p-1", className)}>
+    <div role="radiogroup" aria-label={t("Tema tampilan")} className={cn("flex rounded-full bg-neutral-100 p-1", className)}>
       {OPTIONS.map((o) => (
         <button
           key={o.key}
           type="button"
           role="radio"
           aria-checked={pref === o.key}
-          title={o.label}
+          title={t(o.label)}
           onClick={() => set(o.key)}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 rounded-full text-[12.5px] font-medium transition-colors [&_svg]:size-3.5",
@@ -73,7 +75,7 @@ export function ThemeSwitcher({ className, compact }: { className?: string; comp
             pref === o.key ? "bg-surface text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-neutral-200" : "text-neutral-500 hover:text-neutral-800",
           )}
         >
-          {o.icon}{!compact && o.label}
+          {o.icon}{!compact && t(o.label)}
         </button>
       ))}
     </div>
@@ -83,12 +85,13 @@ export function ThemeSwitcher({ className, compact }: { className?: string; comp
 // Tombol ikon cepat terang/gelap untuk top bar dan halaman publik.
 // Ikon dipilih lewat CSS (kelas .dark), bukan state, agar HTML server dan client selalu sama saat hidrasi.
 export function ThemeToggle({ className }: { className?: string }) {
+  const t = useT();
   return (
     <button
       type="button"
       onClick={() => setThemePref(document.documentElement.classList.contains("dark") ? "light" : "dark")}
-      aria-label="Ganti tema terang atau gelap"
-      title="Ganti tema"
+      aria-label={t("Ganti tema terang atau gelap")}
+      title={t("Ganti tema")}
       className={cn("inline-flex size-10 items-center justify-center rounded-full text-neutral-600 hover:bg-surface hover:text-neutral-900", className)}
     >
       <Moon className="size-5 dark:hidden" aria-hidden="true" />

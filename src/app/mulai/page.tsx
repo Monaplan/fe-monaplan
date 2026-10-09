@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getMyAccess, getMyProjects, isActive, requireUser } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
+import { projectPath } from "@/lib/paths";
 
 // Router setelah login (PRD 5.1): proyek → dashboard, akses aktif tanpa proyek → onboarding,
 // akun baru + trial aktif → mulai trial lalu onboarding, selain itu → aktivasi
@@ -11,7 +12,7 @@ export default async function StartPage() {
 
   if (projects.length) {
     const target = projects.find((p) => p.id === profile?.last_active_project_id) ?? projects[0]!;
-    redirect(`/w/${target.id}`);
+    redirect(projectPath(target));
   }
   const access = await getMyAccess();
   if (isActive(access)) redirect("/onboarding");

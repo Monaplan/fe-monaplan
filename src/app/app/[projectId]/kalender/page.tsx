@@ -1,13 +1,17 @@
 import { getProjectContext } from "@/lib/access";
 import { getGoogleStatus } from "@/lib/google/status";
 import { CalendarClient } from "./calendar-client";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Reminder & Calendar" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Reminder & Calendar") };
+}
 
 export default async function CalendarPage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ google?: string }> }) {
-  const { projectId } = await params;
+  const { projectId: ref } = await params;
   const { google } = await searchParams;
-  const { supabase, project, canWrite, session } = await getProjectContext(projectId);
+  const { supabase, project, canWrite, session, projectId } = await getProjectContext(ref);
   const [{ data: feed }, { data: agenda }, googleStatus] = await Promise.all([
     supabase.from("calendar_feed").select("*").eq("project_id", projectId).order("starts_at").limit(3000),
     supabase.from("agenda_items").select("*").eq("project_id", projectId),

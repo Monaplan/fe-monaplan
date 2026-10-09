@@ -4,10 +4,18 @@ import { Card, PageHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { OrderRow } from "./order-row";
+import { ProductTour } from "@/components/app/product-tour";
+import { TOURS } from "@/content/tours";
+import { getI18n } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Order" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Order") };
+}
 
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; review?: string }> }) {
+  const { t } = await getI18n();
   await requireAdmin();
   const { q, status, review } = await searchParams;
   const admin = createAdminClient();
@@ -27,18 +35,19 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Order" />
+      <ProductTour id="admin-order" steps={TOURS["admin-order"]!} />
+      <PageHeader tour="admin-order" title={t("Order")} />
       <form className="mb-4 flex flex-wrap gap-2">
-        <Input name="q" defaultValue={q} placeholder="Nomor order atau email" className="max-w-xs" />
+        <Input name="q" defaultValue={q} placeholder={t("Nomor order atau email")} className="max-w-xs" />
         <Select name="status" defaultValue={status ?? ""} className="w-auto">
-          <option value="">Semua status</option>
+          <option value="">{t("Semua status")}</option>
           {["pending", "paid", "failed", "expired", "cancelled", "refunded"].map((s) => <option key={s}>{s}</option>)}
         </Select>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="review" value="1" defaultChecked={!!review} className="accent-plum-600" />Perlu ditinjau</label>
-        <Button type="submit" variant="secondary">Terapkan</Button>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="review" value="1" defaultChecked={!!review} className="accent-plum-600" />{t("Perlu ditinjau")}</label>
+        <Button type="submit" variant="secondary">{t("Terapkan")}</Button>
       </form>
-      <Card className="p-0 sm:p-0">
-        {(orders ?? []).length === 0 && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">Tidak ada order.</p>}
+      <Card tour="admin-order-main" className="p-0 sm:p-0">
+        {(orders ?? []).length === 0 && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">{t("Tidak ada order.")}</p>}
         {(orders ?? []).map((o: any) => <OrderRow key={o.id} order={o} />)}
       </Card>
     </>

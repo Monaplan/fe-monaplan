@@ -10,7 +10,7 @@ const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim()
 const KINDS = ["dp", "termin", "pelunasan", "lainnya"];
 
 function done(projectId: string, error: { code?: string; message?: string } | null, message: string): ActionResult {
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message };
 }

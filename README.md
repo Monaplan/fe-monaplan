@@ -22,7 +22,7 @@ Aplikasi web wedding planner all-in-one, dibangun dari `PRD.md`, `ERD.md`, dan `
 ### 2. Isi environment
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 | Variabel | Sumber |
@@ -57,7 +57,7 @@ Dokumen, foto mahar/seserahan, dan foto sampul disimpan di Cloudflare R2 (bucket
 
 1. Cloudflare Dashboard → **R2 Object Storage** → **Create bucket**, misalnya `monaplan-files`. Jangan aktifkan akses publik.
 2. **R2 → Manage API tokens → Create API token**: izin **Object Read & Write**, batasi ke bucket tadi. Salin Access Key ID dan Secret Access Key (secret hanya tampil sekali).
-3. Account ID ada di halaman R2 (atau di URL dashboard). Isi di `.env.local`:
+3. Account ID ada di halaman R2 (atau di URL dashboard). Isi di `.env`:
 
    ```env
    R2_ACCOUNT_ID=...
@@ -146,5 +146,14 @@ supabase/
 
 1. Jalankan migrasi `supabase/migrations/20261009000004_trial_promo_calendar.sql` di SQL Editor (setelah migrasi 1 sampai 3).
 2. Admin > Konfigurasi: atur Trial (lama hari, on/off) dan Promo. Harga promo dikirim ke Midtrans sebagai baris diskon.
-3. **Google Calendar** (opsional): di Google Cloud buat OAuth Client tipe Web, aktifkan *Google Calendar API*, tambahkan redirect URI `{NEXT_PUBLIC_APP_URL}/api/google/callback`, lalu isi `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, dan (opsional) `TOKEN_ENCRYPTION_KEY` di `.env.local`. Selama aplikasi Google berstatus *Testing*, tambahkan email penguji di OAuth consent screen. Scope yang diminta hanya `calendar.app.created`.
+3. **Google Calendar** (opsional): di Google Cloud buat OAuth Client tipe Web, aktifkan *Google Calendar API*, tambahkan redirect URI `{NEXT_PUBLIC_APP_URL}/api/google/callback`, lalu isi `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, dan (opsional) `TOKEN_ENCRYPTION_KEY` di `.env`. Selama aplikasi Google berstatus *Testing*, tambahkan email penguji di OAuth consent screen. Scope yang diminta hanya `calendar.app.created`.
 4. Uji fungsi murni: `npm run test:lib`. Uji database: `npm run test:db`.
+
+## Rute, berkas, email, dan bahasa
+
+- Rute ruang kerja: `/app/<slug>`. Tautan lama `/w/...` dialihkan.
+- Berkas: deploy `workers/files` (`wrangler deploy`), pasang route `files.domainmu.com`, isi `FILES_BASE_URL` dan `FILES_SIGNING_SECRET`. Batas 50 MB per pengguna dan 5 MB per berkas.
+- Email: verifikasi domain di Resend, isi `RESEND_API_KEY`, `EMAIL_FROM`, `SUPPORT_EMAIL`, `CRON_SECRET`; pasang cron dari `supabase/cron.example.sql` ke `/api/cron/reminders`. Pratinjau di `/admin/email`.
+- Migrasi baru: jalankan `20261009000004` dan `20261009000005` di Supabase SQL Editor.
+- Pemeriksaan domain: `npm run check:domain`. Uji: `npm run test:db`, `test:lib`, `test:i18n`.
+- Bahasa: kamus Inggris di `src/i18n/en*.ts`; kunci adalah teks sumber Indonesia.

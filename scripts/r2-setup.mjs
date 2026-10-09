@@ -4,7 +4,7 @@ import { GetBucketCorsCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client
 
 const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_ENDPOINT, NEXT_PUBLIC_APP_URL } = process.env;
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
-  console.error("Isi R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, dan R2_BUCKET di .env.local dulu.");
+  console.error("Isi R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, dan R2_BUCKET di .env dulu.");
   process.exit(1);
 }
 

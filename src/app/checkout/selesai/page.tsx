@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CircleAlert, CircleCheck, Loader2 } from "lucide-react";
 import { Logo } from "@/components/app/logo";
 import { ButtonLink } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 
 // Hanya membaca status order (polling 3 detik, maks 2 menit). Akses diberikan oleh webhook.
 function Waiting() {
+  const t = useT();
   const router = useRouter();
   const order = useSearchParams().get("order");
   const [state, setState] = useState<"waiting" | "paid" | "failed" | "timeout">("waiting");
@@ -41,27 +43,27 @@ function Waiting() {
       {state === "waiting" && (
         <>
           <Loader2 className="mx-auto size-10 animate-spin text-plum-600" />
-          <h1 className="mt-4 text-xl font-semibold">Menunggu konfirmasi pembayaran</h1>
-          <p className="mt-2 text-[13px] text-neutral-600">Biasanya hanya beberapa detik. Jangan tutup halaman ini.</p>
+          <h1 className="mt-4 text-xl font-semibold">{t("Menunggu konfirmasi pembayaran")}</h1>
+          <p className="mt-2 text-[13px] text-neutral-600">{t("Biasanya hanya beberapa detik. Jangan tutup halaman ini.")}</p>
         </>
       )}
       {state === "paid" && (
         <>
           <CircleCheck className="mx-auto size-10 text-plum-600" />
-          <h1 className="mt-4 text-xl font-semibold">Pembayaran berhasil</h1>
-          <p className="mt-2 text-[13px] text-neutral-600">Akses kamu sudah aktif. Mengarahkan…</p>
+          <h1 className="mt-4 text-xl font-semibold">{t("Pembayaran berhasil")}</h1>
+          <p className="mt-2 text-[13px] text-neutral-600">{t("Akses kamu sudah aktif. Mengarahkan…")}</p>
         </>
       )}
       {(state === "failed" || state === "timeout") && (
         <>
           <CircleAlert className="mx-auto size-10 text-danger" />
-          <h1 className="mt-4 text-xl font-semibold">{state === "failed" ? "Pembayaran tidak berhasil" : "Pembayaran belum terkonfirmasi"}</h1>
+          <h1 className="mt-4 text-xl font-semibold">{state === "failed" ? t("Pembayaran tidak berhasil") : t("Pembayaran belum terkonfirmasi")}</h1>
           <p className="mt-2 text-[13px] text-neutral-600">
-            {state === "failed" ? "Transaksi dibatalkan atau kedaluwarsa. Kamu bisa mencoba lagi." : "Bila kamu sudah membayar, akses akan aktif otomatis begitu pembayaran terkonfirmasi. Cek riwayat di halaman Akun."}
+            {state === "failed" ? t("Transaksi dibatalkan atau kedaluwarsa. Kamu bisa mencoba lagi.") : t("Bila kamu sudah membayar, akses akan aktif otomatis begitu pembayaran terkonfirmasi. Cek riwayat di halaman Akun.")}
           </p>
           <div className="mt-6 flex justify-center gap-2">
-            <ButtonLink href="/aktivasi" variant="secondary">Kembali</ButtonLink>
-            <ButtonLink href="/akun/tagihan">Lihat Tagihan</ButtonLink>
+            <ButtonLink href="/aktivasi" variant="secondary">{t("Kembali")}</ButtonLink>
+            <ButtonLink href="/akun/tagihan">{t("Lihat Tagihan")}</ButtonLink>
           </div>
         </>
       )}

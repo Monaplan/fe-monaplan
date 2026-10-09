@@ -9,6 +9,6 @@ export async function setGuideStep(projectId: string, stepKey: string, done: boo
   const { error } = done
     ? await supabase.from("guide_progress").upsert({ project_id: projectId, step_key: stepKey, completed_by: session.user.id })
     : await supabase.from("guide_progress").delete().eq("project_id", projectId).eq("step_key", stepKey);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   return dbError(error);
 }

@@ -8,7 +8,11 @@ const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 
 export const googleConfigured = () => !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+// Login Google lewat alur aplikasi ini hanya bila dinyalakan eksplisit: GOOGLE_CLIENT_ID harus sudah terdaftar
+// sebagai "Authorized Client IDs" di penyedia Google pada Supabase, kalau tidak signInWithIdToken menolak token.
+export const googleOwnLoginEnabled = () => googleConfigured() && process.env.GOOGLE_OWN_LOGIN === "1";
 export const googleRedirectUri = () => `${appUrl()}/api/google/callback`;
+export const googleLoginRedirectUri = () => `${appUrl()}/api/auth/google/callback`;
 
 export class GoogleAuthError extends Error {
   constructor(message: string, readonly revoked = false) {
@@ -46,14 +50,27 @@ async function tokenRequest(params: Record<string, string>) {
   return json;
 }
 
-export async function exchangeCode(code: string) {
-  const j = await tokenRequest({ grant_type: "authorization_code", code, redirect_uri: googleRedirectUri() });
+// Masuk dengan Google lewat alur milik aplikasi: layar persetujuan menampilkan domain kita, bukan alamat Supabase
+export function buildLoginUrl(state: string) {
+  const q = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    redirect_uri: googleLoginRedirectUri(),
+    response_type: "code",
+    scope: "openid email profile",
+    prompt: "select_account",
+    state,
+  });
+  return `${AUTH_URL}?${q}`;
+}
+
+export async function exchangeCode(code: string, redirectUri: string = googleRedirectUri()) {
+  const j = await tokenRequest({ grant_type: "authorization_code", code, redirect_uri: redirectUri });
   let email: string | null = null;
   try {
     // id_token diterima langsung dari Google lewat TLS, jadi cukup dibaca isinya
     email = JSON.parse(Buffer.from(String(j.id_token).split(".")[1]!, "base64url").toString("utf8")).email ?? null;
   } catch {}
-  return { refreshToken: (j.refresh_token as string | undefined) ?? null, accessToken: j.access_token as string, scope: String(j.scope ?? ""), email };
+  return { refreshToken: (j.refresh_token as string | undefined) ?? null, accessToken: j.access_token as string, idToken: (j.id_token as string | undefined) ?? null, scope: String(j.scope ?? ""), email };
 }
 
 export async function refreshAccessToken(refreshToken: string) {

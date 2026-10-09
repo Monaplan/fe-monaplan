@@ -3,10 +3,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, PageHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/form";
 import { GrantLicenseButton, LicenseRow } from "./license-client";
+import { ProductTour } from "@/components/app/product-tour";
+import { TOURS } from "@/content/tours";
+import { getI18n } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Lisensi" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Lisensi") };
+}
 
 export default async function LicensesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { t } = await getI18n();
   await requireAdmin();
   const { q } = await searchParams;
   const admin = createAdminClient();
@@ -19,10 +27,11 @@ export default async function LicensesPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeader title="Lisensi" actions={<GrantLicenseButton plans={plans ?? []} />} />
-      <form className="mb-4"><Input name="q" defaultValue={q} placeholder="Cari email pengguna" className="max-w-xs" /></form>
-      <Card className="p-0 sm:p-0">
-        {(licenses ?? []).length === 0 && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">Tidak ada lisensi.</p>}
+      <ProductTour id="admin-lisensi" steps={TOURS["admin-lisensi"]!} />
+      <PageHeader tour="admin-lisensi" title={t("Lisensi")} actions={<GrantLicenseButton plans={plans ?? []} />} />
+      <form className="mb-4"><Input name="q" defaultValue={q} placeholder={t("Cari email pengguna")} className="max-w-xs" /></form>
+      <Card tour="admin-lisensi-main" className="p-0 sm:p-0">
+        {(licenses ?? []).length === 0 && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">{t("Tidak ada lisensi.")}</p>}
         {(licenses ?? []).map((l: any) => <LicenseRow key={l.id} license={l} />)}
       </Card>
     </>

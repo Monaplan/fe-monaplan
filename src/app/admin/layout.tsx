@@ -1,6 +1,7 @@
 import { SidebarShell, type NavGroup, type NavItem } from "@/components/app/sidebar-shell";
 import { requireAdmin } from "@/lib/access";
 import { NOINDEX } from "@/lib/seo";
+import { getI18n } from "@/i18n/server";
 
 export const metadata = { title: { default: "Admin", template: "%s · Admin Monaplan" }, robots: NOINDEX };
 
@@ -19,6 +20,7 @@ const GROUPS: NavGroup[] = [
       { href: "/admin/paket", label: "Paket", icon: "paket" },
       { href: "/admin/trial", label: "Trial", icon: "trial" },
       { href: "/admin/promo", label: "Promo", icon: "promo" },
+      { href: "/admin/email", label: "Email", icon: "email" },
     ],
   },
   {
@@ -26,6 +28,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/lisensi", label: "Lisensi", icon: "lisensi" },
       { href: "/admin/pengguna", label: "Pengguna", icon: "pengguna" },
+      { href: "/admin/bantuan", label: "Bantuan masuk", icon: "bantuan" },
     ],
   },
   { title: "Sistem", items: [{ href: "/admin/audit", label: "Log Audit", icon: "audit" }] },
@@ -40,10 +43,11 @@ const MOBILE_TABS: NavItem[] = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { t } = await getI18n();
   const { profile, user } = await requireAdmin();
   return (
     <SidebarShell
-      context="Panel Admin"
+      context={t("Panel Admin")}
       contextLabel=""
       contextHref="/admin"
       groups={GROUPS}

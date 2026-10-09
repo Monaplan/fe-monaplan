@@ -11,7 +11,7 @@ const SIDES = ["pria", "wanita", "bersama"] as const;
 const CATS = ["vip", "keluarga", "reguler"] as const;
 
 function done(projectId: string, error: { code?: string; message?: string } | null, message: string, data?: any): ActionResult {
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   return error ? dbError(error) : { ok: true, message, data };
 }
 
@@ -37,7 +37,7 @@ export async function saveGuest(projectId: string, fd: FormData): Promise<Action
     let q = supabase.from("guests").select("id, name").eq("project_id", projectId).eq("phone_e164", phone);
     if (id) q = q.neq("id", id);
     const { data: dup } = await q.limit(1).maybeSingle();
-    if (dup && fd.get("allow_duplicate") !== "on") return fail(`Nomor ini sudah dipakai tamu "${dup.name}". Centang "tetap simpan" bila memang berbeda orang.`);
+    if (dup && fd.get("allow_duplicate") !== "on") return fail('Nomor ini sudah dipakai tamu "{name}". Centang "tetap simpan" bila memang berbeda orang.', { name: dup.name });
   }
 
   const newGroup = str(fd.get("new_group"));
@@ -87,7 +87,7 @@ export async function markInvitationSent(projectId: string, ids: string[], sent 
   const { error } = await supabase.from("guests")
     .update(sent ? { invitation_sent_at: new Date().toISOString(), invitation_sent_by: session.user.id } : { invitation_sent_at: null, invitation_sent_by: null })
     .eq("project_id", projectId).in("id", ids);
-  revalidatePath(`/w/${projectId}/tamu`);
+  revalidatePath("/app/[projectId]/tamu", "page");
   return error ? dbError(error) : { ok: true, message: sent ? (ids.length > 1 ? `${ids.length} tamu ditandai terkirim.` : undefined) : "Tanda terkirim dihapus." };
 }
 

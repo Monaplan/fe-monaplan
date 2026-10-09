@@ -1,7 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { emailLayout, sendEmail } from "@/lib/email";
+import { sendTemplated } from "@/lib/email";
+import type { Lang } from "@/lib/email/templates";
 import { formatDateLong, formatIDR } from "@/lib/format";
+import { appUrl } from "@/lib/constants";
 import { mapMidtransStatus, type ProviderStatus } from "./provider";
 
 // Terapkan status dari payment gateway ke order (dipakai webhook dan admin "cek ulang")
@@ -41,33 +43,24 @@ export async function applyProviderStatus(admin: SupabaseClient, order: any, sta
 
 async function sendReceipt(admin: SupabaseClient, order: any, method: string | null) {
   const [{ data: profile }, { data: license }, { data: plan }] = await Promise.all([
-    admin.from("profiles").select("email, full_name").eq("id", order.user_id).single(),
+    admin.from("profiles").select("*").eq("id", order.user_id).single(),
     admin.from("licenses").select("ends_at").eq("order_id", order.id).maybeSingle(),
     admin.from("plans").select("name").eq("id", order.plan_id).single(),
   ]);
   if (!profile) return;
-  const masa = license?.ends_at ? `Aktif sampai ${formatDateLong(license.ends_at)}` : "Selamanya";
+  const lang: Lang = profile.language === "en" ? "en" : "id";
+  const masa = license?.ends_at ? (lang === "en" ? `Active until ${formatDateLong(license.ends_at)}` : `Aktif sampai ${formatDateLong(license.ends_at)}`) : lang === "en" ? "Lifetime" : "Selamanya";
   await admin.from("notifications").insert({
     user_id: order.user_id,
     type: "payment_succeeded",
-    title: "Pembayaran berhasil",
-    body: `${plan?.name ?? "Paket"} · ${masa}`,
+    title: lang === "en" ? "Payment received" : "Pembayaran berhasil",
+    body: `${plan?.name ?? (lang === "en" ? "Plan" : "Paket")} · ${masa}`,
     link_path: "/akun/tagihan",
     dedupe_key: `payment_succeeded:${order.id}:in_app`,
   });
-  await sendEmail(
-    profile.email,
-    `Kuitansi ${order.order_number}`,
-    emailLayout(
-      "Pembayaran berhasil",
-      `<p>Terima kasih${profile.full_name ? `, ${profile.full_name}` : ""}! Berikut kuitansimu.</p>
-      <table style="width:100%;font-size:14px;margin-top:12px">
-        <tr><td>Nomor order</td><td align="right"><b>${order.order_number}</b></td></tr>
-        <tr><td>Paket</td><td align="right">${plan?.name ?? "-"}</td></tr>
-        <tr><td>Nominal</td><td align="right">${formatIDR(order.amount_idr)}</td></tr>
-        <tr><td>Metode bayar</td><td align="right">${method ?? "-"}</td></tr>
-        <tr><td>Masa aktif</td><td align="right">${masa}</td></tr>
-      </table>`,
-    ),
-  );
+  const discount = Number(order.discount_idr ?? 0) > 0 ? `${order.promo_name ?? "Promo"} (-${formatIDR(order.discount_idr)})` : null;
+  await sendTemplated(profile.email, lang, {
+    kind: "receipt", name: profile.full_name ?? profile.email.split("@")[0], orderNumber: order.order_number, plan: plan?.name ?? "-",
+    amount: formatIDR(order.amount_idr), method: method ?? "-", validity: masa, discount, url: `${appUrl()}/akun/tagihan`,
+  });
 }

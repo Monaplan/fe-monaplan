@@ -16,6 +16,9 @@ import { PURCHASE_STATUS, labelOf } from "@/lib/constants";
 import { formatIDR, formatPercent } from "@/lib/format";
 import { uploadProjectFile } from "@/lib/upload";
 import { deleteGift, saveGift, setGiftStatus } from "@/features/gifts/actions";
+import { ProductTour } from "@/components/app/product-tour";
+import { TOURS } from "@/content/tours";
+import { useT } from "@/i18n/client";
 
 type GiftItem = {
   id: string; type: "mahar" | "seserahan"; name: string; category: string | null; quantity: number; estimated_price_idr: number | null;
@@ -27,6 +30,7 @@ const tone = (s: string): Tone => (s === "diterima" || s === "dibeli" ? "positiv
 const CATS = { mahar: ["Perhiasan", "Uang tunai", "Alat ibadah", "Lainnya"], seserahan: ["Busana", "Kosmetik", "Perlengkapan mandi", "Alat ibadah", "Makanan", "Aksesori", "Lainnya"] };
 
 export function GiftsClient({ projectId, items, canWrite }: { projectId: string; items: GiftItem[]; canWrite: boolean }) {
+  const t = useT();
   const [tab, setTab] = useState<"mahar" | "seserahan">("mahar");
   const [form, setForm] = useState<GiftItem | "new" | null>(null);
   const list = items.filter((i) => i.type === tab);
@@ -37,15 +41,16 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
 
   return (
     <>
-      <PageHeader title="Mahar & Seserahan" description="Rencana, harga, dan progres pembelian."
-        actions={canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>Tambah Item</Button>} />
-      <Segmented className="mb-4" items={[{ key: "mahar", label: "Mahar" }, { key: "seserahan", label: "Seserahan" }]} value={tab} onChange={setTab} />
+      <ProductTour id="mahar" steps={TOURS["mahar"]!} />
+      <PageHeader tour="mahar" title={t("Mahar & Seserahan")} description={t("Rencana, harga, dan status pembelian.")}
+        actions={canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Tambah Item")}</Button>} />
+      <Segmented className="mb-4" items={[{ key: "mahar", label: t("Mahar") }, { key: "seserahan", label: t("Seserahan") }]} value={tab} onChange={setTab} />
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        <StatCard title="Total Estimasi" value={formatIDR(est)} footer={<>{list.length} item</>} />
-        <StatCard title="Total Dibeli" value={formatIDR(spent)} footer={<>{bought.length} item sudah dibeli</>} />
-        <Card>
-          <h3 className="mb-3 text-sm font-semibold text-neutral-800">Progres Pembelian</h3>
+        <StatCard title={t("Total Estimasi")} value={formatIDR(est)} footer={<>{t("{length} item", { length: list.length })}</>} />
+        <StatCard title={t("Total Dibeli")} value={formatIDR(spent)} footer={<>{t("{length} item sudah dibeli", { length: bought.length })}</>} />
+        <Card tour="mahar-main">
+          <h3 className="mb-3 text-sm font-semibold text-neutral-800">{t("Progres Pembelian")}</h3>
           <p className="tabular text-[28px] leading-9 font-bold">{formatPercent(progress)}</p>
           <ProgressBar value={progress} className="mt-3" />
         </Card>
@@ -53,8 +58,8 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
 
       {list.length === 0 ? (
         <Card>
-          <EmptyState icon={<Gift />} title={`Belum ada item ${tab}`} text={`Catat rencana ${tab} beserta harga dan link tokonya.`}
-            action={canWrite && <Button icon={<Plus />} onClick={() => setForm("new")}>Tambah Item</Button>} />
+          <EmptyState icon={<Gift />} title={t("Belum ada item {tab}", { tab })} text={t("Catat rencana {tab} beserta harga dan link tokonya.", { tab })}
+            action={canWrite && <Button icon={<Plus />} onClick={() => setForm("new")}>{t("Tambah Item")}</Button>} />
         </Card>
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
@@ -70,22 +75,22 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
                 {canWrite && (
                   <div className="absolute top-2 right-2">
                     <RowMenu items={[
-                      { label: "Ubah", icon: <Pencil />, onClick: () => setForm(i) },
-                      ...PURCHASE_STATUS.filter((s) => s.key !== i.status).map((s) => ({ label: `Tandai ${s.label.toLowerCase()}`, action: () => setGiftStatus(projectId, i.id, s.key) })),
-                      { label: "Hapus", icon: <Trash2 />, danger: true, confirm: "Hapus item ini?", action: () => deleteGift(projectId, i.id) },
+                      { label: t("Ubah"), icon: <Pencil />, onClick: () => setForm(i) },
+                      ...PURCHASE_STATUS.filter((s) => s.key !== i.status).map((s) => ({ label: t("Tandai {v1}", { v1: s.label.toLowerCase() }), action: () => setGiftStatus(projectId, i.id, s.key) })),
+                      { label: t("Hapus"), icon: <Trash2 />, danger: true, confirm: t("Hapus item ini?"), action: () => deleteGift(projectId, i.id) },
                     ]} />
                   </div>
                 )}
               </div>
               <div className="flex flex-1 flex-col p-3">
-                <p className="text-xs text-neutral-500">{i.category ?? "Tanpa kategori"}{i.quantity > 1 && ` · ${i.quantity}x`}</p>
+                <p className="text-xs text-neutral-500">{i.category ?? t("Tanpa kategori")}{i.quantity > 1 && t("· {quantity}x", { quantity: i.quantity })}</p>
                 <p className="mt-0.5 line-clamp-2 text-sm font-semibold text-neutral-800">{i.name}</p>
                 <p className="tabular mt-1 text-sm font-semibold">{formatIDR(i.actual_price_idr ?? i.estimated_price_idr ?? 0)}</p>
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-                  <StatusPill tone={tone(i.status)}>{labelOf(PURCHASE_STATUS, i.status)}</StatusPill>
+                  <StatusPill tone={tone(i.status)}>{t(labelOf(PURCHASE_STATUS, i.status))}</StatusPill>
                   {i.purchase_url && (
                     <a href={i.purchase_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-plum-600 hover:underline">
-                      <ShoppingBag className="size-3.5" />{i.store_name ?? "Toko"}<ExternalLink className="size-3" />
+                      <ShoppingBag className="size-3.5" />{i.store_name ?? t("Toko")}<ExternalLink className="size-3" />
                     </a>
                   )}
                 </div>
@@ -101,10 +106,11 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
 }
 
 function GiftForm({ projectId, item, type, onClose }: { projectId: string; item: GiftItem | null; type: "mahar" | "seserahan"; onClose: () => void }) {
+  const t = useT();
   const [file, setFile] = useState<File | null>(null);
-  const t = item?.type ?? type;
+  const kind = item?.type ?? type;
   return (
-    <Modal open onClose={onClose} title={item ? "Ubah Item" : `Tambah Item ${t === "mahar" ? "Mahar" : "Seserahan"}`} size="lg">
+    <Modal open onClose={onClose} title={item ? t("Ubah Item") : t("Tambah Item {v1}", { v1: kind === "mahar" ? "Mahar" : "Seserahan" })} size="lg">
       <ActionForm
         action={async (fd) => {
           if (file) {
@@ -121,34 +127,34 @@ function GiftForm({ projectId, item, type, onClose }: { projectId: string; item:
       >
         {item && <input type="hidden" name="id" value={item.id} />}
         {item?.budget_item_id && <input type="hidden" name="budget_item_id" value={item.budget_item_id} />}
-        <input type="hidden" name="type" value={t} />
+        <input type="hidden" name="type" value={kind} />
         <FormGrid>
-          <Field label="Nama item" htmlFor="gf-name" className="sm:col-span-2"><Input id="gf-name" name="name" required defaultValue={item?.name} /></Field>
-          <Field label="Kategori" htmlFor="gf-cat">
+          <Field label={t("Nama item")} htmlFor="gf-name" className="sm:col-span-2"><Input id="gf-name" name="name" required defaultValue={item?.name} /></Field>
+          <Field label={t("Kategori")} htmlFor="gf-cat">
             <Select id="gf-cat" name="category" defaultValue={item?.category ?? ""}>
-              <option value="">Tanpa kategori</option>
-              {CATS[t].map((c) => <option key={c}>{c}</option>)}
+              <option value="">{t("Tanpa kategori")}</option>
+              {CATS[kind].map((c) => <option key={c}>{c}</option>)}
             </Select>
           </Field>
-          <Field label="Jumlah" htmlFor="gf-qty"><Input id="gf-qty" type="number" min={1} name="quantity" defaultValue={item?.quantity ?? 1} /></Field>
-          <Field label="Estimasi harga (per item)" htmlFor="gf-est"><CurrencyInput id="gf-est" name="estimated_price_idr" defaultValue={item?.estimated_price_idr} /></Field>
-          <Field label="Harga beli (per item)" htmlFor="gf-act"><CurrencyInput id="gf-act" name="actual_price_idr" defaultValue={item?.actual_price_idr} /></Field>
-          <Field label="Nama toko" htmlFor="gf-store"><Input id="gf-store" name="store_name" defaultValue={item?.store_name ?? ""} /></Field>
-          <Field label="Link toko" htmlFor="gf-url"><Input id="gf-url" type="url" name="purchase_url" placeholder="https://" defaultValue={item?.purchase_url ?? ""} /></Field>
-          <Field label="Status" htmlFor="gf-status">
-            <Select id="gf-status" name="status" defaultValue={item?.status ?? "rencana"}>{PURCHASE_STATUS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</Select>
+          <Field label={t("Jumlah")} htmlFor="gf-qty"><Input id="gf-qty" type="number" min={1} name="quantity" defaultValue={item?.quantity ?? 1} /></Field>
+          <Field label={t("Estimasi harga (per item)")} htmlFor="gf-est"><CurrencyInput id="gf-est" name="estimated_price_idr" defaultValue={item?.estimated_price_idr} /></Field>
+          <Field label={t("Harga beli (per item)")} htmlFor="gf-act"><CurrencyInput id="gf-act" name="actual_price_idr" defaultValue={item?.actual_price_idr} /></Field>
+          <Field label={t("Nama toko")} htmlFor="gf-store"><Input id="gf-store" name="store_name" defaultValue={item?.store_name ?? ""} /></Field>
+          <Field label={t("Link toko")} htmlFor="gf-url"><Input id="gf-url" type="url" name="purchase_url" placeholder="https://" defaultValue={item?.purchase_url ?? ""} /></Field>
+          <Field label={t("Status")} htmlFor="gf-status">
+            <Select id="gf-status" name="status" defaultValue={item?.status ?? "rencana"}>{PURCHASE_STATUS.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}</Select>
           </Field>
-          <Field label="Foto" htmlFor="gf-img" help="JPG, PNG, atau WEBP. Dikompres otomatis.">
+          <Field label={t("Foto")} htmlFor="gf-img" help={t("JPG, PNG, atau WEBP. Dikompres otomatis.")}>
             <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 px-3 text-[13px] text-neutral-600 hover:bg-neutral-50">
-              <ImagePlus className="size-4" /><span className="truncate">{file?.name ?? (item?.image_path ? "Ganti foto" : "Pilih foto")}</span>
+              <ImagePlus className="size-4" /><span className="truncate">{file?.name ?? (item?.image_path ? t("Ganti foto") : t("Pilih foto"))}</span>
               <input id="gf-img" type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             </label>
           </Field>
         </FormGrid>
-        <Field label="Catatan" htmlFor="gf-notes"><Textarea id="gf-notes" name="notes" defaultValue={item?.notes ?? ""} /></Field>
-        <label className="flex items-center gap-2 text-[13px]"><Checkbox name="link_budget" defaultChecked={!!item?.budget_item_id} />Catat ke budget kategori &quot;Mahar &amp; Seserahan&quot;</label>
-        {item?.image_path && <label className="flex items-center gap-2 text-[13px] text-neutral-600"><Checkbox name="remove_image" />Hapus foto</label>}
-        <FormActions><Button variant="secondary" onClick={onClose}>Batal</Button><SubmitButton>Simpan</SubmitButton></FormActions>
+        <Field label={t("Catatan")} htmlFor="gf-notes"><Textarea id="gf-notes" name="notes" defaultValue={item?.notes ?? ""} /></Field>
+        <label className="flex items-center gap-2 text-[13px]"><Checkbox name="link_budget" defaultChecked={!!item?.budget_item_id} />{t("Catat ke budget kategori \"Mahar & Seserahan\"")}</label>
+        {item?.image_path && <label className="flex items-center gap-2 text-[13px] text-neutral-600"><Checkbox name="remove_image" />{t("Hapus foto")}</label>}
+        <FormActions><Button variant="secondary" onClick={onClose}>{t("Batal")}</Button><SubmitButton>{t("Simpan")}</SubmitButton></FormActions>
       </ActionForm>
     </Modal>
   );

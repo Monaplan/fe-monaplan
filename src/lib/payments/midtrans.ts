@@ -38,6 +38,8 @@ export class MidtransProvider implements PaymentProvider {
     const discount = order.discountIdr ?? 0;
     const items = [{ id: order.planId, price: order.originalIdr ?? order.amountIdr, quantity: 1, name: order.planName.slice(0, 50) }];
     if (discount > 0) items.push({ id: order.promoId ?? "PROMO", price: -discount, quantity: 1, name: `Promo ${order.promoName ?? ""}`.trim().slice(0, 50) });
+    // Upgrade tier: dana yang sudah dibayar untuk paket sebelumnya dikurangkan sebagai baris kredit
+    if ((order.creditIdr ?? 0) > 0) items.push({ id: "UPGRADE-CREDIT", price: -(order.creditIdr as number), quantity: 1, name: "Kredit upgrade" });
     const res = await fetch(`${c.snapBase}/snap/v1/transactions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: c.auth },

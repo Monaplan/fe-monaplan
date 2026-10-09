@@ -242,3 +242,35 @@ create policy support_tickets_select_own on public.support_tickets
 drop policy if exists support_tickets_insert_own on public.support_tickets;
 create policy support_tickets_insert_own on public.support_tickets
   for insert to authenticated with check (user_id = auth.uid() and status = 'open');
+
+-- ---------- Supabase Storage mengikuti storage_prefix dan batas 5 MB ----------
+-- Folder pertama jalur berkas bisa berupa UUID (proyek lama) atau storage_prefix (proyek baru)
+create or replace function public.storage_project_id(p_name text) returns uuid
+language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select id from public.wedding_projects where storage_prefix = (string_to_array(p_name, '/'))[1]),
+    case when (string_to_array(p_name, '/'))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+         then ((string_to_array(p_name, '/'))[1])::uuid end
+  )
+$$;
+
+drop policy if exists project_files_read on storage.objects;
+drop policy if exists project_files_insert on storage.objects;
+drop policy if exists project_files_delete on storage.objects;
+
+create policy project_files_read on storage.objects
+  for select to authenticated
+  using (bucket_id = 'project-files' and public.can_read_project(public.storage_project_id(name)));
+
+create policy project_files_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'project-files' and public.can_write_project(public.storage_project_id(name)));
+
+create policy project_files_delete on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'project-files' and public.can_write_project(public.storage_project_id(name)));
+
+update storage.buckets set file_size_limit = 5242880 where id = 'project-files';
+-- Ukuran per berkas di tabel documents juga 5 MB
+alter table public.documents drop constraint if exists documents_size_bytes_check;
+alter table public.documents add constraint documents_size_bytes_check check (size_bytes between 1 and 5242880) not valid;

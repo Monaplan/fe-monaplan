@@ -44,7 +44,7 @@ export async function saveTask(projectId: string, fd: FormData): Promise<ActionR
   const { error } = id
     ? await supabase.from("tasks").update(row).eq("id", id).eq("project_id", projectId)
     : await supabase.from("tasks").insert({ ...row, created_by: session.user.id, sort_order: Date.now() % 1_000_000_000 });
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: id ? "Tugas diperbarui." : "Tugas ditambahkan." };
 }
@@ -56,7 +56,7 @@ export async function setTaskStatus(projectId: string, id: string, status: "todo
     completed_at: status === "done" ? new Date().toISOString() : null,
     completed_by: status === "done" ? session.user.id : null,
   }).eq("id", id).eq("project_id", projectId);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true };
 }
@@ -64,7 +64,7 @@ export async function setTaskStatus(projectId: string, id: string, status: "todo
 export async function deleteTask(projectId: string, id: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("tasks").delete().eq("id", id).eq("project_id", projectId);
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: "Tugas dihapus." };
 }
@@ -80,14 +80,14 @@ export async function moveTask(projectId: string, id: string, direction: "up" | 
   if (!neighbor) return { ok: true };
   const r1 = await supabase.from("tasks").update({ sort_order: neighbor.sort_order }).eq("id", task.id);
   const r2 = await supabase.from("tasks").update({ sort_order: task.sort_order }).eq("id", neighbor.id);
-  revalidatePath(`/w/${projectId}/checklist`);
+  revalidatePath("/app/[projectId]/checklist", "page");
   return dbError(r1.error ?? r2.error);
 }
 
 export async function applyRecommendedChecklist(projectId: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.rpc("seed_project_defaults", { p_project_id: projectId });
-  revalidatePath(`/w/${projectId}`, "layout");
+  revalidatePath("/app/[projectId]", "layout");
   scheduleCalendarSync(projectId);
   return error ? dbError(error) : { ok: true, message: "Checklist rekomendasi ditambahkan." };
 }

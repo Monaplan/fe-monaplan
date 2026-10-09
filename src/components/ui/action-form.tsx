@@ -5,6 +5,7 @@ import { CircleAlert } from "lucide-react";
 import type { ActionResult } from "@/lib/result";
 import { Button, type ButtonVariant } from "./button";
 import { useToast } from "./toast";
+import { useT } from "@/i18n/client";
 import { useConfirm } from "./dialogs";
 import { ModalFooter } from "./modal";
 import { cn } from "./cn";
@@ -23,6 +24,7 @@ export function ActionForm({ action, children, onSuccess, className, successMess
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
+  const t = useT();
   const ref = useRef<HTMLFormElement>(null);
   const formId = useId();
 
@@ -53,7 +55,7 @@ export function ActionForm({ action, children, onSuccess, className, successMess
         {children}
         {error && (
           <p role="alert" className="flex items-start gap-2 rounded-xl bg-danger-bg px-3.5 py-2.5 text-[13px] leading-5 text-danger">
-            <CircleAlert className="mt-0.5 size-4 shrink-0" /> {error}
+            <CircleAlert className="mt-0.5 size-4 shrink-0" /> {t(error)}
           </p>
         )}
       </form>

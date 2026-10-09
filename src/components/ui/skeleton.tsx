@@ -1,13 +1,15 @@
 import { cn } from "./cn";
+import { getI18n } from "@/i18n/server";
 
 // Kerangka konten saat halaman dimuat: bentuknya meniru isi halaman agar tidak ada lompatan tata letak
 export function Skeleton({ className }: { className?: string }) {
   return <div aria-hidden="true" className={cn("skeleton rounded-xl", className)} />;
 }
 
-export function PageSkeleton({ stats = 4, rows = 5 }: { stats?: number; rows?: number }) {
+export async function PageSkeleton({ stats = 4, rows = 5 }: { stats?: number; rows?: number }) {
+  const { t } = await getI18n();
   return (
-    <div role="status" aria-label="Memuat" aria-busy="true">
+    <div role="status" aria-label={t("Memuat")} aria-busy="true">
       <div className="mb-6 flex flex-col gap-2">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-4 w-80 max-w-full" />
@@ -28,7 +30,7 @@ export function PageSkeleton({ stats = 4, rows = 5 }: { stats?: number; rows?: n
           ))}
         </div>
       </div>
-      <span className="sr-only">Memuat halaman</span>
+      <span className="sr-only">{t("Memuat halaman")}</span>
     </div>
   );
 }

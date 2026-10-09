@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Segmented } from "@/components/ui/tabs";
 import { formatIDR, formatIDRShort } from "@/lib/format";
+import { useT } from "@/i18n/client";
 
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -24,15 +25,16 @@ const axis = { fontSize: 12, fill: "var(--color-neutral-500)" };
 
 // Ringkasan pengeluaran per bulan; bulan berjalan disorot (DESIGN.md 3.3)
 export function SpendingChart({ data }: { data: { month: string; actual: number; estimated: number; current: boolean }[] }) {
+  const t = useT();
   const [mode, setMode] = useState<"actual" | "estimated">("actual");
   const total = data.reduce((s, d) => s + d[mode], 0);
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-[13px] text-neutral-500">Total {formatIDRShort(total)}</p>
-        <Segmented items={[{ key: "actual", label: "Realisasi" }, { key: "estimated", label: "Jadwal" }]} value={mode} onChange={setMode} />
+        <p className="text-[13px] text-neutral-500">{t("Total {v1}", { v1: formatIDRShort(total) })}</p>
+        <Segmented items={[{ key: "actual", label: t("Realisasi") }, { key: "estimated", label: t("Jadwal") }]} value={mode} onChange={setMode} />
       </div>
-      <div className="h-56" role="img" aria-label={`Grafik pengeluaran per bulan, total ${formatIDR(total)}`}>
+      <div className="h-56" role="img" aria-label={t("Grafik pengeluaran per bulan, total {formatIDR}", { formatIDR: formatIDR(total) })}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
             <defs>
@@ -60,8 +62,9 @@ export function SpendingChart({ data }: { data: { month: string; actual: number;
 }
 
 export function CategoryChart({ data }: { data: { name: string; estimated: number; actual: number }[] }) {
+  const t = useT();
   return (
-    <div className="h-64" role="img" aria-label="Grafik estimasi dan realisasi per kategori">
+    <div className="h-64" role="img" aria-label={t("Grafik estimasi dan realisasi per kategori")}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke="var(--color-neutral-200)" strokeDasharray="4 4" />

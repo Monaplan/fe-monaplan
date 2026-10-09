@@ -1,18 +1,21 @@
--- Jadwalkan Edge Function send-reminders tiap 15 menit (PRD bagian 9).
--- Jalankan sekali di SQL Editor Supabase setelah function di-deploy.
--- Ganti <PROJECT_REF> dan <SERVICE_ROLE_KEY>. Jangan commit file berisi key asli.
+-- Jadwalkan pengingat tiap 15 menit lewat endpoint aplikasi (PRD bagian 9).
+-- Jalankan sekali di SQL Editor Supabase. Ganti <DOMAIN> dan <CRON_SECRET> (nilai yang sama dengan CRON_SECRET di environment aplikasi).
+-- Jangan commit file berisi rahasia asli.
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
 select cron.schedule(
-  'send-reminders',
+  'monaplan-reminders',
   '*/15 * * * *',
   $$
   select net.http_post(
-    url := 'https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders',
-    headers := jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE_KEY>', 'Content-Type', 'application/json'),
+    url := 'https://<DOMAIN>/api/cron/reminders',
+    headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>', 'Content-Type', 'application/json'),
     body := '{}'::jsonb
   );
   $$
 );
+
+-- Menghapus jadwal lama dari versi Edge Function, bila ada:
+-- select cron.unschedule('send-reminders');

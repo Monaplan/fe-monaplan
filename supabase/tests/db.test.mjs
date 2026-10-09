@@ -286,6 +286,14 @@ await expectErr("tiket atas nama orang lain ditolak", "row-level security", () =
 
 console.log("\nStorage policy");
 await expectOk("A boleh unggah ke folder proyeknya", () => as(A, "a@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`${P}/documents/x.pdf`])));
+await expectOk("A boleh unggah ke folder bernama storage_prefix proyeknya", async () => {
+  const r = await one(`select storage_prefix sp from wedding_projects where id = $1`, [P]);
+  await as(A, "a@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`${r.sp}/documents/ktp-a1b2c3d4.pdf`]));
+});
+await expectErr("B tidak bisa unggah ke folder storage_prefix proyek orang lain", "row-level security", async () => {
+  const r = await one(`select storage_prefix sp from wedding_projects where owner_id = $1 limit 1`, [D]);
+  await as(B, "b@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`${r.sp}/documents/x.pdf`]));
+});
 await expectErr("B tidak bisa unggah ke proyek yang bukan miliknya", "row-level security", () => as(B, "b@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`44444444-4444-4444-4444-444444444444/documents/x.pdf`])));
 
 console.log(`\n${pass} lulus, ${failN} gagal`);

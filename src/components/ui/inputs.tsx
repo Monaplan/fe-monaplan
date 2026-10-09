@@ -3,6 +3,7 @@
 import { useState, type ComponentProps } from "react";
 import { cn } from "./cn";
 import { inputClass } from "./form";
+import { useT } from "@/i18n/client";
 
 function fmt(n: string) {
   const d = n.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
@@ -11,10 +12,11 @@ function fmt(n: string) {
 
 // Input Rupiah: prefix Rp, format ribuan otomatis, keyboard numerik
 export function CurrencyInput({ name, defaultValue, className, ...rest }: Omit<ComponentProps<"input">, "defaultValue"> & { defaultValue?: number | null }) {
+  const t = useT();
   const [value, setValue] = useState(defaultValue ? fmt(String(defaultValue)) : "");
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-neutral-500">Rp</span>
+      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-neutral-500">{t("Rp")}</span>
       <input
         {...rest}
         inputMode="numeric"
@@ -40,6 +42,7 @@ export function PhoneInput({ className, ...rest }: ComponentProps<"input">) {
 const ALPHABET = /[^0-9A-HJKMNP-TV-Z]/g;
 // Input kode akses dengan mask MNP-XXXX-XXXX-XXXX
 export function AccessCodeInput({ name, className, ...rest }: ComponentProps<"input">) {
+  const t = useT();
   const [value, setValue] = useState("");
   function mask(raw: string) {
     let s = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -54,7 +57,7 @@ export function AccessCodeInput({ name, className, ...rest }: ComponentProps<"in
       name={name}
       autoComplete="off"
       spellCheck={false}
-      placeholder="MNP-XXXX-XXXX-XXXX"
+      placeholder={t("MNP-XXXX-XXXX-XXXX")}
       className={cn(inputClass, "tabular h-12 text-center font-semibold tracking-[0.12em] uppercase", className)}
       value={value}
       onChange={(e) => setValue(mask(e.target.value))}

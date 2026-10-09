@@ -3,8 +3,10 @@ import { Lock } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 import { formatDateCompact } from "@/lib/format";
 import type { AccessState } from "@/lib/access";
+import { getI18n } from "@/i18n/server";
 
-export function ReadOnlyBanner({ access, isOwner, role, archived }: { access: AccessState; isOwner: boolean; role: string; archived: boolean }) {
+export async function ReadOnlyBanner({ access, isOwner, role, archived }: { access: AccessState; isOwner: boolean; role: string; archived: boolean }) {
+  const { t, lang } = await getI18n();
   let text: string | null = null;
   let actions: React.ReactNode = null;
 
@@ -12,13 +14,13 @@ export function ReadOnlyBanner({ access, isOwner, role, archived }: { access: Ac
     text = "Proyek ini diarsipkan. Data hanya bisa dilihat dan diekspor.";
   } else if (access.state === "revoked") {
     text = "Akses ruang kerja ini sedang tidak aktif. Data tetap aman dan bisa diekspor. Hubungi kami bila menurutmu ini keliru.";
-    if (isOwner) actions = <a href="mailto:halo@monaplan.id" className={buttonClass("primary", "sm")}>Hubungi Bantuan</a>;
+    if (isOwner) actions = <a href="/akun/bantuan" className={buttonClass("primary", "sm")}>{t("Hubungi Bantuan")}</a>;
   } else if (access.state === "expired" || access.state === "none") {
     if (isOwner) {
       text = access.isTrial
-        ? `Masa trial kalian berakhir${access.endsAt ? ` pada ${formatDateCompact(access.endsAt)}` : ""}. Data tetap aman dan bisa diekspor. Dapatkan akses selamanya untuk kembali mengedit.`
-        : `Akses kalian berakhir${access.endsAt ? ` pada ${formatDateCompact(access.endsAt)}` : ""}. Data tetap aman dan bisa diekspor. Aktifkan lagi untuk kembali mengedit.`;
-      actions = <Link href="/aktivasi" className={buttonClass("primary", "sm")}>Dapatkan Akses Selamanya</Link>;
+        ? `Masa trial kalian berakhir${access.endsAt ? ` pada ${formatDateCompact(access.endsAt, undefined, lang)}` : ""}. Data tetap aman dan bisa diekspor. Dapatkan akses selamanya untuk kembali mengedit.`
+        : `Akses kalian berakhir${access.endsAt ? ` pada ${formatDateCompact(access.endsAt, undefined, lang)}` : ""}. Data tetap aman dan bisa diekspor. Aktifkan lagi untuk kembali mengedit.`;
+      actions = <Link href="/aktivasi" className={buttonClass("primary", "sm")}>{t("Dapatkan Akses Selamanya")}</Link>;
     } else {
       text = "Akses ruang kerja ini sudah berakhir. Minta pemilik ruang kerja untuk memperpanjang.";
     }

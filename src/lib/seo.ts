@@ -22,15 +22,17 @@ export const NOINDEX: Metadata["robots"] = { index: false, follow: false, nocach
 
 // Path yang tidak boleh dirayapi (robots.txt) dan diberi header X-Robots-Tag: noindex
 export const PRIVATE_PATHS = [
-  "/w/", "/admin", "/akun", "/aktivasi", "/onboarding", "/checkout", "/gabung/", "/rsvp/", "/mulai",
+  "/app/", "/w/", "/admin", "/akun", "/aktivasi", "/onboarding", "/checkout", "/gabung/", "/rsvp/", "/mulai",
   "/reset-password", "/lupa-password", "/auth/", "/api/",
 ];
 
-export function pageMetadata({ title, description, path, noindex }: { title?: string; description?: string; path: string; noindex?: boolean }): Metadata {
-  const t = title ?? SITE.title;
-  const d = description ?? SITE.description;
+// tr: fungsi terjemah (getT) agar judul dan deskripsi mengikuti bahasa pengunjung
+export function pageMetadata({ title, description, path, noindex, tr }: { title?: string; description?: string; path: string; noindex?: boolean; tr?: (s: string) => string }): Metadata {
+  const x = tr ?? ((s: string) => s);
+  const t = title ? x(title) : x(SITE.title);
+  const d = x(description ?? SITE.description);
   return {
-    title: title ? title : { absolute: SITE.title },
+    title: title ? x(title) : { absolute: x(SITE.title) },
     description: d,
     alternates: { canonical: path },
     openGraph: { title: t, description: d, url: path, type: "website", siteName: SITE.name, locale: SITE.locale },

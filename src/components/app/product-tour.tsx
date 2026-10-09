@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/components/ui/cn";
+import { useT } from "@/i18n/client";
 
 export type TourStep = { target: string; title: string; body: string };
 
@@ -22,6 +23,7 @@ function findTarget(target: string): HTMLElement | null {
 // Tur panduan: menyorot elemen ber-atribut data-tour, menggelapkan sisanya, dan menampilkan kartu penjelasan.
 // Otomatis tampil sekali per halaman; bisa diputar ulang lewat tombol bantuan di top bar (event "mp:tour-start").
 export function ProductTour({ id, steps, autoStart = true }: { id: string; steps: TourStep[]; autoStart?: boolean }) {
+  const t = useT();
   const [active, setActive] = useState<TourStep[] | null>(null);
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -125,15 +127,15 @@ export function ProductTour({ id, steps, autoStart = true }: { id: string; steps
         style={mobile ? undefined : { width: cardW, left, top, bottom }}
       >
         <div className="flex items-start gap-3">
-          <h2 id="tour-title" className="flex-1 text-[17px] leading-6 font-semibold text-neutral-900">{step.title}</h2>
+          <h2 id="tour-title" className="flex-1 text-[17px] leading-6 font-semibold text-neutral-900">{t(step.title)}</h2>
           <span className="tabular shrink-0 pt-0.5 text-xs text-neutral-500">{index + 1} / {active.length}</span>
         </div>
-        <p id="tour-body" className="mt-2 text-[13.5px] leading-[22px] text-neutral-600">{step.body}</p>
+        <p id="tour-body" className="mt-2 text-[13.5px] leading-[22px] text-neutral-600">{t(step.body)}</p>
         <div className="mt-5 flex items-center gap-2">
-          {!last && <button onClick={finish} className="text-[13px] font-medium text-neutral-500 hover:text-neutral-800">Lewati</button>}
+          {!last && <button onClick={finish} className="text-[13px] font-medium text-neutral-500 hover:text-neutral-800">{t("Lewati")}</button>}
           <div className="ml-auto flex items-center gap-2">
             {index > 0 && (
-              <button onClick={() => setIndex(index - 1)} aria-label="Sebelumnya"
+              <button onClick={() => setIndex(index - 1)} aria-label={t("Sebelumnya")}
                 className="inline-flex size-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
                 <ArrowLeft className="size-4" />
               </button>
@@ -143,7 +145,7 @@ export function ProductTour({ id, steps, autoStart = true }: { id: string; steps
               onClick={() => (last ? finish() : setIndex(index + 1))}
               className="inline-flex h-9 items-center rounded-full bg-plum-600 px-4 text-[13px] font-semibold text-white shadow-btn hover:bg-plum-700 dark:hover:bg-plum-600 dark:hover:brightness-110"
             >
-              {last ? "Oke, mengerti" : "Lanjut"}
+              {last ? t("Oke, mengerti") : t("Lanjut")}
             </button>
           </div>
         </div>

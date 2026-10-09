@@ -4,10 +4,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ROLE_LABEL } from "@/lib/constants";
 import { JoinButton } from "./join-button";
 import { NOINDEX } from "@/lib/seo";
+import { getI18n } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Gabung Ruang Kerja", robots: NOINDEX };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Gabung Ruang Kerja"), robots: NOINDEX };
+}
 
 export default async function JoinPage({ params }: { params: Promise<{ token: string }> }) {
+  const { t } = await getI18n();
   const { token } = await params;
   const { user } = await requireUser();
   const { data: inv } = await createAdminClient()
@@ -25,18 +31,17 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
         <Logo className="mb-6" />
         {!valid ? (
           <>
-            <h1 className="text-xl font-semibold">Undangan tidak berlaku</h1>
-            <p className="mt-2 text-[13px] text-neutral-600">Undangan sudah dipakai, dibatalkan, atau kedaluwarsa. Minta pemilik ruang kerja mengundang ulang.</p>
+            <h1 className="text-xl font-semibold">{t("Undangan tidak berlaku")}</h1>
+            <p className="mt-2 text-[13px] text-neutral-600">{t("Undangan sudah dipakai, dibatalkan, atau kedaluwarsa. Minta pemilik ruang kerja mengundang ulang.")}</p>
           </>
         ) : (
           <>
-            <p className="text-[13px] text-neutral-600">{(inv as any).profiles?.full_name ?? "Pemilik ruang kerja"} mengundangmu ke</p>
+            <p className="text-[13px] text-neutral-600">{(inv as any).profiles?.full_name ?? t("Pemilik ruang kerja")}{" "}{t("mengundangmu ke")}</p>
             <h1 className="mt-1 font-display text-[32px] leading-10 font-medium">{(inv as any).wedding_projects?.title}</h1>
-            <p className="mt-2 text-[13px] text-neutral-600">sebagai <b>{ROLE_LABEL[inv.role]}</b></p>
+            <p className="mt-2 text-[13px] text-neutral-600">sebagai <b>{t(ROLE_LABEL[inv.role])}</b></p>
             {mismatch ? (
-              <div className="mt-5 rounded-md bg-danger-bg p-3 text-left text-[13px] text-danger">
-                Undangan ini untuk <b>{inv.email}</b>, sedangkan kamu masuk sebagai <b>{user.email}</b>. Keluar lalu masuk dengan email yang diundang, atau minta pemilik mengundang ulang.
-                <form action="/auth/signout" method="post" className="mt-3"><button className="font-semibold underline">Keluar dan ganti akun</button></form>
+              <div className="mt-5 rounded-md bg-danger-bg p-3 text-left text-[13px] text-danger">{t("Undangan ini untuk")}{" "}<b>{inv.email}</b>{t(", sedangkan kamu masuk sebagai")}{" "}<b>{user.email}</b>. Keluar lalu masuk dengan email yang diundang, atau minta pemilik mengundang ulang.
+                <form action="/auth/signout" method="post" className="mt-3"><button className="font-semibold underline">{t("Keluar dan ganti akun")}</button></form>
               </div>
             ) : (
               <JoinButton token={token} />

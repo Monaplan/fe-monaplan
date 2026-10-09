@@ -1,8 +1,35 @@
 node_modules
 .next
 out
-.env*.local
-.env
+.env*
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# Cloudflare Worker (rahasia lokal dan cache wrangler)
+.dev.vars*
+.wrangler
+
+# Log, berkas sementara, dan cache editor/OS
+*.log
+.tmp-*
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+coverage
+
+# Kunci dan sertifikat
+*.pem
+*.key
+
+# Supabase CLI dan alat bantu lokal
+supabase/.temp
+supabase/.branches
+.claude
+
+# Dokumen perencanaan internal
+DESIGN.md
+ERD.md
+PRD.md

@@ -49,14 +49,14 @@ export async function saveRundownItem(projectId: string, fd: FormData): Promise<
   const { error } = id
     ? await supabase.from("rundown_items").update(row).eq("id", id).eq("project_id", projectId)
     : await supabase.from("rundown_items").insert({ ...row, sort_order: Date.now() % 1_000_000_000 });
-  revalidatePath(`/w/${projectId}/rundown`);
+  revalidatePath("/app/[projectId]/rundown", "page");
   return error ? dbError(error) : { ok: true, message: "Rundown tersimpan." };
 }
 
 export async function deleteRundownItem(projectId: string, id: string): Promise<ActionResult> {
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("rundown_items").delete().eq("id", id).eq("project_id", projectId);
-  revalidatePath(`/w/${projectId}/rundown`);
+  revalidatePath("/app/[projectId]/rundown", "page");
   return error ? dbError(error) : { ok: true, message: "Item dihapus." };
 }
 
@@ -64,7 +64,7 @@ export async function applyRundownTemplate(projectId: string, eventId: string, k
   const { supabase } = await getProjectContext(projectId);
   const rows = TEMPLATES[kind]!.map(([s, e, title, pic], i) => ({ project_id: projectId, event_id: eventId, start_time: s, end_time: e, title, pic_name: pic, sort_order: i }));
   const { error } = await supabase.from("rundown_items").insert(rows);
-  revalidatePath(`/w/${projectId}/rundown`);
+  revalidatePath("/app/[projectId]/rundown", "page");
   return error ? dbError(error) : { ok: true, message: "Contoh rundown ditambahkan. Sesuaikan jam dan PIC-nya, ya." };
 }
 
@@ -76,6 +76,6 @@ export async function swapRundownOrder(projectId: string, aId: string, bId: stri
   const so = a.sort_order === b.sort_order ? b.sort_order + 1 : b.sort_order;
   await supabase.from("rundown_items").update({ sort_order: so }).eq("id", a.id);
   const { error } = await supabase.from("rundown_items").update({ sort_order: a.sort_order }).eq("id", b.id);
-  revalidatePath(`/w/${projectId}/rundown`);
+  revalidatePath("/app/[projectId]/rundown", "page");
   return dbError(error);
 }

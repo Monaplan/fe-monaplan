@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { adminContext as ctx } from "./context";
-import { dbError, fail, type ActionResult } from "@/lib/result";
+import { dbError, fail, okm, type ActionResult } from "@/lib/result";
 import { generateAccessCode } from "@/lib/codes";
 import { parseIDR } from "@/lib/format";
 import { getPaymentProvider } from "@/lib/payments/midtrans";
 import { applyProviderStatus } from "@/lib/payments/process";
-import { deletePrefix } from "@/lib/storage";
+import { deletePrefix, storagePrefix } from "@/lib/storage";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
@@ -25,10 +25,11 @@ export async function savePlan(fd: FormData): Promise<ActionResult> {
     price_idr: parseIDR(fd.get("price_idr")),
     max_projects: Number(fd.get("max_projects")) || 1,
     max_collaborators: Number(fd.get("max_collaborators") ?? 3),
-    storage_quota_mb: Number(fd.get("storage_quota_mb")) || 500,
+    storage_quota_mb: Number(fd.get("storage_quota_mb")) || 50,
     is_public: fd.get("is_public") === "on",
     is_active: fd.get("is_active") === "on",
     sort_order: Number(fd.get("sort_order")) || 0,
+    tier: Math.max(0, Math.floor(Number(fd.get("tier") ?? 1))) || (fd.get("code") === "TRIAL" ? 0 : 1),
   };
   if (!row.code || !row.name) return fail("Kode dan nama paket wajib diisi.");
   if (type === "timed" && !row.duration_days) return fail("Durasi wajib diisi untuk paket bermasa aktif.");
@@ -81,7 +82,7 @@ export async function createBatch(fd: FormData): Promise<ActionResult> {
   }
   await audit("batch.create", "access_code_batch", batch.id, { name: d.name, quantity: d.quantity, plan_id: d.plan_id });
   revalidatePath("/admin/kode");
-  return { ok: true, message: `${d.quantity} kode dibuat.`, data: { id: batch.id } };
+  return okm("{n} kode dibuat.", { n: d.quantity }, { id: batch.id });
 }
 
 export async function revokeCode(codeId: string, reason: string): Promise<ActionResult> {
@@ -115,9 +116,9 @@ export async function recheckOrder(orderId: string): Promise<ActionResult> {
     const res = await applyProviderStatus(admin, order, status);
     await audit("order.recheck", "order", orderId, { transaction_status: status.transactionStatus });
     revalidatePath("/admin/order");
-    return { ok: true, message: `Status Midtrans: ${status.transactionStatus}${res.granted ? ", lisensi diterbitkan." : "."}` };
+    return okm(res.granted ? "Status Midtrans: {status}, lisensi diterbitkan." : "Status Midtrans: {status}.", { status: status.transactionStatus });
   } catch (e) {
-    return fail(`Gagal cek status: ${(e as Error).message}`);
+    return fail("Gagal cek status: {error}", { error: (e as Error).message });
   }
 }
 
@@ -154,7 +155,7 @@ export async function extendLicense(licenseId: string, days: number): Promise<Ac
   if (error) return dbError(error);
   await audit("license.extend", "license", licenseId, { days });
   revalidatePath("/admin/lisensi");
-  return { ok: true, message: `Diperpanjang ${days} hari.` };
+  return okm("Diperpanjang {days} hari.", { days });
 }
 
 export async function revokeLicense(licenseId: string, reason: string): Promise<ActionResult> {
@@ -192,7 +193,7 @@ export async function deleteUserAccount(userId: string, confirmEmail: string): P
   }
 
   const [{ data: projects }, { count: licenses }, { count: orders }] = await Promise.all([
-    admin.from("wedding_projects").select("id, title").eq("owner_id", userId),
+    admin.from("wedding_projects").select("*").eq("owner_id", userId),
     admin.from("licenses").select("*", { count: "exact", head: true }).eq("user_id", userId),
     admin.from("orders").select("*", { count: "exact", head: true }).eq("user_id", userId),
   ]);
@@ -203,10 +204,10 @@ export async function deleteUserAccount(userId: string, confirmEmail: string): P
     projects: (projects ?? []).map((p) => p.title), licenses: licenses ?? 0, orders_kept: orders ?? 0,
   });
 
-  for (const p of projects ?? []) await deletePrefix(`${p.id}/`).catch(() => {});
+  for (const p of projects ?? []) await deletePrefix(`${storagePrefix(p)}/`).catch(() => {});
   const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) return fail(`Gagal menghapus akun: ${error.message}`);
+  if (error) return fail("Gagal menghapus akun: {error}", { error: error.message });
 
   revalidatePath("/admin", "layout");
-  return { ok: true, message: `Akun ${target.email} dihapus.` };
+  return okm("Akun {email} dihapus.", { email: target.email });
 }

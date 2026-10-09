@@ -6,6 +6,7 @@ export type CheckoutOrder = {
   planName: string;
   originalIdr?: number;
   discountIdr?: number;
+  creditIdr?: number;
   promoId?: string | null;
   promoName?: string | null;
 };

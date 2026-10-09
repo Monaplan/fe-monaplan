@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/i18n/client";
 
-export function GoogleButton({ next }: { next?: string }) {
+export function GoogleButton({ next, own }: { next?: string; own?: boolean }) {
+  const t = useT();
   const [loading, setLoading] = useState(false);
   return (
     <Button
@@ -22,13 +24,13 @@ export function GoogleButton({ next }: { next?: string }) {
       }
       onClick={async () => {
         setLoading(true);
+        // Alur milik aplikasi bila kredensial Google tersedia; selain itu pakai alur bawaan Supabase
+        if (own) { window.location.href = `/api/auth/google${next ? `?next=${encodeURIComponent(next)}` : ""}`; return; }
         const supabase = createClient();
         const redirectTo = `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`;
         const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
         if (error) setLoading(false);
       }}
-    >
-      Masuk dengan Google
-    </Button>
+    >{t("Masuk dengan Google")}</Button>
   );
 }

@@ -4,10 +4,14 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "lh3.googleusercontent.com" }],
   },
+  async redirects() {
+    // Alamat ruang kerja lama /w/... dialihkan permanen; /app/<uuid> lalu diteruskan ke slug oleh layout
+    return [{ source: "/w/:path*", destination: "/app/:path*", permanent: true }];
+  },
   async headers() {
     // Halaman privat dan token: jangan diindeks walau tautannya bocor ke publik
     const noindex = [
-      "/w/:path*", "/admin/:path*", "/admin", "/akun/:path*", "/akun", "/aktivasi", "/onboarding", "/checkout/:path*",
+      "/app/:path*", "/w/:path*", "/admin/:path*", "/admin", "/akun/:path*", "/akun", "/aktivasi", "/onboarding", "/checkout/:path*",
       "/gabung/:path*", "/rsvp/:path*", "/mulai", "/reset-password", "/lupa-password", "/auth/:path*", "/api/:path*",
     ].map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }));
     return [

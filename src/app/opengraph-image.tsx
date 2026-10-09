@@ -16,7 +16,7 @@ export default function OpengraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 22, letterSpacing: 4, color: "#EDD1DF" }}>DIGITAL WEDDING PLANNER</div>
-          <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.1, marginTop: 16, maxWidth: 900 }}>Semua persiapan pernikahan, tenang dalam satu tempat.</div>
+          <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.1, marginTop: 16, maxWidth: 900 }}>Atur pernikahanmu di satu aplikasi.</div>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           {chips.map((c) => (

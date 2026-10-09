@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Rea
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "./cn";
+import { useT } from "@/i18n/client";
 
 // Tumpukan modal yang terbuka: Escape dan Tab hanya berlaku untuk modal paling atas
 const stack: string[] = [];
@@ -25,6 +26,7 @@ export function Modal({ open, onClose, title, description, children, size = "md"
   size?: "md" | "lg";
   hideHeader?: boolean;
 }) {
+  const t = useT();
   const id = useId();
   const panel = useRef<HTMLDivElement>(null);
   const [footer, setFooter] = useState<HTMLDivElement | null>(null);
@@ -92,7 +94,7 @@ export function Modal({ open, onClose, title, description, children, size = "md"
               <h2 id={`${id}-title`} className="text-lg leading-7 font-semibold text-neutral-900">{title}</h2>
               {description && <p className="mt-1 text-[13.5px] leading-5 text-neutral-500">{description}</p>}
             </div>
-            <button aria-label="Tutup" onClick={onClose} className="-mt-0.5 -mr-2 inline-flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800">
+            <button aria-label={t("Tutup")} onClick={onClose} className="-mt-0.5 -mr-2 inline-flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800">
               <X className="size-[18px]" />
             </button>
           </div>

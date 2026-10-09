@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { fail, type ActionResult } from "@/lib/result";
+import { fail, type ActionResult, okm } from "@/lib/result";
 
 const Email = z.string().trim().toLowerCase().email("Format email belum benar.");
 const Password = z.string().min(8, "Password minimal 8 karakter.").max(72);
@@ -64,7 +64,7 @@ export async function signUpWithPassword(fd: FormData): Promise<ActionResult> {
   // Supabase mengembalikan user tanpa identities bila email sudah terdaftar
   if (data.user && data.user.identities?.length === 0) return fail("Email ini sudah terdaftar. Silakan masuk.");
   if (data.session) return { ok: true, data: { redirect: safeNext(fd.get("next")) } };
-  return { ok: true, data: { confirm: true }, message: `Tautan konfirmasi sudah dikirim ke ${parsed.data.email}. Buka email itu untuk mengaktifkan akun.` };
+  return okm("Tautan konfirmasi sudah dikirim ke {email}. Buka email itu untuk mengaktifkan akun.", { email: parsed.data.email }, { confirm: true });
 }
 
 export async function requestPasswordReset(fd: FormData): Promise<ActionResult> {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { appUrl } from "@/lib/constants";
+import { projectPath } from "@/lib/paths";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptToken, verifyState } from "@/lib/google/crypto";
@@ -11,7 +12,9 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const state = verifyState(url.searchParams.get("state"));
   if (!state || !googleConfigured()) return NextResponse.redirect(`${appUrl()}/mulai`);
-  const back = (flag: string) => NextResponse.redirect(`${appUrl()}/w/${state.p}/kalender?google=${flag}`);
+  const admin0 = createAdminClient();
+  const { data: proj } = await admin0.from("wedding_projects").select("*").eq("id", state.p).maybeSingle();
+  const back = (flag: string) => NextResponse.redirect(`${appUrl()}${projectPath({ id: state.p, slug: proj?.slug }, "kalender")}?google=${flag}`);
 
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();

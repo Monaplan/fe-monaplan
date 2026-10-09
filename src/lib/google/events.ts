@@ -41,8 +41,8 @@ function lines(...parts: (string | null | undefined | false)[]) {
   return parts.filter(Boolean).join("\n");
 }
 
-function base(source: SourceKind, id: string, projectId: string, appBaseUrl: string, description: string, extra: Record<string, unknown>) {
-  const link = `${appBaseUrl}/w/${projectId}/${SECTION[source]}`;
+function base(source: SourceKind, id: string, ref: string, appBaseUrl: string, description: string, extra: Record<string, unknown>) {
+  const link = `${appBaseUrl}/app/${ref}/${SECTION[source]}`;
   return {
     description: lines(description, `Buka di Monaplan: ${link}`),
     source: { title: "Monaplan", url: link },
@@ -61,15 +61,15 @@ function timed(startsAt: string, endsAt: string | null, tz: string) {
 
 export function buildDesiredEvents(
   input: { tasks: TaskRow[]; payments: PaymentRow[]; events: EventRow[]; agenda: AgendaRow[] },
-  ctx: { projectId: string; tz: string; appUrl: string },
+  ctx: { ref: string; tz: string; appUrl: string },
 ): DesiredEvent[] {
   const out: DesiredEvent[] = [];
-  const { projectId, tz, appUrl } = ctx;
+  const { ref, tz, appUrl } = ctx;
 
   for (const t of input.tasks) {
     out.push({
       source: "task", sourceId: t.id, eventId: eventIdFor("task", t.id),
-      body: base("task", t.id, projectId, appUrl, lines(t.category && `Kategori: ${t.category}`, `Prioritas: ${t.priority}`, t.description),
+      body: base("task", t.id, ref, appUrl, lines(t.category && `Kategori: ${t.category}`, `Prioritas: ${t.priority}`, t.description),
         { summary: `Tugas: ${t.title}`, ...allDay(t.due_date), reminders: REMIND.task }),
     });
   }
@@ -77,7 +77,7 @@ export function buildDesiredEvents(
     const kind = labelOf(PAYMENT_KIND, p.kind);
     out.push({
       source: "expense_payment", sourceId: p.id, eventId: eventIdFor("expense_payment", p.id),
-      body: base("expense_payment", p.id, projectId, appUrl, lines(`Nominal: ${formatIDR(p.amount_idr)}`, p.notes),
+      body: base("expense_payment", p.id, ref, appUrl, lines(`Nominal: ${formatIDR(p.amount_idr)}`, p.notes),
         { summary: `Bayar: ${p.label?.trim() || kind}`, ...allDay(p.due_date), reminders: REMIND.payment }),
     });
   }
@@ -85,14 +85,14 @@ export function buildDesiredEvents(
     const where = [e.venue_name, e.venue_address].filter(Boolean).join(", ");
     out.push({
       source: "event", sourceId: e.id, eventId: eventIdFor("event", e.id),
-      body: base("event", e.id, projectId, appUrl, lines(`Jenis acara: ${labelOf(EVENT_TYPES, e.type)}`, e.dress_code && `Dress code: ${e.dress_code}`, e.maps_url && `Peta: ${e.maps_url}`, e.notes),
+      body: base("event", e.id, ref, appUrl, lines(`Jenis acara: ${labelOf(EVENT_TYPES, e.type)}`, e.dress_code && `Dress code: ${e.dress_code}`, e.maps_url && `Peta: ${e.maps_url}`, e.notes),
         { summary: e.name, ...(where && { location: where }), ...timed(e.starts_at, e.ends_at, tz), reminders: REMIND.event }),
     });
   }
   for (const a of input.agenda) {
     out.push({
       source: "agenda", sourceId: a.id, eventId: eventIdFor("agenda", a.id),
-      body: base("agenda", a.id, projectId, appUrl, a.description ?? "", {
+      body: base("agenda", a.id, ref, appUrl, a.description ?? "", {
         summary: a.title,
         ...(a.location && { location: a.location }),
         ...(a.all_day ? allDay(isoDateInTz(a.starts_at, tz)) : timed(a.starts_at, a.ends_at, tz)),

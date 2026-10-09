@@ -10,6 +10,8 @@ import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/dialogs";
 import { formatDateCompact, formatTime } from "@/lib/format";
 import { disconnectGoogle, enableProjectSync, setGoogleAutoSync, stopProjectSync, syncGoogleNow } from "@/features/google/actions";
+import { useI18n } from "@/i18n/client";
+import { useT } from "@/i18n/client";
 
 export type GoogleUiStatus = {
   configured: boolean;
@@ -29,6 +31,7 @@ const FLASH: Record<string, { text: string; tone: "positive" | "danger" }> = {
 };
 
 export function GoogleCalendarButton({ projectId, tz, status, flash }: { projectId: string; tz: string; status: GoogleUiStatus; flash?: string }) {
+  const { t, lang } = useI18n();
   const router = useRouter();
   const toast = useToast();
   const confirm = useConfirm();
@@ -58,54 +61,52 @@ export function GoogleCalendarButton({ projectId, tz, status, flash }: { project
 
   return (
     <>
-      <Button variant="outline" icon={<CalendarMark />} onClick={() => setOpen(true)}>
-        Google Calendar
-        {connected && <span aria-hidden="true" className={hasError ? "size-2 rounded-full bg-danger" : "size-2 rounded-full bg-positive"} />}
+      <Button variant="outline" icon={<CalendarMark />} onClick={() => setOpen(true)}>{t("Google Calendar")}{connected && <span aria-hidden="true" className={hasError ? "size-2 rounded-full bg-danger" : "size-2 rounded-full bg-positive"} />}
       </Button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Google Calendar" description="Tampilkan tugas, pembayaran, acara, dan agenda proyek ini di kalender Google kamu.">
+      <Modal open={open} onClose={() => setOpen(false)} title={t("Google Calendar")} description={t("Tampilkan jadwal proyek ini di Google Calendar.")}>
         {!status.configured ? (
           <p className="flex gap-3 rounded-xl bg-caution-bg p-4 text-[13px] leading-5 text-caution">
             <CircleAlert className="mt-0.5 size-4 shrink-0" />
-            <span>Fitur ini belum diaktifkan di server. Admin perlu mengisi <b>GOOGLE_CLIENT_ID</b> dan <b>GOOGLE_CLIENT_SECRET</b>, lalu memulai ulang aplikasi.</span>
+            <span>{t("Fitur ini belum diaktifkan di server. Admin perlu mengisi")}{" "}<b>{t("GOOGLE_CLIENT_ID")}</b> dan <b>{t("GOOGLE_CLIENT_SECRET")}</b>{t(", lalu memulai ulang aplikasi.")}</span>
           </p>
         ) : !status.linked ? (
           <div className="flex flex-col gap-5">
             <ul className="list-disc space-y-2 pl-5 text-[13.5px] leading-5 text-neutral-700">
-              <li>Monaplan membuat kalender terpisah bernama <b>Monaplan</b>, jadi kalender pribadimu tidak tersentuh.</li>
-              <li>Satu arah: perubahan dari Monaplan muncul di Google. Mengubah event di Google tidak mengubah Monaplan.</li>
-              <li>Izin yang diminta hanya untuk kalender dan event buatan Monaplan. Bisa diputus kapan saja.</li>
+              <li>{t("Monaplan membuat kalender terpisah bernama")}{" "}<b>{t("Monaplan")}</b>{t(", jadi kalender pribadimu tidak tersentuh.")}</li>
+              <li>{t("Satu arah: perubahan dari Monaplan muncul di Google. Mengubah event di Google tidak mengubah Monaplan.")}</li>
+              <li>{t("Izin yang diminta hanya untuk kalender dan event buatan Monaplan. Bisa diputus kapan saja.")}</li>
             </ul>
-            <ButtonLink href={`/api/google/connect?project=${projectId}`} size="lg" icon={<Link2 />} className="w-full">Hubungkan Google Calendar</ButtonLink>
+            <ButtonLink href={`/api/google/connect?project=${projectId}`} prefetch={false} size="lg" icon={<Link2 />} className="w-full">{t("Hubungkan Google Calendar")}</ButtonLink>
           </div>
         ) : !status.sync ? (
           <div className="flex flex-col gap-5">
-            <p className="flex items-center gap-2 text-[13.5px] text-neutral-700"><CircleCheck className="size-4 text-positive" />Tersambung sebagai <b>{status.linked.email ?? "akun Google"}</b></p>
-            <p className="text-[13.5px] leading-5 text-neutral-600">Proyek ini belum disinkronkan. Mulai sekarang untuk membuat kalender Monaplan di akun Google tersebut.</p>
-            <Button size="lg" loading={pending} icon={<RefreshCw />} onClick={() => run(() => enableProjectSync(projectId))}>Sinkronkan proyek ini</Button>
-            <Button variant="ghost" className="text-danger" icon={<Unplug />} disabled={pending} onClick={async () => { if (await confirm({ title: "Putuskan Google Calendar?", body: "Izin ke akun Google dicabut dan semua sinkronisasi berhenti. Event yang sudah ada di Google tidak dihapus.", confirmLabel: "Putuskan", tone: "danger" })) run(() => disconnectGoogle(projectId)); }}>Putuskan akun Google</Button>
+            <p className="flex items-center gap-2 text-[13.5px] text-neutral-700"><CircleCheck className="size-4 text-positive" />{t("Tersambung sebagai")}{" "}<b>{status.linked.email ?? t("akun Google")}</b></p>
+            <p className="text-[13.5px] leading-5 text-neutral-600">{t("Proyek ini belum disinkronkan. Mulai sekarang untuk membuat kalender Monaplan di akun Google tersebut.")}</p>
+            <Button size="lg" loading={pending} icon={<RefreshCw />} onClick={() => run(() => enableProjectSync(projectId))}>{t("Sinkronkan proyek ini")}</Button>
+            <Button variant="ghost" className="text-danger" icon={<Unplug />} disabled={pending} onClick={async () => { if (await confirm({ title: t("Putuskan Google Calendar?"), body: t("Izin ke akun Google dicabut dan semua sinkronisasi berhenti. Event yang sudah ada di Google tidak dihapus."), confirmLabel: t("Putuskan"), tone: "danger" })) run(() => disconnectGoogle(projectId)); }}>{t("Putuskan akun Google")}</Button>
           </div>
         ) : (
           <div className="flex flex-col gap-5">
-            <p className="flex items-center gap-2 text-[13.5px] text-neutral-700"><CircleCheck className="size-4 text-positive" />Tersambung sebagai <b>{status.linked.email ?? "akun Google"}</b></p>
+            <p className="flex items-center gap-2 text-[13.5px] text-neutral-700"><CircleCheck className="size-4 text-positive" />{t("Tersambung sebagai")}{" "}<b>{status.linked.email ?? t("akun Google")}</b></p>
 
             <div className={hasError ? "rounded-xl bg-danger-bg p-3.5 text-[13px] leading-5 text-danger" : "rounded-xl bg-neutral-50 p-3.5 text-[13px] leading-5 text-neutral-700"}>
-              <p className="font-medium">{last ? `Terakhir sinkron ${formatDateCompact(last, tz)} ${formatTime(last, tz)}` : "Belum pernah disinkronkan"}</p>
-              {status.sync.lastMessage && <p className="mt-0.5">{status.sync.lastMessage}</p>}
+              <p className="font-medium">{last ? t("Terakhir sinkron {date} {time}", { date: formatDateCompact(last, tz, lang), time: formatTime(last, tz, undefined, lang) }) : t("Belum pernah disinkronkan")}</p>
+              {status.sync.lastMessage && <p className="mt-0.5">{t(status.sync.lastMessage)}</p>}
             </div>
 
             <label className="flex items-center justify-between gap-4">
               <span>
-                <span className="block text-[13.5px] font-medium text-neutral-900">Sinkron otomatis</span>
-                <span className="block text-[13px] leading-5 text-neutral-600">Perubahan tugas, pembayaran, acara, dan agenda langsung dikirim ke Google.</span>
+                <span className="block text-[13.5px] font-medium text-neutral-900">{t("Sinkron otomatis")}</span>
+                <span className="block text-[13px] leading-5 text-neutral-600">{t("Perubahan tugas, pembayaran, acara, dan agenda langsung dikirim ke Google.")}</span>
               </span>
-              <Switch label="Sinkron otomatis" checked={status.sync.autoSync} disabled={pending} onChange={(v) => run(() => setGoogleAutoSync(projectId, v))} />
+              <Switch label={t("Sinkron otomatis")} checked={status.sync.autoSync} disabled={pending} onChange={(v) => run(() => setGoogleAutoSync(projectId, v))} />
             </label>
 
-            <Button size="lg" loading={pending} icon={<RefreshCw />} onClick={() => run(() => syncGoogleNow(projectId))}>Sinkronkan sekarang</Button>
+            <Button size="lg" loading={pending} icon={<RefreshCw />} onClick={() => run(() => syncGoogleNow(projectId))}>{t("Sinkronkan sekarang")}</Button>
             <div className="flex flex-wrap justify-between gap-2">
-              <Button variant="ghost" disabled={pending} onClick={async () => { if (await confirm({ title: "Hentikan sinkron proyek ini?", body: "Event yang sudah ada di Google tidak dihapus.", confirmLabel: "Hentikan" })) run(() => stopProjectSync(projectId)); }}>Hentikan untuk proyek ini</Button>
-              <Button variant="ghost" className="text-danger" icon={<Unplug />} disabled={pending} onClick={async () => { if (await confirm({ title: "Putuskan Google Calendar?", body: "Izin ke akun Google dicabut dan semua sinkronisasi berhenti. Event yang sudah ada di Google tidak dihapus.", confirmLabel: "Putuskan", tone: "danger" })) run(() => disconnectGoogle(projectId)); }}>Putuskan akun Google</Button>
+              <Button variant="ghost" disabled={pending} onClick={async () => { if (await confirm({ title: t("Hentikan sinkron proyek ini?"), body: t("Event yang sudah ada di Google tidak dihapus."), confirmLabel: t("Hentikan") })) run(() => stopProjectSync(projectId)); }}>{t("Hentikan untuk proyek ini")}</Button>
+              <Button variant="ghost" className="text-danger" icon={<Unplug />} disabled={pending} onClick={async () => { if (await confirm({ title: t("Putuskan Google Calendar?"), body: t("Izin ke akun Google dicabut dan semua sinkronisasi berhenti. Event yang sudah ada di Google tidak dihapus."), confirmLabel: t("Putuskan"), tone: "danger" })) run(() => disconnectGoogle(projectId)); }}>{t("Putuskan akun Google")}</Button>
             </div>
           </div>
         )}

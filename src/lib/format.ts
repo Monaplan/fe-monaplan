@@ -33,6 +33,10 @@ export function pct(part: number, total: number): number {
   return total > 0 ? part / total : 0;
 }
 
+// Bahasa tampilan untuk tanggal dan jam; Rupiah tetap berformat Indonesia di semua bahasa
+export type FmtLang = "id" | "en";
+const loc = (lang?: FmtLang) => (lang === "en" ? "en-US" : "id-ID");
+
 // Tanggal tanpa jam (kolom `date`) disimpan "YYYY-MM-DD" dan diperlakukan sebagai UTC
 function toDate(value: string | Date): { d: Date; isDateOnly: boolean } {
   if (value instanceof Date) return { d: value, isDateOnly: false };
@@ -40,41 +44,42 @@ function toDate(value: string | Date): { d: Date; isDateOnly: boolean } {
   return { d: new Date(value), isDateOnly: false };
 }
 
-export function formatDateShort(value: string | Date | null | undefined, tz = "Asia/Jakarta"): string {
+export function formatDateShort(value: string | Date | null | undefined, tz = "Asia/Jakarta", lang?: FmtLang): string {
   if (!value) return "-";
   const { d, isDateOnly } = toDate(value);
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat(loc(lang), {
     weekday: "short", day: "numeric", month: "short", year: "numeric",
     timeZone: isDateOnly ? "UTC" : tz,
   }).format(d);
 }
 
-export function formatDateLong(value: string | Date | null | undefined, tz = "Asia/Jakarta"): string {
+export function formatDateLong(value: string | Date | null | undefined, tz = "Asia/Jakarta", lang?: FmtLang): string {
   if (!value) return "-";
   const { d, isDateOnly } = toDate(value);
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat(loc(lang), {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
     timeZone: isDateOnly ? "UTC" : tz,
   }).format(d);
 }
 
-export function formatDateCompact(value: string | Date | null | undefined, tz = "Asia/Jakarta"): string {
+export function formatDateCompact(value: string | Date | null | undefined, tz = "Asia/Jakarta", lang?: FmtLang): string {
   if (!value) return "-";
   const { d, isDateOnly } = toDate(value);
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat(loc(lang), {
     day: "numeric", month: "short", year: "numeric", timeZone: isDateOnly ? "UTC" : tz,
   }).format(d);
 }
 
-export function formatTime(value: string | Date | null | undefined, tz = "Asia/Jakarta", withZone = true): string {
+export function formatTime(value: string | Date | null | undefined, tz = "Asia/Jakarta", withZone = true, lang?: FmtLang): string {
   if (!value) return "-";
+  const sep = lang === "en" ? ":" : ".";
   // kolom `time` "HH:MM:SS"
   if (typeof value === "string" && /^\d{2}:\d{2}/.test(value)) {
-    return value.slice(0, 5).replace(":", ".");
+    return value.slice(0, 5).replace(":", sep);
   }
   const { d } = toDate(value);
-  const t = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz })
-    .format(d).replace(":", ".");
+  const t = new Intl.DateTimeFormat(loc(lang), { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz })
+    .format(d).replace(":", sep);
   return withZone ? `${t} ${TZ_LABEL[tz] ?? ""}`.trim() : t;
 }
 
@@ -100,9 +105,16 @@ export function diffDays(fromISO: string, toISO: string): number {
   return Math.round((Date.parse(toISO + "T00:00:00Z") - Date.parse(fromISO + "T00:00:00Z")) / 86_400_000);
 }
 
-export function relativeDay(iso: string | null | undefined, tz = "Asia/Jakarta"): string {
+export function relativeDay(iso: string | null | undefined, tz = "Asia/Jakarta", lang?: FmtLang): string {
   if (!iso) return "";
   const n = diffDays(todayISO(tz), iso.slice(0, 10));
+  if (lang === "en") {
+    if (n === 0) return "today";
+    if (n === 1) return "tomorrow";
+    if (n === -1) return "yesterday";
+    if (n > 1) return `in ${n} days`;
+    return `${-n} days overdue`;
+  }
   if (n === 0) return "hari ini";
   if (n === 1) return "besok";
   if (n === -1) return "kemarin";

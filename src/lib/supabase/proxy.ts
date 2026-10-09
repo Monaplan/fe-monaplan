@@ -1,13 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED = ["/w", "/akun", "/aktivasi", "/admin", "/onboarding", "/checkout", "/gabung", "/mulai", "/reset-password"];
+const PROTECTED = ["/app", "/w", "/akun", "/aktivasi", "/admin", "/onboarding", "/checkout", "/gabung", "/mulai", "/reset-password"];
 
 export async function updateSession(request: NextRequest) {
   // Halaman publik (landing, privasi, SEO) tidak butuh sesi, jadi tidak menyentuh Supabase sama sekali
   const path = request.nextUrl.pathname;
   const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
   if (!needsAuth && !path.startsWith("/auth")) return NextResponse.next({ request });
+  // Layout ruang kerja memakai ini untuk mengalihkan alamat lama ke slug dengan sisa path yang sama
+  request.headers.set("x-pathname", path + request.nextUrl.search);
 
   let response = NextResponse.next({ request });
 

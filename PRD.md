@@ -847,3 +847,14 @@ Grup **Konfigurasi** berisi Paket, Trial, dan Promo.
 
 ### 17.6 Mobile
 Di layar kecil navigasi berada di bilah tab bawah (4 tujuan utama + Menu) untuk workspace, akun, dan admin. Menu membuka bottom sheet berisi semua modul, kartu akses, tema, dan keluar.
+
+## 18. Revisi gelombang B: rute, kuota, email, bantuan, bahasa
+
+- **Rute**: ruang kerja berada di `/app/<slug>/...`. Slug dibuat otomatis dari nama panggilan pasangan, unik, dan bisa diubah pemilik. `/w/<uuid>` dan `/w/<slug>` dialihkan permanen ke rute baru.
+- **Berkas**: kuota 50 MB per pengguna (semua proyek miliknya dijumlah, unggahan kolaborator dihitung ke pemilik), maksimal 5 MB per berkas. Berkas disajikan lewat Cloudflare Worker di domain sendiri dengan token bertanda tangan; bucket R2 tetap privat. Kunci berkas: `{storage_prefix}/{folder}/{nama}-{id}.{ext}`.
+- **Rundown PDF**: dibuat di server (`@react-pdf/renderer`) dengan tata letak dokumen formal A4: judul, identitas acara, tabel bergaris, nomor halaman, kolom tanda tangan.
+- **Pengingat**: email lewat Resend dari `/api/cron/reminders` (dilindungi `CRON_SECRET`, dipanggil pg_cron). Template bertipe dua bahasa; pratinjau dan kirim tes di `/admin/email`.
+- **Bantuan**: halaman `/app/<slug>/bantuan` (FAQ, ulangi tur, formulir ke `support_tickets`); kotak masuk di `/admin/bantuan`. Product tour mencakup seluruh halaman pengguna dan admin.
+- **Tingkat paket**: paket lifetime punya `tier`. Upgrade membayar selisih: harga tier tujuan (setelah promo) dikurangi kredit dari pembayaran sebelumnya, minimal Rp 1.000. Lisensi lama menjadi `superseded`. Kode akses dan pemberian admin tidak memberi kredit.
+- **Bahasa**: Indonesia dan Inggris dengan pengalih bahasa (cookie `mp-lang`, `profiles.language`). Konten buatan pengguna dan nama paket di database tidak diterjemahkan; PDF rundown tetap berbahasa Indonesia.
+- **Performa dan animasi**: sesi lewat `getClaims()`, query paralel, `loading.tsx` skeleton, transisi halaman CSS yang menghormati `prefers-reduced-motion`.

@@ -30,16 +30,16 @@ export function CardHeader({ icon, title, action, subtitle }: { icon?: ReactNode
   );
 }
 
-export function PageHeader({ title, description, actions, eyebrow, children }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode; children?: ReactNode }) {
+export function PageHeader({ title, description, actions, eyebrow, children, tour }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode; children?: ReactNode; tour?: string }) {
   return (
     <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <div className="min-w-0">
+      <div className="min-w-0" data-tour={tour ? `${tour}-header` : undefined}>
         {eyebrow && <p className="mb-1 text-[11px] font-semibold tracking-[0.12em] text-plum-600 uppercase">{eyebrow}</p>}
         <h1 className="text-[24px] leading-8 font-semibold tracking-[-0.01em] text-neutral-900 md:text-[28px] md:leading-9">{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-[14px] leading-[22px] text-neutral-600">{description}</p>}
         {children}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2" data-tour={tour ? `${tour}-actions` : undefined}>{actions}</div>}
     </div>
   );
 }
