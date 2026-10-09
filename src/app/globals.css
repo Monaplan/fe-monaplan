@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/* Mode gelap berbasis kelas .dark di <html> (dipasang skrip tema sebelum render) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-plum-50:  #FBF5F8;
+  --color-plum-100: #F6E8EF;
+  --color-plum-200: #EDD1DF;
+  --color-plum-300: #DFADC5;
+  --color-plum-400: #C67C9F;
+  --color-plum-500: #A9557E;
+  --color-plum-600: #8C3A63;
+  --color-plum-700: #722E51;
+  --color-plum-800: #5A2541;
+  --color-plum-900: #3E1A2D;
+  --color-plum-950: #26101C;
+
+  --color-neutral-0:   #FFFFFF;
+  --color-neutral-50:  #FAF8F9;
+  --color-neutral-100: #F3EFF1;
+  --color-neutral-200: #E8E2E5;
+  --color-neutral-300: #D4CCD0;
+  --color-neutral-400: #A99EA4;
+  --color-neutral-500: #73676D;
+  --color-neutral-600: #5E5358;
+  --color-neutral-700: #43393E;
+  --color-neutral-800: #2D2529;
+  --color-neutral-900: #1C1619;
+
+  --color-positive:     #722E51;
+  --color-positive-bg:  #F6E8EF;
+  --color-caution:      #9A4A2E;
+  --color-caution-bg:   #FBEEE8;
+  --color-danger:       #B42F4E;
+  --color-danger-bg:    #FBEAEE;
+  --color-danger-solid: #B42F4E;
+
+  /* Permukaan: kartu, modal, sidebar (putih di mode terang) dan kanvas halaman */
+  --color-surface: #FFFFFF;
+  --color-canvas:  #F6F2F4;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  --shadow-pop: 0 8px 24px rgba(62, 26, 45, 0.10);
+  --shadow-modal: 0 24px 64px rgba(62, 26, 45, 0.18);
+  --shadow-card: 0 1px 2px rgba(62, 26, 45, 0.04), 0 10px 30px -18px rgba(62, 26, 45, 0.14);
+  --shadow-btn: 0 1px 2px rgba(62, 26, 45, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+
+  --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root {
+  --background: #F6F2F4;
+  --foreground: #1C1619;
+}
+
+/* Mode gelap: skala netral dibalik dan skala plum digeser ke nuansa gelap.
+   Komponen memakai token yang sama sehingga cukup memetakan ulang variabel di sini. */
+.dark {
+  --color-plum-50:  #26161F;
+  --color-plum-100: #351C2A;
+  --color-plum-200: #4B263A;
+  --color-plum-300: #6A3452;
+  --color-plum-400: #9A5079;
+  --color-plum-500: #C47A9F;
+  --color-plum-600: #A9447A;
+  --color-plum-700: #E59CC0;
+  --color-plum-800: #F1BED7;
+  --color-plum-900: #4A2238;
+  --color-plum-950: #1A0C14;
+
+  --color-neutral-0:   #1C1519;
+  --color-neutral-50:  #221A1F;
+  --color-neutral-100: #2A2126;
+  --color-neutral-200: #372C32;
+  --color-neutral-300: #4A3D44;
+  --color-neutral-400: #74666D;
+  --color-neutral-500: #A0939A;
+  --color-neutral-600: #BCB0B6;
+  --color-neutral-700: #D5CBD0;
+  --color-neutral-800: #E9E1E5;
+  --color-neutral-900: #F7F1F4;
+
+  --color-positive:     #E59CC0;
+  --color-positive-bg:  #351C2A;
+  --color-caution:      #F2A985;
+  --color-caution-bg:   #3A231A;
+  --color-danger:       #F38CA3;
+  --color-danger-bg:    #3E1823;
+  --color-danger-solid: #C93A5C;
+
+  --color-surface: #1C1519;
+  --color-canvas:  #130E11;
+
+  --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
+  --shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  --background: #130E11;
+  --foreground: #F7F1F4;
+  color-scheme: dark;
+}
+
+/* Teks aksen plum di mode gelap dibuat lebih terang agar kontras di atas latar gelap (WCAG AA),
+   sementara plum-600 sebagai latar tombol tetap cukup gelap untuk teks putih.
+   Aturan ini sengaja di luar @layer agar mengalahkan utilitas Tailwind. */
+.dark .text-plum-600, .dark .text-plum-500 { color: #E390B9; }
+.dark .hover:text-plum-700:hover, .dark .hover:text-plum-600:hover { color: #F1BED7; }
+
+/* Matikan transisi sesaat saat berganti tema agar tidak ada animasi warna yang aneh */
+.theme-switching, .theme-switching * { transition: none !important; }
+
+::selection { background: var(--color-plum-200); color: var(--color-neutral-900); }
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 22px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+.access-gradient {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(198, 124, 159, 0.35) 0%, transparent 55%),
+    linear-gradient(135deg, #5A2541 0%, #3E1A2D 55%, #26101C 100%);
+}
+
+/* Latar kanvas aplikasi: netral bernuansa plum dengan cahaya lembut di pojok */
+.app-canvas {
+  background:
+    radial-gradient(900px 420px at 100% -10%, rgba(237, 209, 223, 0.55), transparent 60%),
+    radial-gradient(700px 360px at -10% 110%, rgba(246, 232, 239, 0.7), transparent 60%),
+    #F6F2F4;
+}
+.dark .app-canvas {
+  background:
+    radial-gradient(900px 420px at 100% -10%, rgba(140, 58, 99, 0.22), transparent 60%),
+    radial-gradient(700px 360px at -10% 110%, rgba(90, 37, 65, 0.25), transparent 60%),
+    #130E11;
+}
+
+.brand-canvas {
+  background:
+    radial-gradient(600px 400px at 0% 0%, rgba(198, 124, 159, 0.45), transparent 60%),
+    radial-gradient(500px 400px at 100% 100%, rgba(140, 58, 99, 0.55), transparent 60%),
+    linear-gradient(160deg, #3E1A2D 0%, #26101C 100%);
+}
+
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--color-neutral-200) transparent; }
+
+.dark .access-gradient { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
+
+:focus-visible {
+  outline: 2px solid var(--color-plum-400);
+  outline-offset: 2px;
+}
+
+@keyframes sheet-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes check-pop { from { transform: scale(0.9); } to { transform: scale(1); } }
+.animate-sheet-in { animation: sheet-in 250ms var(--ease-out-soft); }
+.animate-sheet-up { animation: sheet-up 280ms var(--ease-out-soft); }
+.animate-fade-in { animation: fade-in 200ms var(--ease-out-soft); }
+.animate-check { animation: check-pop 150ms var(--ease-out-soft); }
+
+/* ---- Sistem animasi: hanya transform dan opacity, durasi singkat, mati bila gerak dikurangi ---- */
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.page-enter { animation: page-in 220ms var(--ease-out-soft); }
+.animate-grow { transform-origin: left center; animation: grow-x 700ms var(--ease-out-soft); }
+
+/* Anak langsung muncul berurutan; indeks lewat nth-child agar tanpa JavaScript */
+.stagger > * { animation: rise 360ms var(--ease-out-soft) backwards; }
+.stagger > :nth-child(1) { animation-delay: 0ms; }
+.stagger > :nth-child(2) { animation-delay: 45ms; }
+.stagger > :nth-child(3) { animation-delay: 90ms; }
+.stagger > :nth-child(4) { animation-delay: 135ms; }
+.stagger > :nth-child(5) { animation-delay: 180ms; }
+.stagger > :nth-child(6) { animation-delay: 225ms; }
+.stagger > :nth-child(7) { animation-delay: 270ms; }
+.stagger > :nth-child(8) { animation-delay: 315ms; }
+.stagger > :nth-child(n+9) { animation-delay: 360ms; }
+
+.hover-lift { transition: transform 180ms var(--ease-out-soft), box-shadow 180ms var(--ease-out-soft); }
+@media (hover: hover) { .hover-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); } }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Muncul saat digulir ke layar (Chrome dan Edge terbaru; peramban lain langsung menampilkan) */
+@supports (animation-timeline: view()) {
+  .reveal { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 35%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+}
