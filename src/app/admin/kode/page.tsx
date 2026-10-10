@@ -15,12 +15,16 @@ export async function generateMetadata() {
   return { title: t("Kode Akses") };
 }
 
-export default async function CodesPage() {
+import { parseSort } from "@/lib/sort";
+import { SortSelect } from "@/components/app/sort-select";
+
+export default async function CodesPage({ searchParams }: { searchParams: Promise<{ sort?: string; dir?: string }> }) {
   const { t, lang } = await getI18n();
   await requireAdmin();
+  const sort = parseSort(await searchParams, { tanggal: { column: "created_at", dir: "desc" }, nama: { column: "name", dir: "asc" }, jumlah: { column: "quantity", dir: "desc" } }, "tanggal");
   const admin = createAdminClient();
   const [{ data: batches }, { data: plans }] = await Promise.all([
-    admin.from("access_code_batches").select("*, plans(name), access_codes(redemption_count, status)").order("created_at", { ascending: false }),
+    admin.from("access_code_batches").select("*, plans(name), access_codes(redemption_count, status)").order(sort.column, { ascending: sort.ascending }).order("created_at", { ascending: false }),
     admin.from("plans").select("id, name").eq("is_active", true).eq("type", "lifetime").order("sort_order"),
   ]);
 
@@ -28,7 +32,7 @@ export default async function CodesPage() {
     <>
       <ProductTour id="admin-kode" steps={TOURS["admin-kode"]!} />
       <PageHeader tour="admin-kode" title={t("Kode Akses")} description={t("Buat batch kode untuk reseller, promo, atau kompensasi.")}
-        actions={<NewBatchButton plans={plans ?? []} />} />
+        actions={<><SortSelect value={sort.key} dir={sort.dir} options={[{ key: "tanggal", label: t("Tanggal") }, { key: "nama", label: t("Nama") }, { key: "jumlah", label: t("Jumlah kode") }]} /><NewBatchButton plans={plans ?? []} /></>} />
       <Card tour="admin-kode-main" className="p-0 sm:p-0">
         {(batches ?? []).length === 0 && <p className="px-5 py-8 text-center text-[13px] text-neutral-500">{t("Belum ada batch.")}</p>}
         {(batches ?? []).map((b: any) => {

@@ -99,7 +99,7 @@ export const EN2: Record<string, string> = {
   "Minggu {date}": "Week of {date}",
   "Bulan": "Month",
   "Minggu": "Week",
-  "Daftar": "List",
+  "Daftar": "Sign Up",
   "+{v1} lagi": "+{v1} more",
   "Tidak ada agenda mendatang.": "No upcoming agenda.",
   "· Hari ini": "· Today",

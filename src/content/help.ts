@@ -40,6 +40,8 @@ export const HELP_TOURS: { id: string; label: L; path: string; scope: "app" | "a
   { id: "mahar", label: { id: "Mahar & Seserahan", en: "Gifts" }, path: "mahar-seserahan", scope: "app" },
   { id: "dokumen", label: { id: "Dokumen Penting", en: "Documents" }, path: "dokumen", scope: "app" },
   { id: "kalender", label: { id: "Reminder & Calendar", en: "Reminders & calendar" }, path: "kalender", scope: "app" },
+  { id: "inspirasi", label: { id: "Rona Impian", en: "Rona Impian" }, path: "rona-impian", scope: "app" },
+  { id: "perjalanan", label: { id: "Honeymoon Planner", en: "Honeymoon Planner" }, path: "honeymoon-planner", scope: "app" },
   { id: "pengaturan", label: { id: "Pengaturan Pernikahan", en: "Wedding settings" }, path: "pengaturan", scope: "app" },
   { id: "panduan", label: { id: "Panduan Penggunaan", en: "Usage guide" }, path: "panduan", scope: "app" },
   { id: "akun", label: { id: "Akun & Lisensi", en: "Account & license" }, path: "/akun", scope: "akun" },

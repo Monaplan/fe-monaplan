@@ -6,7 +6,7 @@ import { getI18n } from "@/i18n/server";
 export const metadata = { title: { default: "Admin", template: "%s · Admin Monaplan" }, robots: NOINDEX };
 
 const GROUPS: NavGroup[] = [
-  { title: "Ikhtisar", items: [{ href: "/admin", label: "Ringkasan", icon: "dashboard", exact: true }] },
+  { title: "Dashboard", items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", exact: true }] },
   {
     title: "Penjualan",
     items: [
@@ -28,15 +28,14 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/lisensi", label: "Lisensi", icon: "lisensi" },
       { href: "/admin/pengguna", label: "Pengguna", icon: "pengguna" },
-      { href: "/admin/bantuan", label: "Bantuan masuk", icon: "bantuan" },
     ],
   },
-  { title: "Sistem", items: [{ href: "/admin/audit", label: "Log Audit", icon: "audit" }] },
+  { title: "Sistem", items: [{ href: "/admin/sistem", label: "Sistem", icon: "sistem" }, { href: "/admin/audit", label: "Log Audit", icon: "audit" }] },
   { title: "Pintasan", items: [{ href: "/mulai", label: "Buka aplikasi", icon: "switch" }] },
 ];
 
 const MOBILE_TABS: NavItem[] = [
-  { href: "/admin", label: "Ringkasan", icon: "dashboard", exact: true },
+  { href: "/admin", label: "Dashboard", icon: "dashboard", exact: true },
   { href: "/admin/order", label: "Order", icon: "order" },
   { href: "/admin/pengguna", label: "Pengguna", icon: "pengguna" },
   { href: "/admin/promo", label: "Promo", icon: "promo" },

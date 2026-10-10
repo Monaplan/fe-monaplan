@@ -126,7 +126,7 @@ export async function deletePrefix(prefix: string) {
     return;
   }
   const admin = createAdminClient();
-  for (const folder of ["documents", "gifts", "cover"]) {
+  for (const folder of ["documents", "gifts", "cover", "inspiration"]) {
     const { data } = await admin.storage.from(SUPABASE_BUCKET).list(`${prefix}${folder}`, { limit: 1000 });
     if (data?.length) await admin.storage.from(SUPABASE_BUCKET).remove(data.map((f) => `${prefix}${folder}/${f.name}`));
   }
@@ -135,6 +135,19 @@ export async function deletePrefix(prefix: string) {
 // Awalan jalur berkas sebuah proyek: nama terbaca (mis. raka-nadia-3f9a2c) untuk proyek baru, UUID untuk proyek lama
 export const storagePrefix = (p: { id: string; storage_prefix?: string | null }) => p.storage_prefix || p.id;
 
-export function isProjectKey(key: string | null | undefined, project: { id: string; storage_prefix?: string | null }, folder: "documents" | "gifts" | "cover") {
+export function isProjectKey(key: string | null | undefined, project: { id: string; storage_prefix?: string | null }, folder: "documents" | "gifts" | "cover" | "inspiration") {
   return !!key && key.startsWith(`${storagePrefix(project)}/${folder}/`) && !key.includes("..");
+}
+
+// Semua objek di R2 beserta ukuran dan waktu ubah terakhir (untuk audit berkas yatim)
+export async function listAllObjects(): Promise<{ key: string; size: number; modified: number }[]> {
+  if (storageDriver() !== "r2") throw new Error("Pemeriksaan berkas yatim hanya untuk penyimpanan R2.");
+  const out: { key: string; size: number; modified: number }[] = [];
+  let token: string | undefined;
+  do {
+    const res = await r2().send(new ListObjectsV2Command({ Bucket: bucket(), ContinuationToken: token }));
+    for (const o of res.Contents ?? []) if (o.Key) out.push({ key: o.Key, size: o.Size ?? 0, modified: o.LastModified?.getTime() ?? Date.now() });
+    token = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (token);
+  return out;
 }

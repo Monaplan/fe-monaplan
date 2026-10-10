@@ -35,7 +35,7 @@ export function EmailPreview({ previews, from, configured }: { previews: Preview
           <CircleAlert className="mt-0.5 size-4 shrink-0" />{t("RESEND_API_KEY belum diisi, jadi email belum terkirim. Pratinjau tetap bisa dilihat.")}</p>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
         <Card tour="admin-email-main" className="h-fit p-2 sm:p-2">
           <ul className="flex flex-col gap-0.5" aria-label={t("Jenis email")}>
             {EMAIL_KINDS.map((k) => (

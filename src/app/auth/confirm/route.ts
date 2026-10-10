@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/paths";
 
 // Tautan email dengan token_hash (konfirmasi daftar, reset password, magic link).
 // Bekerja walau email dibuka di browser lain, berbeda dengan alur ?code=.
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next");
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : type === "recovery" ? "/reset-password" : "/mulai";
+  const safeNext = safeNextPath(next, type === "recovery" ? "/reset-password" : "/mulai");
 
   if (tokenHash && type) {
     const supabase = await createClient();

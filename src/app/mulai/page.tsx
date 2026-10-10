@@ -7,8 +7,9 @@ import { projectPath } from "@/lib/paths";
 // Router setelah login (PRD 5.1): proyek → dashboard, akses aktif tanpa proyek → onboarding,
 // akun baru + trial aktif → mulai trial lalu onboarding, selain itu → aktivasi
 export default async function StartPage() {
-  const { profile } = await requireUser();
-  const projects = (await getMyProjects()).filter((p) => !p.archived_at);
+  // Profil dan daftar proyek diambil bersamaan: satu putaran ke database, bukan dua berurutan
+  const [{ profile }, allProjects] = await Promise.all([requireUser(), getMyProjects()]);
+  const projects = allProjects.filter((p) => !p.archived_at);
 
   if (projects.length) {
     const target = projects.find((p) => p.id === profile?.last_active_project_id) ?? projects[0]!;

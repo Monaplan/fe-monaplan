@@ -25,6 +25,8 @@ export async function applyProviderStatus(admin: SupabaseClient, order: any, sta
     await admin.from("orders").update({ needs_review: true, metadata: { ...order.metadata, amount_mismatch: status.grossAmount } }).eq("id", order.id);
     return { outcome, granted: false, error: "AMOUNT_MISMATCH" };
   }
+  // Order yang sudah digantikan order baru tidak dihidupkan lagi oleh status "pending"
+  if (order.metadata?.superseded === true && outcome.status === "pending") return { outcome, granted: false };
   // Jangan turunkan order yang sudah lunas, kecuali refund atau perlu ditinjau
   if (order.status !== "paid" || outcome.status === "refunded" || outcome.review) {
     await admin.from("orders").update({

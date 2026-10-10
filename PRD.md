@@ -858,3 +858,17 @@ Di layar kecil navigasi berada di bilah tab bawah (4 tujuan utama + Menu) untuk 
 - **Tingkat paket**: paket lifetime punya `tier`. Upgrade membayar selisih: harga tier tujuan (setelah promo) dikurangi kredit dari pembayaran sebelumnya, minimal Rp 1.000. Lisensi lama menjadi `superseded`. Kode akses dan pemberian admin tidak memberi kredit.
 - **Bahasa**: Indonesia dan Inggris dengan pengalih bahasa (cookie `mp-lang`, `profiles.language`). Konten buatan pengguna dan nama paket di database tidak diterjemahkan; PDF rundown tetap berbahasa Indonesia.
 - **Performa dan animasi**: sesi lewat `getClaims()`, query paralel, `loading.tsx` skeleton, transisi halaman CSS yang menghormati `prefers-reduced-motion`.
+
+## 19. Revisi gelombang C
+
+- Kode promo bebas diketik admin, dengan periode berlaku dan popup promo dari bawah layar.
+- Aktivasi ditata ulang (tombol Keluar, dua kartu kode berdampingan).
+- Tombol bantuan menjadi menu: tur halaman, pusat bantuan, WhatsApp admin.
+- Lima tema RSVP gratis (Adat Luxury, Klasik Emas, Minimal Modern, Floral Romantis, Rustic Natural).
+- Rundown PDF polos tanpa kop dan tanda tangan. Admin bisa menghapus lisensi yang dicabut.
+- Dashboard admin dengan grafik. Notifikasi RSVP langsung dan pencarian lintas modul.
+
+## 20. Bonus dan landing
+
+- Dua modul bonus: Rona Impian (papan inspirasi) dan Honeymoon Planner. Nilai pemasaran Rp30.000 dan Rp55.000 diatur di `src/content/bonus.ts`.
+- Landing dirancang ulang: sebelum-sesudah, peta jalan dengan jumlah tugas nyata, bento fitur, tiket bonus dan nota nilai, tab peran, harga satu paket ("Dapatkan Sekarang") atau banyak paket ("Pilih paket ini").

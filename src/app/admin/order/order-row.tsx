@@ -16,15 +16,16 @@ export function OrderRow({ order }: { order: any }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-neutral-200 last:border-0">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3">
-        <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:gap-x-4 sm:gap-y-1 sm:px-5">
+        <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full min-w-0 items-center gap-2 text-left sm:w-auto sm:flex-1">
           <ChevronDown className={cn("size-4 shrink-0 text-neutral-400 transition-transform", !open && "-rotate-90")} />
           <span className="min-w-0">
-            <span className="tabular block text-sm font-medium">{order.order_number}</span>
+            <span className="tabular block text-sm font-medium whitespace-nowrap">{order.order_number}</span>
             <span className="block truncate text-xs text-neutral-500">{order.profiles?.email ?? "-"} · {order.plans?.name} · {formatDateCompact(order.created_at, undefined, lang)}{Number(order.discount_idr) > 0 && t("· promo {v1} -{formatIDR}", { v1: order.promo_name ?? "", formatIDR: formatIDR(order.discount_idr) })}</span>
           </span>
         </button>
         <span className="tabular text-sm font-semibold">{formatIDR(order.amount_idr)}</span>
+        {order.metadata?.superseded && <span className="text-xs text-neutral-500">{order.metadata?.left_page ? t("Ditinggalkan pembeli") : t("Digantikan order baru")}</span>}
         {order.needs_review && <StatusPill tone="danger">{t("Tinjau")}</StatusPill>}
         <StatusPill tone={TONE[order.status]}>{order.status}</StatusPill>
         <ActionButton size="sm" variant="outline" icon={<RefreshCw />} action={() => recheckOrder(order.id)}>{t("Cek ulang")}</ActionButton>

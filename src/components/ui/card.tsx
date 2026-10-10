@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
-export function Card({ className, children, id, tour }: { className?: string; children: ReactNode; id?: string; tour?: string }) {
+export function Card({ className, children, id, tour, rowId }: { className?: string; children: ReactNode; id?: string; tour?: string; rowId?: string }) {
   return (
-    <section id={id} data-tour={tour} className={cn("rounded-2xl border border-neutral-200/80 bg-surface p-4 shadow-card sm:p-5", className)}>
+    <section id={id} data-tour={tour} data-row-id={rowId} className={cn("rounded-2xl border border-neutral-200/80 bg-surface p-4 shadow-card sm:p-5", className)}>
       {children}
     </section>
   );

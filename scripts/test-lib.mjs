@@ -11,7 +11,7 @@ const ts = require("typescript");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "mp-lib-"));
 
-for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts"]) {
+for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts"]) {
   // "server-only" hanya berlaku di bundel Next, jadi dilepas untuk uji ini
   const src = fs.readFileSync(path.join(ROOT, rel), "utf8").replace('import "server-only";', "");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
@@ -21,7 +21,10 @@ for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format
   fs.writeFileSync(dest, js);
 }
 const load = (rel) => import(pathToFileURL(path.join(OUT, rel)).href);
-const { priceFor, discountOf, promoIsLive, MIN_CHARGE_IDR, upgradeQuote, creditOf } = await load("src/lib/pricing.mjs");
+const { priceFor, discountOf, promoIsLive, MIN_CHARGE_IDR, upgradeQuote, creditOf, promoState, checkPromoCode, normalizeCode, promoExhausted } = await load("src/lib/pricing.mjs");
+const { safeNextPath } = await load("src/lib/paths.mjs");
+const { parseSort } = await load("src/lib/sort.mjs");
+const { parseTerms, cleanQuery } = await load("src/lib/search-terms.mjs");
 const { buildDesiredEvents, eventIdFor, planSync } = await load("src/lib/google/events.mjs");
 process.env.TOKEN_ENCRYPTION_KEY = "kunci-uji";
 const { encryptToken, decryptToken, signState, verifyState } = await load("src/lib/google/crypto.mjs");
@@ -50,9 +53,35 @@ check("potongan + final = harga asli", (() => { const r = priceFor(plan, [mk({ d
 check("diskon persen dibulatkan ke bawah", discountOf(mk({ discount_value: 15 }), 99999) === 14999);
 check("promoIsLive batas akhir eksklusif", !promoIsLive(mk({ ends_at: new Date(1000).toISOString() }), 1000));
 
-console.log("\nUpgrade tier");
 const T1 = { id: "T1", price_idr: 199000, tier: 1 }, T2 = { id: "T2", price_idr: 399000, tier: 2 }, T3 = { id: "T3", price_idr: 599000, tier: 3 };
 const own1 = { licenseId: "L1", tier: 1, planName: "Basic", creditIdr: 199000 };
+console.log("\nKode promo dan periode");
+const day = 86_400_000, now0 = Date.now();
+const coded = (o) => mk({ id: "c", code: "NIKAH2026", ...o });
+check("promo berkode diabaikan tanpa kode", priceFor(plan, [coded({})], true).discount === 0);
+check("promo berkode berlaku dengan kode", priceFor(plan, [coded({})], true, now0, "NIKAH2026").final === 159200);
+check("kode tidak peduli huruf besar/kecil dan spasi tepi", priceFor(plan, [coded({})], true, now0, "  nikah2026 ").final === 159200);
+check("kode salah tidak mengubah harga", priceFor(plan, [coded({})], true, now0, "SALAH").discount === 0);
+check("promo otomatis tetap jalan saat kode salah", priceFor(plan, [mk({ id: "a", discount_value: 10 }), coded({})], true, now0, "SALAH").discount === 19900);
+check("kode bersaing dengan promo otomatis: terbesar menang", priceFor(plan, [mk({ id: "a", discount_value: 10 }), coded({ discount_value: 30 })], true, now0, "NIKAH2026").promo?.id === "c");
+check("saklar promo mati mematikan kode juga", priceFor(plan, [coded({})], false, now0, "NIKAH2026").discount === 0);
+check("kode ikut dihitung pada upgrade", upgradeQuote(T2, own1, [coded({ discount_value: 10 })], true, now0, "NIKAH2026").discount === 39900);
+check("upgrade tanpa kode tidak memakai promo berkode", upgradeQuote(T2, own1, [coded({ discount_value: 10 })], true, now0).discount === 0);
+check("normalizeCode", normalizeCode("  hemat_50 ") === "HEMAT_50" && normalizeCode(null) === "");
+check("kode kosong", checkPromoCode("", "P1", [coded({})]).reason === "empty");
+check("kode tidak ditemukan", checkPromoCode("XYZ", "P1", [coded({})]).reason === "not_found");
+check("kode valid", checkPromoCode("nikah2026", "P1", [coded({})]).ok === true);
+check("kode untuk paket lain", checkPromoCode("NIKAH2026", "P1", [coded({ plan_id: "P2" })]).reason === "other_plan");
+check("kode belum berlaku", checkPromoCode("NIKAH2026", "P1", [coded({ starts_at: new Date(now0 + day).toISOString() })]).reason === "not_started");
+check("kode sudah berakhir", checkPromoCode("NIKAH2026", "P1", [coded({ ends_at: new Date(now0 - 1000).toISOString() })]).reason === "ended");
+check("kode nonaktif", checkPromoCode("NIKAH2026", "P1", [coded({ is_active: false })]).reason === "inactive");
+check("promoState terjadwal", promoState(coded({ starts_at: new Date(now0 + day).toISOString() }), now0).state === "scheduled");
+check("promoState berjalan dengan sisa hari", (() => { const r = promoState(coded({ ends_at: new Date(now0 + 2.5 * day).toISOString() }), now0); return r.state === "live" && r.daysLeft === 3; })());
+check("promoState tanpa batas", (() => { const r = promoState(coded({}), now0); return r.state === "live" && r.daysLeft === null; })());
+check("promoState berakhir tepat pada batas", promoState(coded({ ends_at: new Date(now0).toISOString() }), now0).state === "ended");
+check("periode akhir 23:59 WIB hari itu masih berlaku", promoState(coded({ ends_at: "2026-11-30T23:59:59+07:00" }), Date.parse("2026-11-30T23:30:00+07:00")).state === "live");
+
+console.log("\nUpgrade tier");
 check("tanpa kepemilikan: bayar penuh, tanpa kredit", (() => { const q = upgradeQuote(T2, null, [], false); return q.payable === 399000 && q.credit === 0 && q.upgradeFromLicenseId === null; })());
 check("upgrade membayar selisih", upgradeQuote(T2, own1, [], false).payable === 200000);
 check("upgrade memuat kredit dan id lisensi asal", (() => { const q = upgradeQuote(T2, own1, [], false); return q.credit === 199000 && q.upgradeFromLicenseId === "L1"; })());
@@ -64,6 +93,28 @@ check("kredit tidak membuat total di bawah batas minimum", (() => { const q = up
 check("kredit berantai: bayar sebelumnya + kredit sebelumnya", creditOf({ source: "payment" }, { amount_idr: 200000, credit_idr: 199000 }) === 399000);
 check("lisensi dari kode atau admin tanpa kredit", creditOf({ source: "access_code" }, { amount_idr: 0 }) === 0 && creditOf({ source: "admin_grant" }, null) === 0);
 check("urutan upgrade berantai tetap menjumlah", (() => { const first = upgradeQuote(T2, own1, [], false); const o2 = { licenseId: "L2", tier: 2, planName: "Plus", creditIdr: creditOf({ source: "payment" }, { amount_idr: first.payable, credit_idr: first.credit }) }; const second = upgradeQuote(T3, o2, [], false); return first.payable + second.payable + 199000 === 599000; })());
+
+console.log("\nBatas pemakaian promo");
+check("tanpa batas tidak pernah habis", !promoExhausted(coded({ max_uses: null, uses: 9999 })));
+check("belum mencapai batas", !promoExhausted(coded({ max_uses: 10, uses: 9 })));
+check("tepat mencapai batas = habis", promoExhausted(coded({ max_uses: 10, uses: 10 })));
+check("kode habis ditolak dengan alasan exhausted", checkPromoCode("NIKAH2026", "P1", [coded({ max_uses: 5, uses: 5 })]).reason === "exhausted");
+check("kode dengan sisa kuota diterima", checkPromoCode("NIKAH2026", "P1", [coded({ max_uses: 5, uses: 4 })]).ok === true);
+check("promo habis tidak memberi potongan", priceFor(plan, [coded({ max_uses: 1, uses: 1 })], true, now0, "NIKAH2026").discount === 0);
+check("promo otomatis yang habis juga berhenti", priceFor(plan, [mk({ max_uses: 2, uses: 2 })], true).discount === 0);
+check("promo dengan sisa kuota tetap berlaku", priceFor(plan, [coded({ max_uses: 2, uses: 1 })], true, now0, "NIKAH2026").final === 159200);
+
+console.log("\nPengalihan aman dan kata kunci pencarian");
+const BS = String.fromCharCode(92), LF = String.fromCharCode(10);
+check("alamat dalam situs diterima", safeNextPath("/app/raka-nadia/budget?x=1") === "/app/raka-nadia/budget?x=1");
+check("//evil.com ditolak", safeNextPath("//evil.com") === "/mulai");
+check("garis miring terbalik ditolak", safeNextPath("/" + BS + "evil.com") === "/mulai" && safeNextPath("/ok/" + BS + "x") === "/mulai");
+check("URL absolut dan skema ditolak", safeNextPath("https://evil.com") === "/mulai" && safeNextPath("javascript:alert(1)") === "/mulai");
+check("karakter kontrol ditolak", safeNextPath("/a" + LF + "b") === "/mulai");
+check("bukan string memakai fallback", safeNextPath(undefined) === "/mulai" && safeNextPath(null, "/x") === "/x");
+check("kata kunci: karakter filter dibuang", cleanQuery("a,b(c)%d_e*f") === "a b c d e f");
+check("kata kunci dipisah dan dibatasi 5 kata", parseTerms("satu dua tiga empat lima enam tujuh").length === 5);
+check("kata kunci kosong", parseTerms("  ,,  ").length === 0);
 
 console.log("\nEvent Google Calendar");
 const ctx = { ref: "raka-nadia", tz: "Asia/Jakarta", appUrl: "https://monaplan.test" };
@@ -166,6 +217,15 @@ check("state sah terbaca", eq(verifyState(st), { u: "user-1", p: "proj-1" }));
 check("state diubah ditolak", verifyState(st.replace(/^./, (c) => (c === "A" ? "B" : "A"))) === null);
 check("state kedaluwarsa ditolak", verifyState(signState({ u: "u", p: "p" }, -1000)) === null);
 check("state kosong ditolak", verifyState(null) === null && verifyState("abc") === null);
+
+console.log("\nUrutan daftar admin");
+const COLS = { tanggal: { column: "created_at", dir: "desc" }, nama: { column: "name", dir: "asc" } };
+check("tanpa parameter memakai bawaan", eq(parseSort({}, COLS, "tanggal"), { key: "tanggal", dir: "desc", column: "created_at", ascending: false }));
+check("kunci sah dengan arah bawaan kolom", eq(parseSort({ sort: "nama" }, COLS, "tanggal"), { key: "nama", dir: "asc", column: "name", ascending: true }));
+check("arah dari URL dipakai", parseSort({ sort: "nama", dir: "desc" }, COLS, "tanggal").ascending === false);
+check("kolom di luar daftar ditolak", parseSort({ sort: "password; drop table x" }, COLS, "tanggal").column === "created_at");
+check("kunci prototipe ditolak", parseSort({ sort: "constructor" }, COLS, "tanggal").key === "tanggal");
+check("arah tak dikenal diabaikan", parseSort({ sort: "nama", dir: "sideways" }, COLS, "tanggal").dir === "asc");
 
 fs.rmSync(OUT, { recursive: true, force: true });
 console.log(`\n${pass} lulus, ${bad} gagal`);

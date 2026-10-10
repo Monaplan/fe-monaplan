@@ -265,7 +265,7 @@ erDiagram
     text phone_e164
     party_side side
     smallint pax_invited
-    text rsvp_token UK
+    boolean self_registered
     rsvp_status rsvp_status
     smallint pax_confirmed
   }
@@ -765,7 +765,7 @@ create table public.guests (
   side                public.party_side not null default 'bersama',
   category            text not null default 'reguler',   -- vip, keluarga, reguler
   pax_invited         smallint not null default 1 check (pax_invited between 1 and 20),
-  rsvp_token          text not null unique default public.gen_url_token(),
+  self_registered     boolean not null default false,  -- mendaftar sendiri lewat tautan umum (migrasi 20261010000002)
   rsvp_status         public.rsvp_status not null default 'belum_respon',
   pax_confirmed       smallint not null default 0 check (pax_confirmed >= 0),
   rsvp_message        text check (char_length(rsvp_message) <= 500),
@@ -1705,3 +1705,19 @@ Migrasi `20261009000004_trial_promo_calendar.sql`.
 - `support_tickets` (user_id, project_id, subject, message, status, timestamps), RLS pemilik; admin membaca lewat service role.
 - Fungsi: `can_upgrade_to`, `lifetime_tier`; `grant_license_for_order` dan `issue_license` mendukung upgrade.
 - Migrasi: `20261009000004_trial_promo_calendar.sql`, `20261009000005_slug_tier_quota.sql`.
+
+## 14. Tambahan gelombang C
+
+- `promos.code` (unik tanpa membedakan huruf), `popup_enabled`, `popup_title`, `popup_text`, `popup_cta`, `popup_audience`.
+- `wedding_projects.rsvp_template` (lima nilai).
+- `submit_rsvp` menyisipkan `notifications` (type `rsvp_response`) untuk owner dan editor. Tabel `notifications` masuk publikasi `supabase_realtime`.
+- Indeks trigram pada kolom nama/judul untuk pencarian.
+
+## 15. Modul bonus
+
+- `inspiration_items` (kategori, judul, catatan, tautan, warna hex, foto, favorit), `trip_plans` (satu per proyek), `trip_items` (hari, jam, jenis, biaya, status dipesan). RLS baca untuk anggota, tulis untuk pemilik dan editor.
+
+
+## Pembaruan 2026-10-10
+- Undangan memakai tautan `domain/slug?to=Nama`; `submit_rsvp(token)` dan kolom `guests.rsvp_token` dibuang, diganti `submit_rsvp_by_name(slug, nama, status, pax, pesan)` dan `rsvp_lookup(slug, nama)`.
+- Tabel `support_tickets` dibuang (bantuan lewat WhatsApp). Fungsi `reserved_slug()` mencadangkan nama rute; tema RSVP: `elegan_minimalis`, `klasik_emas`, `bali`, `noir_luxury`, `botanical_soft`.

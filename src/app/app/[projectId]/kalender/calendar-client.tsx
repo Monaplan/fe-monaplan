@@ -87,9 +87,9 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
     );
     const cls = cn("flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-medium", s.cls);
     return ag && canWrite ? (
-      <button key={f.source + f.source_id} className={cls} onClick={() => setForm({ agenda: ag })} title={f.title}>{content}</button>
+      <button key={f.source + f.source_id} data-row-id={f.source_id} className={cls} onClick={() => setForm({ agenda: ag })} title={f.title}>{content}</button>
     ) : (
-      <Link key={f.source + f.source_id} href={`${base}/${s.path}`} className={cls} title={f.title}>{content}</Link>
+      <Link key={f.source + f.source_id} data-row-id={f.source_id} href={`${base}/${s.path}`} className={cls} title={f.title}>{content}</Link>
     );
   };
 
@@ -110,7 +110,7 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
           <Button variant="outline" size="icon-sm" aria-label={t("Berikutnya")} onClick={() => shift(1)}><ChevronRight /></Button>
           <Button variant="outline" size="sm" onClick={() => setCursor(today)}>{t("Hari ini")}</Button>
           <h2 className="ml-1 text-lg font-semibold capitalize">{view === "bulan" ? monthLabel : view === "minggu" ? t("Minggu {date}", { date: formatDateLong(weekDays[0]!, undefined, lang).split(", ").slice(1).join(", ") }) : t("Mulai {date}", { date: formatDateLong(cursor, undefined, lang) })}</h2>
-          <Segmented className="ml-auto" items={[{ key: "bulan", label: t("Bulan") }, { key: "minggu", label: t("Minggu") }, { key: "daftar", label: t("Daftar") }]} value={view} onChange={setView} />
+          <Segmented className="ml-auto" items={[{ key: "bulan", label: t("Bulan") }, { key: "minggu", label: t("Minggu") }, { key: "daftar", label: t("Agenda") }]} value={view} onChange={setView} />
         </div>
 
         <div className="mb-3 flex flex-wrap gap-3 text-xs text-neutral-600">
@@ -160,7 +160,7 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
                     const s = SOURCE[f.source];
                     const ag = f.source === "agenda" ? agenda.find((a) => a.id === f.source_id) : null;
                     return (
-                      <li key={f.source + f.source_id} className="flex items-center gap-3 rounded-md border border-neutral-200 p-3">
+                      <li key={f.source + f.source_id} data-row-id={f.source_id} className="flex items-center gap-3 rounded-md border border-neutral-200 p-3">
                         <span className={cn("inline-flex size-8 shrink-0 items-center justify-center rounded-md [&_svg]:size-4", s.cls)}>{s.icon}</span>
                         <div className="min-w-0 flex-1">
                           <p className={cn("truncate text-sm font-medium", (f.status === "done" || f.status === "sudah_bayar") && "text-neutral-400 line-through")}>{f.source === "task" ? t(f.title) : f.title}</p>

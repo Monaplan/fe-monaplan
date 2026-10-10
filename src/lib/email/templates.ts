@@ -11,11 +11,9 @@ export type EmailData =
   | { kind: "trial_ended"; name: string; url: string }
   | { kind: "receipt"; name: string; orderNumber: string; plan: string; amount: string; method: string; validity: string; discount?: string | null; url: string }
   | { kind: "invitation"; name: string; inviter: string; project: string; role: "editor" | "viewer"; expiresDays: number; url: string }
-  | { kind: "support_received"; name: string; subject: string; url: string }
-  | { kind: "support_ticket"; name: string; from: string; email: string; subject: string; message: string; url: string };
 
 export type EmailKind = EmailData["kind"];
-export const EMAIL_KINDS: EmailKind[] = ["agenda_reminder", "task_due", "payment_due", "rsvp_digest", "trial_ending", "trial_ended", "receipt", "invitation", "support_received", "support_ticket"];
+export const EMAIL_KINDS: EmailKind[] = ["agenda_reminder", "task_due", "payment_due", "rsvp_digest", "trial_ending", "trial_ended", "receipt", "invitation"];
 
 // Isi tiap email: judul/subjek, paragraf, baris rincian, dan tombol
 type Content = { subject: string; headline: string; paragraphs: string[]; rows?: [string, string][]; cta: string; preheader: string };
@@ -107,22 +105,6 @@ function content(lang: Lang, d: EmailData): Content {
         cta: id ? "Lihat tagihan" : "View billing",
         preheader: `${d.plan} · ${d.amount}`,
       };
-    case "support_received":
-      return {
-        subject: id ? `Pertanyaanmu sudah kami terima: ${d.subject}` : `We received your message: ${d.subject}`,
-        headline: id ? "Pertanyaanmu sudah masuk" : "We received your message",
-        paragraphs: [id ? `Subjek: ${d.subject}` : `Subject: ${d.subject}`, id ? "Kami balas lewat email ini secepatnya. Kamu tidak perlu mengirim ulang." : "We will reply to this email as soon as we can. You do not need to send it again."],
-        cta: id ? "Buka Pusat Bantuan" : "Open Help Center",
-        preheader: d.subject,
-      };
-    case "support_ticket":
-      return {
-        subject: `[Bantuan] ${d.subject}`,
-        headline: `Tiket baru: ${d.subject}`,
-        paragraphs: [`Dari ${d.from} (${d.email})`, ...d.message.split(/\n+/).filter(Boolean)],
-        cta: "Buka kotak masuk bantuan",
-        preheader: d.message.slice(0, 90),
-      };
     case "invitation":
       return {
         subject: id ? `${d.inviter} mengundangmu ke ${d.project}` : `${d.inviter} invited you to ${d.project}`,
@@ -190,8 +172,6 @@ export function sampleData(kind: EmailKind, url = "https://monaplan.example/app/
     case "trial_ending": return { kind, name, daysLeft: 1, url };
     case "trial_ended": return { kind, name, url };
     case "receipt": return { kind, name, orderNumber: "MNP-20261009-ABC123", plan: "Monaplan Selamanya", amount: "Rp 159.200", method: "QRIS", validity: "Selamanya", discount: "Promo Akhir Tahun (-Rp 39.800)", url };
-    case "support_received": return { kind, name, subject: "Cara menambah kategori budget", url };
-    case "support_ticket": return { kind, name: "Tim Monaplan", from: "Raka Pratama", email: "raka@example.com", subject: "Cara menambah kategori budget", message: "Halo, bagaimana cara menambah kategori budget baru?\nTerima kasih.", url };
     case "invitation": return { kind, name: "Nadia Putri", inviter: "Raka Pratama", project: "Raka & Nadia", role: "editor", expiresDays: 7, url };
   }
 }
@@ -205,6 +185,4 @@ export const EMAIL_LABEL: Record<EmailKind, { id: string; en: string }> = {
   trial_ended: { id: "Trial berakhir", en: "Trial ended" },
   receipt: { id: "Kuitansi pembayaran", en: "Payment receipt" },
   invitation: { id: "Undangan kolaborator", en: "Collaborator invitation" },
-  support_received: { id: "Pertanyaan diterima", en: "Support message received" },
-  support_ticket: { id: "Tiket bantuan (untuk tim)", en: "Support ticket (for staff)" },
 };

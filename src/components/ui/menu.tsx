@@ -57,7 +57,7 @@ export function RowMenu({ items, label = "Aksi" }: { items: MenuItem[]; label?: 
         aria-expanded={open}
         disabled={pending}
         onClick={toggle}
-        className="inline-flex size-8 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+        className="inline-flex size-10 items-center justify-center rounded-full bg-neutral-100 md:size-8 text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
       >
         <MoreHorizontal className="size-4" />
       </button>

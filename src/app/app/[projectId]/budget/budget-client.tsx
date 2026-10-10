@@ -13,9 +13,9 @@ import { StatusPill } from "@/components/ui/pill";
 import { ProgressBar } from "@/components/ui/progress";
 import { Segmented } from "@/components/ui/tabs";
 import { cn } from "@/components/ui/cn";
-import { CategoryChart } from "@/components/app/charts";
+import { CategoryChart } from "@/components/app/charts-lazy";
 import { PAYMENT_KIND, labelOf } from "@/lib/constants";
-import { formatDateCompact, formatIDR, formatPercent, relativeDay, todayISO } from "@/lib/format";
+import { formatDateCompact, formatIDR, formatIDRShort, formatPercent, relativeDay, todayISO } from "@/lib/format";
 import { deleteCategory, deleteItem, deletePayment, markPaymentPaid, saveCategory, saveItem } from "@/features/budget/actions";
 import { PaymentFormModal, type Payment } from "@/features/budget/payment-form";
 import { ProductTour } from "@/components/app/product-tour";
@@ -25,6 +25,9 @@ import { useI18n } from "@/i18n/client";
 type Category = { id: string; name: string; allocated_idr: number };
 type Item = { id: string; category_id: string; name: string; estimated_idr: number; actual_idr: number | null; vendor_id: string | null; notes: string | null; vendors: { name: string } | null };
 type PaymentRow = Payment & { vendors: { name: string } | null; budget_items: { name: string } | null };
+
+// Kartu ringkasan: nominal singkat di HP supaya tidak terpotong, lengkap di layar lebar
+const money = (n: number) => <><span className="sm:hidden">{formatIDRShort(n)}</span><span className="hidden sm:inline">{formatIDR(n)}</span></>;
 
 export function BudgetClient({ projectId, tz, totalBudget, categories, items, payments, vendors, documents, canWrite }: {
   projectId: string; tz: string; totalBudget: number; categories: Category[]; items: Item[]; payments: PaymentRow[];
@@ -66,12 +69,12 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
       />
 
       <div data-tour="budget-stats" className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={<PiggyBank />} title={t("Total Budget")} value={formatIDR(totalBudget)}
+        <StatCard icon={<PiggyBank />} title={t("Total Budget")} value={money(totalBudget)}
           footer={<StatusPill tone={diff < 0 ? "danger" : "positive"}>{diff < 0 ? t("Lebih {formatIDR}", { formatIDR: formatIDR(-diff) }) : t("Sisa {formatIDR}", { formatIDR: formatIDR(diff) })}</StatusPill>} />
-        <StatCard icon={<Wallet />} title={t("Realisasi")} value={formatIDR(actual)}
+        <StatCard icon={<Wallet />} title={t("Realisasi")} value={money(actual)}
           footer={<><StatusPill tone={actual > totalBudget ? "danger" : "positive"} icon={false}>{formatPercent(totalBudget ? actual / totalBudget : 0)}</StatusPill> estimasi {formatIDR(estimated)}</>} />
-        <StatCard icon={<CircleCheck />} title={t("Sudah Dibayar")} value={formatIDR(paid)} footer={<>{t("{n} pembayaran", { n: payments.filter((p) => p.status === "sudah_bayar").length })}</>} />
-        <StatCard icon={<ReceiptText />} title={t("Sisa Tagihan")} value={formatIDR(unpaid)} footer={<>{payments.filter((p) => p.status === "belum_bayar").length}{" "}{t("belum dibayar")}</>} />
+        <StatCard icon={<CircleCheck />} title={t("Sudah Dibayar")} value={money(paid)} footer={<>{t("{n} pembayaran", { n: payments.filter((p) => p.status === "sudah_bayar").length })}</>} />
+        <StatCard icon={<ReceiptText />} title={t("Sisa Tagihan")} value={money(unpaid)} footer={<>{payments.filter((p) => p.status === "belum_bayar").length}{" "}{t("belum dibayar")}</>} />
       </div>
 
       {catStats.some((c) => c.estimated || c.actual) && (
@@ -133,7 +136,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
                         ]} />
                       );
                       return (
-                        <div key={i.id} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1fr_140px_140px_140px_40px] md:items-center">
+                        <div key={i.id} data-row-id={i.id} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1fr_140px_140px_140px_40px] md:items-center">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium text-neutral-800">{i.name}</p>
                             {i.vendors && <p className="text-xs text-neutral-500">{i.vendors.name}</p>}
@@ -166,7 +169,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
             const late = p.status === "belum_bayar" && p.due_date && p.due_date < today;
             const soon = p.status === "belum_bayar" && p.due_date && !late && p.due_date <= addDays(today, 7);
             return (
-              <div key={p.id} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1.4fr_1fr_130px_140px_130px_40px] md:items-center">
+              <div key={p.id} data-row-id={p.id} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1.4fr_1fr_130px_140px_130px_40px] md:items-center">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-neutral-800">{p.label ?? t(labelOf(PAYMENT_KIND, p.kind))}</p>
                   <p className="truncate text-xs text-neutral-500">{t(labelOf(PAYMENT_KIND, p.kind))}{p.budget_items ? ` · ${p.budget_items.name}` : ""}</p>

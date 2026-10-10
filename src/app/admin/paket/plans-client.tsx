@@ -17,7 +17,7 @@ import { useT } from "@/i18n/client";
 
 type Plan = { id: string; tier?: number; code: string; name: string; description: string | null; type: "lifetime" | "timed"; duration_days: number | null; price_idr: number; max_projects: number; max_collaborators: number; storage_quota_mb: number; is_public: boolean; is_active: boolean; sort_order: number };
 
-export function PlansClient({ plans }: { plans: Plan[] }) {
+export function PlansClient({ plans, sortControl }: { plans: Plan[]; sortControl?: React.ReactNode }) {
   const t = useT();
   const [form, setForm] = useState<Plan | "new" | null>(null);
   const p = form && form !== "new" ? form : null;
@@ -25,7 +25,7 @@ export function PlansClient({ plans }: { plans: Plan[] }) {
   return (
     <>
       <ProductTour id="admin-paket" steps={TOURS["admin-paket"]!} />
-      <PageHeader tour="admin-paket" title={t("Paket")} description={t("Semua paket yang dijual berlaku selamanya. Masa uji coba diatur di menu Trial.")} actions={<Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Paket Baru")}</Button>} />
+      <PageHeader tour="admin-paket" title={t("Paket")} description={t("Semua paket yang dijual berlaku selamanya. Masa uji coba diatur di menu Trial.")} actions={<>{sortControl}<Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Paket Baru")}</Button></>} />
       <Card tour="admin-paket-main" className="p-0 sm:p-0">
         {plans.map((x) => (
           <div key={x.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 px-5 py-3 last:border-0">

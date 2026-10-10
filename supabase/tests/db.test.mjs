@@ -124,10 +124,11 @@ await expectOk("idempoten (dipanggil dua kali, satu lisensi)", async () => {
 });
 
 console.log("\nRSVP");
-const g = await as(A, "a@x.com", () => one(`insert into guests (project_id, name, pax_invited) values ($1, 'Bapak Hendra', 2) returning rsvp_token`, [P]));
-await expectOk("token RSVP 12 karakter url-safe", async () => { if (!/^[A-Za-z0-9_-]{12}$/.test(g.rsvp_token)) throw new Error(g.rsvp_token); });
-await expectErr("pax melebihi kuota", "RSVP_PAX_INVALID", () => db.query(`select submit_rsvp($1, 'hadir', 3::smallint, '')`, [g.rsvp_token]));
-await expectOk("submit RSVP hadir 2 pax", () => db.query(`select submit_rsvp($1, 'hadir', 2::smallint, 'Selamat!')`, [g.rsvp_token]));
+const SLUG = (await one(`select slug from wedding_projects where id = $1`, [P])).slug;
+await as(A, "a@x.com", () => db.query(`insert into guests (project_id, name, pax_invited) values ($1, 'Bapak Hendra', 2)`, [P]));
+const rsvp = (name, status, pax, msg = '') => db.query(`select submit_rsvp_by_name($1, $2, $3::rsvp_status, $4::smallint, $5)`, [SLUG, name, status, pax, msg]);
+await expectErr("pax melebihi kuota", "RSVP_PAX_INVALID", () => rsvp('Bapak Hendra', 'hadir', 3));
+await expectOk("submit RSVP hadir 2 pax (nama cocok walau huruf dan sapaan beda)", () => rsvp('  hendra ', 'hadir', 2, 'Selamat!'));
 await expectOk("guest_rsvp_summary", () => as(A, "a@x.com", async () => { const r = await one(`select * from guest_rsvp_summary where project_id=$1`, [P]); if (Number(r.attending_pax) !== 2) throw new Error(JSON.stringify(r)); }));
 await expectOk("calendar_feed & budget_category_summary terbaca", () => as(A, "a@x.com", async () => { await db.query(`select * from calendar_feed limit 5`); await db.query(`select * from budget_category_summary limit 5`); }));
 
@@ -273,16 +274,126 @@ await expectOk("pengguna mengubah bahasanya sendiri", () => as(A, "a@x.com", asy
   if (r.language !== "en") throw new Error(r.language);
 }));
 await expectErr("bahasa selain id/en ditolak", "violates check constraint", () => db.query(`update profiles set language = 'fr' where id = $1`, [A]));
-await expectOk("pengguna membuat dan membaca tiket sendiri", () => as(A, "a@x.com", async () => {
-  await db.query(`insert into support_tickets (user_id, subject, message) values ($1, 'Tanya budget', 'Bagaimana cara menambah kategori?')`, [A]);
-  const r = await one(`select count(*)::int c from support_tickets`);
+await expectOk("tabel tiket bantuan, kolom rsvp_token, dan fungsi lama sudah dibuang", async () => {
+  const r = await one(`select to_regclass('public.support_tickets') t, (select count(*)::int from information_schema.columns where table_name = 'guests' and column_name = 'rsvp_token') c, (select count(*)::int from pg_proc where proname = 'submit_rsvp') f`);
+  if (r.t !== null || r.c !== 0 || r.f !== 0) throw new Error(JSON.stringify(r));
+});
+
+console.log("\nKode promo, template RSVP, notifikasi RSVP");
+await expectOk("kode promo tersimpan dan unik tanpa membedakan huruf", async () => {
+  await db.query(`insert into promos (name, discount_type, discount_value, code) values ('Uji kode', 'percent', 10, 'NIKAH2026')`);
+});
+await expectErr("kode promo kembar (huruf berbeda) ditolak", "duplicate key", () => db.query(`insert into promos (name, discount_type, discount_value, code) values ('Kembar', 'percent', 10, 'nikah2026')`));
+await expectErr("kode promo dengan spasi ditolak", "violates check constraint", () => db.query(`insert into promos (name, discount_type, discount_value, code) values ('Spasi', 'percent', 10, 'ada spasi')`));
+await expectOk("dua promo tanpa kode boleh ada", () => db.query(`insert into promos (name, discount_type, discount_value) values ('Otomatis 1', 'percent', 5), ('Otomatis 2', 'percent', 5)`));
+await expectErr("sasaran popup di luar daftar ditolak", "violates check constraint", () => db.query(`insert into promos (name, discount_type, discount_value, popup_audience) values ('X', 'percent', 5, 'semua')`));
+await expectErr("batas pemakaian 0 ditolak", "violates check constraint", () => db.query(`insert into promos (name, discount_type, discount_value, max_uses) values ('Nol', 'percent', 5, 0)`));
+await expectOk("batas pemakaian positif atau kosong diterima", () => db.query(`insert into promos (name, discount_type, discount_value, max_uses) values ('Terbatas', 'percent', 5, 10), ('Bebas', 'percent', 5, null)`));
+await expectOk("template RSVP bawaan elegan_minimalis", async () => {
+  const r = await one(`select rsvp_template t from wedding_projects where id = $1`, [P]);
+  if (r.t !== "elegan_minimalis") throw new Error(r.t);
+});
+await expectErr("template RSVP di luar daftar ditolak", "violates check constraint", () => db.query(`update wedding_projects set rsvp_template = 'norak' where id = $1`, [P]));
+const H = "99999999-9999-9999-9999-999999999991", V = "99999999-9999-9999-9999-999999999992";
+await db.query(`insert into auth.users (id, email) values ($1, 'h@x.com'), ($2, 'v@x.com')`, [H, V]);
+await db.query(`insert into project_members (project_id, user_id, role) values ($1, $2, 'editor'), ($1, $3, 'viewer')`, [P, H, V]);
+await as(A, "a@x.com", () => db.query(`insert into guests (project_id, name, pax_invited) values ($1, 'Ibu Sari', 3)`, [P]));
+await rsvp('Ibu Sari', 'hadir', 2);
+await expectOk("RSVP membuat notifikasi untuk pemilik", () => as(A, "a@x.com", async () => {
+  const r = await one(`select count(*)::int c, max(body) b, max(link_path) l from notifications where type = 'rsvp_response' and body like 'Ibu Sari%'`);
+  if (r.c !== 1 || r.b !== "Ibu Sari: Hadir (2 orang)" || !r.l.endsWith("/tamu")) throw new Error(JSON.stringify(r));
+}));
+await expectOk("RSVP membuat notifikasi untuk editor", () => as(H, "h@x.com", async () => {
+  const r = await one(`select count(*)::int c from notifications where body like 'Ibu Sari%'`);
   if (r.c !== 1) throw new Error("c=" + r.c);
 }));
-await expectOk("pengguna lain tidak melihat tiket", () => as(B, "b@x.com", async () => {
-  const r = await one(`select count(*)::int c from support_tickets`);
-  if (r.c !== 0) throw new Error("tiket bocor");
+await expectOk("RSVP tidak membuat notifikasi untuk viewer", () => as(V, "v@x.com", async () => {
+  const r = await one(`select count(*)::int c from notifications where body like 'Ibu Sari%'`);
+  if (r.c !== 0) throw new Error("c=" + r.c);
 }));
-await expectErr("tiket atas nama orang lain ditolak", "row-level security", () => as(B, "b@x.com", () => db.query(`insert into support_tickets (user_id, subject, message) values ($1, 'Palsu', 'Pesan palsu atas nama A')`, [A])));
+const X = "99999999-9999-9999-9999-999999999994";
+await db.query(`insert into auth.users (id, email) values ($1, 'x@x.com')`, [X]);
+await expectOk("pengguna di luar proyek tidak melihat notifikasi orang lain", () => as(X, "x@x.com", async () => {
+  const r = await one(`select count(*)::int c from notifications where body like 'Ibu Sari%'`);
+  if (r.c !== 0) throw new Error("bocor");
+}));
+await rsvp('Ibu Sari', 'tidak_hadir', 0);
+await expectOk("jawaban kedua tamu membuat notifikasi baru, tanpa duplikat", () => as(A, "a@x.com", async () => {
+  const r = await one(`select count(*)::int c from notifications where body like 'Ibu Sari%'`);
+  if (r.c < 1 || r.c > 2) throw new Error("c=" + r.c);
+}));
+console.log("\nRSVP lewat nama");
+await expectOk("normalisasi nama membuang sapaan dan tanda baca", async () => {
+  const r = await one(`select normalize_guest_name('  Bapak  H. Hendra, S.T. ') n`);
+  if (r.n !== "h hendra s t") throw new Error(r.n);
+});
+await expectOk("rsvp_lookup menemukan satu tamu", async () => {
+  const r = (await one(`select rsvp_lookup($1, 'ibu sari') r`, [SLUG])).r;
+  if (r.matches !== 1 || r.guest.name !== "Ibu Sari") throw new Error(JSON.stringify(r));
+});
+await expectErr("tautan dengan slug tak dikenal ditolak", "RSVP_NOT_FOUND", () => db.query(`select submit_rsvp_by_name('tidak-ada-slug', 'Budi', 'hadir', 1::smallint, '')`));
+await expectErr("nama kosong ditolak", "RSVP_NAME_INVALID", () => rsvp('   ', 'hadir', 1));
+await expectOk("nama yang belum ada dicatat sebagai tamu baru bertanda mendaftar sendiri", async () => {
+  await rsvp('Pak Wayan Sudarma', 'hadir', 2, 'Om Swastyastu');
+  const r = await one(`select self_registered s, pax_invited p, rsvp_status st from guests where project_id = $1 and name = 'Pak Wayan Sudarma'`, [P]);
+  if (!r.s || r.p !== 2 || r.st !== "hadir") throw new Error(JSON.stringify(r));
+});
+await expectOk("jawaban kedua dari nama yang sama memperbarui, bukan menambah", async () => {
+  await rsvp('wayan sudarma', 'tidak_hadir', 0);
+  const r = await one(`select count(*)::int c, max(rsvp_status::text) st from guests where project_id = $1 and normalize_guest_name(name) = 'wayan sudarma'`, [P]);
+  if (r.c !== 1 || r.st !== "tidak_hadir") throw new Error(JSON.stringify(r));
+});
+await expectErr("tamu baru maksimal 5 orang", "RSVP_PAX_INVALID", () => rsvp('Tamu Rombongan', 'hadir', 6));
+await as(A, "a@x.com", () => db.query(`insert into guests (project_id, name) values ($1, 'Made Ayu'), ($1, 'Bu Made Ayu')`, [P]));
+await expectOk("nama persis menang atas kecocokan tanpa sapaan", async () => {
+  const r = (await one(`select rsvp_lookup($1, 'made ayu') r`, [SLUG])).r;
+  if (r.matches !== 1 || r.guest.name !== "Made Ayu") throw new Error(JSON.stringify(r));
+});
+await expectErr("sapaan lain yang cocok dengan dua tamu ambigu", "RSVP_NAME_AMBIGUOUS", () => rsvp('Mas Made Ayu', 'hadir', 1));
+await expectOk("rsvp_lookup melaporkan dua kecocokan", async () => {
+  const r = (await one(`select rsvp_lookup($1, 'mas made ayu') r`, [SLUG])).r;
+  if (r.matches !== 2) throw new Error(JSON.stringify(r));
+});
+await as(A, "a@x.com", () => db.query(`insert into guests (project_id, name, pax_invited) values ($1, 'Bapak Budi', 2), ($1, 'Ibu Budi', 2)`, [P]));
+await expectOk("nama persis dengan sapaan membedakan Bapak Budi dan Ibu Budi", async () => {
+  await rsvp('Bapak Budi', 'hadir', 2);
+  const r = await one(`select name, rsvp_status st from guests where project_id = $1 and name in ('Bapak Budi', 'Ibu Budi') order by name`, [P]);
+  const all = (await db.query(`select name, rsvp_status st from guests where project_id = $1 and name in ('Bapak Budi', 'Ibu Budi') order by name`, [P])).rows;
+  if (all[0].name !== "Bapak Budi" || all[0].st !== "hadir" || all[1].st !== "belum_respon") throw new Error(JSON.stringify(all));
+});
+await expectErr("nama tanpa sapaan yang cocok dengan dua tamu tetap ambigu", "RSVP_NAME_AMBIGUOUS", () => rsvp('Budi', 'hadir', 1));
+await expectOk("rsvp_lookup nama persis menemukan satu tamu dan tidak membocorkan ucapan", async () => {
+  const r = (await one(`select rsvp_lookup($1, 'ibu budi') r`, [SLUG])).r;
+  if (r.matches !== 1 || r.guest.name !== "Ibu Budi" || "rsvp_message" in r.guest) throw new Error(JSON.stringify(r));
+});
+for (let i = 0; i < 50; i++) await db.query(`insert into guests (project_id, name, self_registered) values ($1, $2, true)`, [P, `Pendaftar ${i}`]);
+await expectErr("tamu baru setelah 50 dalam sehari ditolak", "RSVP_TOO_MANY", () => rsvp('Pendaftar Baru Sekali', 'hadir', 1));
+await expectOk("slug yang bentrok dengan rute aplikasi diganti", async () => {
+  const r = await one(`select unique_project_slug('admin') s, unique_project_slug('login') l, unique_project_slug('raka-nadia-baru') o`);
+  if (r.s === "admin" || r.l === "login" || r.o !== "raka-nadia-baru") throw new Error(JSON.stringify(r));
+});
+await expectOk("lisensi dicabut bisa dihapus tanpa merusak order", async () => {
+  const O = "99999999-9999-9999-9999-999999999993";
+  await db.query(`insert into auth.users (id, email) values ($1, 'o@x.com')`, [O]);
+  const l = await one(`insert into licenses (user_id, plan_id, source, status, revoked_reason) values ($1, $2, 'admin_grant', 'revoked', 'uji') returning id`, [O, life.id]);
+  await db.query(`delete from licenses where id = $1`, [l.id]);
+  const r = await one(`select count(*)::int c from licenses where id = $1`, [l.id]);
+  if (r.c !== 0) throw new Error("masih ada");
+});
+
+console.log("\nPapan Inspirasi dan Perjalanan Berdua");
+await expectOk("editor menambah item inspirasi", () => as(H, "h@x.com", () => db.query(`insert into inspiration_items (project_id, category, title, color) values ($1, 'dekorasi', 'Backdrop bunga putih', '#FFFFFF')`, [P])));
+await expectErr("viewer tidak bisa menambah item inspirasi", "row-level security", () => as(V, "v@x.com", () => db.query(`insert into inspiration_items (project_id, title) values ($1, 'X')`, [P])));
+await expectOk("viewer boleh membaca item inspirasi", () => as(V, "v@x.com", async () => { const r = await one(`select count(*)::int c from inspiration_items`); if (r.c < 1) throw new Error("c=" + r.c); }));
+await expectErr("warna di luar format hex ditolak", "violates check constraint", () => as(H, "h@x.com", () => db.query(`insert into inspiration_items (project_id, title, color) values ($1, 'Warna', 'merah')`, [P])));
+await expectErr("kategori inspirasi di luar daftar ditolak", "violates check constraint", () => as(H, "h@x.com", () => db.query(`insert into inspiration_items (project_id, title, category) values ($1, 'X', 'lain')`, [P])));
+await expectOk("pengguna di luar proyek tidak melihat inspirasi", () => as(X, "x@x.com", async () => { const r = await one(`select count(*)::int c from inspiration_items`); if (r.c !== 0) throw new Error("bocor"); }));
+await expectOk("owner menyimpan rencana perjalanan", () => as(A, "a@x.com", () => db.query(`insert into trip_plans (project_id, destination, start_date, end_date, budget_idr) values ($1, 'Labuan Bajo', '2027-03-20', '2027-03-25', 15000000)`, [P])));
+await expectErr("tanggal pulang sebelum berangkat ditolak", "violates check constraint", () => as(A, "a@x.com", () => db.query(`update trip_plans set end_date = '2027-03-10' where project_id = $1`, [P])));
+await expectErr("rencana perjalanan kedua untuk proyek yang sama ditolak", "duplicate key", () => as(A, "a@x.com", () => db.query(`insert into trip_plans (project_id) values ($1)`, [P])));
+await expectOk("editor menambah butir perjalanan", () => as(H, "h@x.com", () => db.query(`insert into trip_items (project_id, day_date, kind, title, cost_idr) values ($1, '2027-03-21', 'akomodasi', 'Hotel dekat pantai', 3200000)`, [P])));
+await expectErr("viewer tidak bisa mengubah butir perjalanan", "", async () => { const r = await as(V, "v@x.com", () => db.query(`update trip_items set is_booked = true where project_id = $1 returning id`, [P])); if (r.rows.length) throw new Error("terubah"); throw new Error("tidak ada baris terubah"); });
+await expectErr("biaya perjalanan negatif ditolak", "violates check constraint", () => as(H, "h@x.com", () => db.query(`insert into trip_items (project_id, title, cost_idr) values ($1, 'Aneh', -5)`, [P])));
 
 console.log("\nStorage policy");
 await expectOk("A boleh unggah ke folder proyeknya", () => as(A, "a@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`${P}/documents/x.pdf`])));

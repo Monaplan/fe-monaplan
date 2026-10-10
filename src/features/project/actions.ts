@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { SLUG_RE } from "@/lib/paths";
+import { RESERVED_SLUGS, SLUG_RE } from "@/lib/paths";
 import { scheduleCalendarSync } from "@/lib/google/schedule";
 import { z } from "zod";
 import { getMyAccess, getProjectContext, isActive, requireUser } from "@/lib/access";
@@ -12,6 +12,7 @@ import { dbError, fail, type ActionResult } from "@/lib/result";
 import { addDaysISO, diffDays, localToISO, parseIDR } from "@/lib/format";
 import { appUrl, EVENT_TYPES } from "@/lib/constants";
 import { sendTemplated } from "@/lib/email";
+import { RSVP_THEME_IDS } from "@/content/rsvp-themes";
 import { deleteObjects, deletePrefix, isProjectKey, storagePrefix } from "@/lib/storage";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -87,6 +88,7 @@ export async function updateCouple(projectId: string, fd: FormData): Promise<Act
   const changeSlug = isOwner && !!slug && !!project.slug && slug !== project.slug;
   if (changeSlug && !SLUG_RE.test(slug!)) return fail("Alamat hanya boleh huruf kecil, angka, dan tanda hubung (3 sampai 60 karakter).");
   if (changeSlug && (slug!.length < 3 || slug!.length > 60)) return fail("Alamat harus 3 sampai 60 karakter.");
+  if (changeSlug && RESERVED_SLUGS.has(slug!)) return fail("Alamat itu dicadangkan untuk sistem. Coba yang lain.");
   const { error } = await supabase.from("wedding_projects").update({
     partner_one_name: p1,
     partner_two_name: p2,
@@ -99,6 +101,16 @@ export async function updateCouple(projectId: string, fd: FormData): Promise<Act
   if (error?.message.includes("SLUG_TAKEN")) return fail("Alamat itu sudah dipakai. Coba yang lain.");
   if (error?.message.includes("SLUG_INVALID")) return fail("Alamat hanya boleh huruf kecil, angka, dan tanda hubung (3 sampai 60 karakter).");
   return error ? dbError(error) : { ok: true, message: "Data pasangan tersimpan.", data: { slug: changeSlug ? slug : project.slug } };
+}
+
+export async function setRsvpTemplate(projectId: string, theme: string): Promise<ActionResult> {
+  const { supabase, canWrite } = await getProjectContext(projectId);
+  if (!canWrite) return fail("Kamu tidak punya izin mengubah ini.");
+  if (!(RSVP_THEME_IDS as readonly string[]).includes(theme)) return fail("Tema tidak dikenal.");
+  const { error } = await supabase.from("wedding_projects").update({ rsvp_template: theme }).eq("id", projectId);
+  if (error) return dbError(error);
+  revalidatePath("/app/[projectId]", "layout");
+  return { ok: true, message: "Tema undangan tersimpan." };
 }
 
 export async function updateWeddingInfo(projectId: string, fd: FormData): Promise<ActionResult> {

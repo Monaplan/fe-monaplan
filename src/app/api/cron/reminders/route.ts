@@ -19,7 +19,9 @@ async function handle(request: Request) {
   if (!process.env.CRON_SECRET) return NextResponse.json({ error: "CRON_SECRET belum diisi" }, { status: 503 });
   if (!authorized(request)) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   try {
-    return NextResponse.json({ ok: true, ...(await runReminders(createAdminClient())) });
+    const admin = createAdminClient();
+    const reminders = await runReminders(admin);
+    return NextResponse.json({ ok: true, ...reminders });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });
   }

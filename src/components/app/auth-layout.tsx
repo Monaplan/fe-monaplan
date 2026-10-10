@@ -19,7 +19,7 @@ export async function AuthLayout({ title, subtitle, children, footer }: { title?
         </Link>
         <div className="mt-auto max-w-md">
           <p className="text-[11px] font-semibold tracking-[0.16em] text-[#EDD1DF] uppercase">{t("Digital Wedding Planner")}</p>
-          <h2 className="mt-3 font-display text-[44px] leading-[1.1] font-medium">{t("Atur pernikahan di satu tempat.")}</h2>
+          <h2 className="mt-3 font-display text-[44px] leading-[1.1] font-medium">{t("Satu tempat untuk semua rencana nikahmu.")}</h2>
           <ul className="mt-8 space-y-3 text-[14px] text-white/85">
             {[
               [<CalendarHeart key="a" />, "Checklist per fase dengan hitung mundur hari H"],

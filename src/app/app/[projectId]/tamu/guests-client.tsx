@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Papa from "papaparse";
 import {
-  CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageCircle, MessageSquareText, Pencil, Plus, RefreshCw, Search, Send, Trash2, Users, X,
+  CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageCircle, MessageSquareText, Pencil, Plus, Search, Send, Trash2, Users, X,
 } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import { GUEST_CATEGORY, PARTY_SIDE, RSVP_STATUS, labelOf } from "@/lib/constant
 import { formatDateCompact, formatPhone, normalizePhone, waLink } from "@/lib/format";
 import { composeMessage, PLACEHOLDERS, type EventLite } from "@/lib/messages";
 import {
-  deleteGuests, importGuests, markInvitationSent, regenerateRsvpToken, saveGuest, saveTemplate, setGuestsGroup,
+  deleteGuests, importGuests, markInvitationSent, saveGuest, saveTemplate, setGuestsGroup,
 } from "@/features/guests/actions";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
@@ -30,16 +30,16 @@ import { useT } from "@/i18n/client";
 
 type Guest = {
   id: string; name: string; phone_e164: string | null; side: string; category: string; group_id: string | null; pax_invited: number;
-  rsvp_token: string; rsvp_status: string; pax_confirmed: number; rsvp_message: string | null; rsvp_responded_at: string | null;
+  self_registered: boolean; rsvp_status: string; pax_confirmed: number; rsvp_message: string | null; rsvp_responded_at: string | null;
   invitation_sent_at: string | null; notes: string | null;
 };
 type Group = { id: string; name: string; side: string };
 
 const rsvpTone = (s: string): Tone => (s === "hadir" ? "positive" : s === "tidak_hadir" ? "danger" : s === "ragu" ? "caution" : "neutral");
 
-export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, groups, events, invites, template, baseUrl, canWrite }: {
+export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, groups, events, invites, template, baseUrl, slug, canWrite }: {
   projectId: string; tz: string; coupleName: string; rsvpDeadline: string | null; guests: Guest[]; groups: Group[]; events: EventLite[];
-  invites: { guest_id: string; event_id: string }[]; template: { id: string | null; name: string; body: string }; baseUrl: string; canWrite: boolean;
+  invites: { guest_id: string; event_id: string }[]; template: { id: string | null; name: string; body: string }; baseUrl: string; slug: string; canWrite: boolean;
 }) {
   const { t, lang } = useI18n();
   const toast = useToast();
@@ -80,7 +80,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
     (!fGroup || g.group_id === fGroup) && (!fSide || g.side === fSide) && (!fStatus || g.rsvp_status === fStatus) &&
     (!fSent || (fSent === "sudah" ? !!g.invitation_sent_at : !g.invitation_sent_at)));
 
-  const link = (g: Guest) => `${baseUrl}/rsvp/${g.rsvp_token}`;
+  const link = (g: Guest) => `${baseUrl}/${slug}?to=${encodeURIComponent(g.name)}`;
   const messageFor = (g: Guest) => {
     const ids = invitesByGuest.get(g.id);
     const evs = ids?.length ? events.filter((e) => ids.includes(e.id)) : events;
@@ -116,7 +116,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
         }
       />
 
-      <div data-tour="tamu-stats" className="-mx-4 mb-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-5 md:px-0">
+      <div data-tour="tamu-stats" className="-mx-4 mb-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-5 md:px-0">
         {[
           { label: t("Undangan"), value: stats.total, sub: t("{n} sudah dikirim", { n: stats.sent }) },
           { label: t("Total Pax"), value: stats.pax, sub: t("kuota undangan") },
@@ -161,8 +161,8 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
         </Card>
       ) : (
         <Card className="p-0 sm:p-0">
-          <div data-tour="tamu-filter" className="grid gap-2 border-b border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-5">
-            <div className="relative">
+          <div data-tour="tamu-filter" className="grid grid-cols-2 gap-2 border-b border-neutral-200 p-3 lg:grid-cols-5">
+            <div className="relative col-span-2 lg:col-span-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Cari nama atau nomor")} className="pl-9" aria-label={t("Cari tamu")} />
             </div>
@@ -176,10 +176,11 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
             <span>{t("Nama")}</span><span>{t("Grup")}</span><span>{t("WhatsApp")}</span><span className="text-right">{t("Pax")}</span><span>{t("RSVP")}</span><span>{t("Undangan")}</span><span />
           </div>
           {filtered.slice(0, limit).map((g) => (
-            <div key={g.id} className={cn("grid grid-cols-[24px_1fr_auto] items-start gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 hover:bg-plum-50 sm:px-5 md:grid-cols-[32px_1.5fr_1fr_1fr_70px_130px_120px_40px] md:items-center", selected.has(g.id) && "bg-plum-50")}>
+            <div key={g.id} data-row-id={g.id} className={cn("grid grid-cols-[24px_1fr_auto] items-start gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 hover:bg-plum-50 sm:px-5 md:grid-cols-[32px_1.5fr_1fr_1fr_70px_130px_120px_40px] md:items-center", selected.has(g.id) && "bg-plum-50")}>
               <span className="pt-0.5 md:pt-0">{canWrite && <Checkbox aria-label={t("Pilih {name}", { name: g.name })} checked={selected.has(g.id)} onChange={() => toggleSel(g.id)} />}</span>
               <div className="min-w-0">
-                <button onClick={() => setForm(g)} className="block truncate text-left text-sm font-medium text-neutral-800 hover:text-plum-700">{g.name}</button>
+                <button onClick={() => setForm(g)} className="-my-1.5 block truncate py-1.5 text-left text-sm font-medium text-neutral-800 hover:text-plum-700">{g.name}</button>
+                {g.self_registered && <span className="mr-2 mt-0.5 inline-block rounded-full bg-caution-bg px-2 text-[11px] font-medium text-caution">{t("Mendaftar sendiri")}</span>}
                 <span className="text-xs text-neutral-500">{t(labelOf(PARTY_SIDE, g.side))} · {t(labelOf(GUEST_CATEGORY, g.category))}</span>
               </div>
               <div className="col-start-3 row-start-1 md:hidden">{rowMenu(g)}</div>
@@ -207,7 +208,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
       {selected.size > 0 && (
         <div className="fixed inset-x-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-2xl flex-wrap items-center gap-2 rounded-full border border-neutral-200 bg-surface px-4 py-2 shadow-pop md:bottom-6">
           <span className="text-sm font-semibold">{t("{size} dipilih", { size: selected.size })}</span>
-          <Select className="h-8 w-auto flex-1 rounded-full text-[13px]" defaultValue="" onChange={(e) => {
+          <Select className="h-10 w-auto flex-1 rounded-full text-[13px] md:h-8" defaultValue="" onChange={(e) => {
             if (e.target.value === "") return;
             bulk(() => setGuestsGroup(projectId, [...selected], e.target.value === "none" ? null : e.target.value));
             e.target.value = "";
@@ -228,7 +229,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
 
       {form && <GuestForm projectId={projectId} guest={form === "new" ? null : form} groups={groups} events={events} invited={form === "new" ? events.map((e) => e.id) : invitesByGuest.get(form.id) ?? []} canWrite={canWrite} onClose={() => setForm(null)} />}
       {importOpen && <ImportModal projectId={projectId} existingPhones={new Set(guests.map((g) => g.phone_e164).filter(Boolean) as string[])} onClose={() => setImportOpen(false)} />}
-      {tplOpen && <TemplateModal projectId={projectId} template={template} coupleName={coupleName} events={events} tz={tz} onClose={() => setTplOpen(false)} />}
+      {tplOpen && <TemplateModal projectId={projectId} template={template} coupleName={coupleName} events={events} tz={tz} sampleLink={`${baseUrl}/${slug}?to=Bapak%20Hendra`} onClose={() => setTplOpen(false)} />}
       {seqOpen && <SequentialModal guests={guests.filter((g) => !g.invitation_sent_at && g.phone_e164)} onSend={sendWA} onClose={() => setSeqOpen(false)} />}
     </>
   );
@@ -241,7 +242,6 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
         { label: t("Buka halaman RSVP"), icon: <Link2 />, href: link(g), external: true },
         { label: t("Ubah"), icon: <Pencil />, hidden: !canWrite, onClick: () => setForm(g) },
         { label: t("Hapus tanda terkirim"), icon: <X />, hidden: !canWrite || !g.invitation_sent_at, action: () => markInvitationSent(projectId, [g.id], false) },
-        { label: t("Buat ulang link RSVP"), icon: <RefreshCw />, hidden: !canWrite, confirm: t("Link lama tidak akan bisa dipakai lagi. Lanjutkan?"), action: () => regenerateRsvpToken(projectId, g.id) },
         { label: t("Hapus"), icon: <Trash2 />, danger: true, hidden: !canWrite, confirm: t("Hapus {name}?", { name: g.name }), action: () => deleteGuests(projectId, [g.id]) },
       ]} />
     );
@@ -406,13 +406,13 @@ function ImportModal({ projectId, existingPhones, onClose }: { projectId: string
   );
 }
 
-function TemplateModal({ projectId, template, coupleName, events, tz, onClose }: {
-  projectId: string; template: { id: string | null; name: string; body: string }; coupleName: string; events: EventLite[]; tz: string; onClose: () => void;
+function TemplateModal({ projectId, template, coupleName, events, tz, sampleLink, onClose }: {
+  projectId: string; template: { id: string | null; name: string; body: string }; coupleName: string; events: EventLite[]; tz: string; sampleLink: string; onClose: () => void;
 }) {
   const t = useT();
   const [body, setBody] = useState(template.body);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const preview = composeMessage(body, { guestName: "Bapak Hendra", coupleName, events, link: "https://monaplan.id/rsvp/contoh", tz });
+  const preview = composeMessage(body, { guestName: "Bapak Hendra", coupleName, events, link: sampleLink, tz });
   function insert(p: string) {
     const el = ref.current;
     if (!el) return setBody(body + p);

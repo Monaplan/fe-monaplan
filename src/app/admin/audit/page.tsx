@@ -12,19 +12,25 @@ export async function generateMetadata() {
   return { title: t("Log Audit") };
 }
 
-export default async function AuditPage() {
+import { parseSort } from "@/lib/sort";
+import { SortSelect } from "@/components/app/sort-select";
+
+export default async function AuditPage({ searchParams }: { searchParams: Promise<{ sort?: string; dir?: string }> }) {
   const { t, lang } = await getI18n();
   await requireAdmin();
+  const sort = parseSort(await searchParams, { tanggal: { column: "created_at", dir: "desc" }, aksi: { column: "action", dir: "asc" } }, "tanggal");
   const { data: logs } = await createAdminClient()
     .from("admin_audit_logs")
     .select("*, profiles(email)")
+    .order(sort.column, { ascending: sort.ascending })
     .order("created_at", { ascending: false })
     .limit(200);
 
   return (
     <>
       <ProductTour id="admin-audit" steps={TOURS["admin-audit"]!} />
-      <PageHeader tour="admin-audit" title={t("Log Audit")} description={t("Semua aksi admin tercatat di sini.")} />
+      <PageHeader tour="admin-audit" title={t("Log Audit")} description={t("Semua aksi admin tercatat di sini.")}
+        actions={<SortSelect value={sort.key} dir={sort.dir} options={[{ key: "tanggal", label: t("Tanggal") }, { key: "aksi", label: t("Aksi") }]} />} />
       <Card tour="admin-audit-main" className="p-0 sm:p-0">
         {(logs ?? []).map((l: any) => (
           <details key={l.id} className="border-b border-neutral-200 px-5 py-3 last:border-0">

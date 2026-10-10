@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { requestUpload } from "@/features/storage/actions";
 
 import { withI18n } from "@/i18n/translate";
@@ -24,7 +23,7 @@ async function compressImage(file: File, maxSide = 1600): Promise<Blob> {
 }
 
 // Unggah langsung dari browser ke penyimpanan (Cloudflare R2 atau Supabase) memakai URL dari server
-export async function uploadProjectFile(projectId: string, folder: "documents" | "gifts" | "cover", file: File) {
+export async function uploadProjectFile(projectId: string, folder: "documents" | "gifts" | "cover" | "inspiration", file: File) {
   if (!(ALLOWED_MIME as readonly string[]).includes(file.type)) throw new Error("Format file harus PDF, JPG, PNG, atau WEBP.");
   if (file.size > MAX_FILE_BYTES) throw new Error(withI18n("Ukuran file maksimal {mb} MB.", { mb: MAX_FILE_MB }));
   const body = await compressImage(file);
@@ -39,6 +38,7 @@ export async function uploadProjectFile(projectId: string, folder: "documents" |
     const put = await fetch(t.url, { method: "PUT", headers: t.headers, body });
     if (!put.ok) throw new Error(withI18n("Unggah gagal ({status}). Cek pengaturan CORS bucket R2.", { status: put.status }));
   } else {
+    const { createClient } = await import("@/lib/supabase/client");
     const { error } = await createClient().storage.from("project-files").uploadToSignedUrl(t.key, t.token, body, { contentType: mime });
     if (error) throw new Error(error.message);
   }

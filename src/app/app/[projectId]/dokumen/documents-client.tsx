@@ -68,7 +68,7 @@ export function DocumentsClient({ projectId, checklist, documents, vendors, usag
               <ProgressBar value={list.length ? done / list.length : 0} className="mb-3" />
               <ul className="flex flex-col">
                 {list.map((c) => (
-                  <li key={c.id} className="flex items-center gap-3 border-b border-neutral-200 py-2.5 last:border-0">
+                  <li key={c.id} data-row-id={c.id} className="flex items-center gap-3 border-b border-neutral-200 py-2.5 last:border-0">
                     <input type="checkbox" className="size-[18px] accent-plum-600" checked={c.is_done} disabled={!canWrite}
                       onChange={(e) => toggleDocChecklist(projectId, c.id, e.target.checked)} aria-label={t(c.name)} />
                     <span className={cn("flex-1 text-sm", c.is_done && "text-neutral-400 line-through")}>{t(c.name)}</span>
@@ -122,7 +122,7 @@ export function DocumentsClient({ projectId, checklist, documents, vendors, usag
         ) : view === "grid" ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {docs.map((d) => (
-              <div key={d.id} className="flex flex-col rounded-lg border border-neutral-200 p-3">
+              <div key={d.id} data-row-id={d.id} className="flex flex-col rounded-lg border border-neutral-200 p-3">
                 <div className="flex items-start justify-between">
                   <span className="inline-flex size-10 items-center justify-center rounded-md bg-plum-100 text-plum-700">{d.mime_type === "application/pdf" ? <FileText className="size-5" /> : <FileImage className="size-5" />}</span>
                   {docMenu(d)}
@@ -136,7 +136,7 @@ export function DocumentsClient({ projectId, checklist, documents, vendors, usag
         ) : (
           <ul className="divide-y divide-neutral-200">
             {docs.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 py-3">
+              <li key={d.id} data-row-id={d.id} className="flex items-center gap-3 py-3">
                 {d.mime_type === "application/pdf" ? <FileText className="size-5 text-plum-600" /> : <FileImage className="size-5 text-plum-600" />}
                 <div className="min-w-0 flex-1">
                   <a href={`/api/files/${d.id}`} target="_blank" rel="noreferrer" className="block truncate text-sm font-medium hover:text-plum-700">{d.title}</a>

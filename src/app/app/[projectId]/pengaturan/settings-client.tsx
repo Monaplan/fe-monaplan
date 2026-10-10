@@ -24,11 +24,12 @@ import {
   updateMemberRole, updateWeddingInfo,
 } from "@/features/project/actions";
 import { useI18n } from "@/i18n/client";
+import { RsvpThemePicker } from "./rsvp-theme-picker";
 import { useT } from "@/i18n/client";
 
 type Event = { id: string; type: string; name: string; starts_at: string | null; ends_at: string | null; venue_name: string | null; venue_address: string | null; maps_url: string | null; dress_code: string | null; notes: string | null; sort_order: number };
 type Invitation = { id: string; email: string; role: string; expires_at: string; link: string };
-type Tab = "pasangan" | "acara" | "budget" | "kolaborator" | "lainnya";
+type Tab = "pasangan" | "acara" | "budget" | "undangan" | "kolaborator" | "lainnya";
 
 export function SettingsClient({ initialTab, project, events, members, invitations, maxCollaborators, coverUrl, canWrite, isOwner, currentUserId }: {
   initialTab: string; project: Project; events: Event[]; members: Member[]; invitations: Invitation[]; maxCollaborators: number; coverUrl: string | null;
@@ -37,7 +38,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
   const { t, lang } = useI18n();
   const router = useRouter();
   const toast = useToast();
-  const [tab, setTab] = useState<Tab>((["pasangan", "acara", "budget", "kolaborator", "lainnya"].includes(initialTab) ? initialTab : "pasangan") as Tab);
+  const [tab, setTab] = useState<Tab>((["pasangan", "acara", "budget", "undangan", "kolaborator", "lainnya"].includes(initialTab) ? initialTab : "pasangan") as Tab);
   const [eventForm, setEventForm] = useState<Event | "new" | null>(null);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -54,6 +55,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
         { key: "pasangan", label: t("Pasangan") },
         { key: "acara", label: t("Acara") },
         { key: "budget", label: t("Budget dan Tamu") },
+        { key: "undangan", label: t("Undangan RSVP") },
         { key: "kolaborator", label: t("Kolaborator") },
         { key: "lainnya", label: t("Lainnya") },
       ]} />
@@ -124,7 +126,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
       {tab === "acara" && (
         <div className="flex flex-col gap-3">
           {events.map((e) => (
-            <Card key={e.id}>
+            <Card key={e.id} rowId={e.id}>
               <div className="flex items-start gap-3">
                 <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-plum-100 text-plum-700"><CalendarDays className="size-5" /></span>
                 <div className="min-w-0 flex-1">
@@ -253,6 +255,13 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
             <Card><p className="text-[13px] text-neutral-600">{t("Hanya pemilik ruang kerja yang bisa mengundang dan mengatur kolaborator.")}</p></Card>
           )}
         </div>
+      )}
+
+      {tab === "undangan" && (
+        <Card tour="pengaturan-rsvp">
+          <CardHeader title={t("Tema undangan RSVP")} subtitle={t("Pilih tampilan halaman yang dibuka tamu. Semua tema gratis dan bisa diganti kapan saja.")} />
+          <RsvpThemePicker projectId={pid} current={project.rsvp_template ?? "adat_luxury"} canWrite={canWrite} />
+        </Card>
       )}
 
       {tab === "lainnya" && (

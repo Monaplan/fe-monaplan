@@ -6,6 +6,7 @@ import { ThemeSync } from "@/components/app/theme";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
+import { EN } from "@/i18n/en";
 import { SITE } from "@/lib/seo";
 import "./globals.css";
 
@@ -52,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
-        <I18nProvider lang={lang}>
+        <I18nProvider lang={lang} dict={lang === "en" ? EN : undefined}>
           <ToastProvider>
             <DialogProvider>{children}</DialogProvider>
             <ThemeSync />

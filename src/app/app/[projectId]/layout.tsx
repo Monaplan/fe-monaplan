@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { RowHighlight } from "@/components/app/row-highlight";
 import { SidebarShell, type NavGroup, type NavItem } from "@/components/app/sidebar-shell";
 import { AccessStatusCard } from "@/components/app/access-card";
 import { ReadOnlyBanner } from "@/components/app/read-only-banner";
@@ -20,7 +22,7 @@ async function loadExtras(projectId: string, timezone: string) {
   const [{ count: overdue }, { count: rsvpNew }, { data: notifications }, { count: pendingInv }] = await Promise.all([
     supabase.from("tasks").select("*", { count: "exact", head: true }).eq("project_id", projectId).neq("status", "done").lt("due_date", today),
     supabase.from("guests").select("*", { count: "exact", head: true }).eq("project_id", projectId).gte("rsvp_responded_at", weekAgo),
-    supabase.from("notifications").select("id, title, body, link_path, read_at, created_at").eq("channel", "in_app")
+    supabase.from("notifications").select("id, type, title, body, link_path, read_at, created_at").eq("channel", "in_app")
       .lte("scheduled_for", new Date().toISOString()).order("created_at", { ascending: false }).limit(15),
     supabase.from("project_invitations").select("*", { count: "exact", head: true }).eq("project_id", projectId).eq("status", "pending"),
   ]);
@@ -76,6 +78,13 @@ export default async function WorkspaceLayout({ children, params }: { children: 
       ],
     },
     {
+      title: t("Bonus"),
+      items: [
+        { href: `${base}/rona-impian`, label: t("Rona Impian"), icon: "palette" },
+        { href: `${base}/honeymoon-planner`, label: t("Honeymoon Planner"), icon: "plane" },
+      ],
+    },
+    {
       title: t("Umum"),
       items: [
         { href: `${base}/pengaturan`, label: t("Pengaturan Pernikahan"), icon: "pengaturan" },
@@ -103,6 +112,7 @@ export default async function WorkspaceLayout({ children, params }: { children: 
       searchBase={`${base}/cari`}
       helpHref={`${base}/bantuan`}
       notifications={notifications ?? []}
+      userId={session.user.id}
       user={{
         name: session.profile?.full_name ?? null,
         email: session.profile?.email ?? session.user.email ?? "",
@@ -113,6 +123,7 @@ export default async function WorkspaceLayout({ children, params }: { children: 
     >
       <ReadOnlyBanner access={access} isOwner={isOwner} role={role} archived={!!project.archived_at} />
       {children}
+      <Suspense fallback={null}><RowHighlight /></Suspense>
     </SidebarShell>
   );
 }

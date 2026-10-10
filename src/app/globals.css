@@ -178,7 +178,8 @@ body {
 .animate-check { animation: check-pop 150ms var(--ease-out-soft); }
 
 /* ---- Sistem animasi: hanya transform dan opacity, durasi singkat, mati bila gerak dikurangi ---- */
-@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* Hanya bergeser, tanpa memudar: isi halaman langsung terlihat sehingga tampil dan LCP tidak tertunda */
+@keyframes page-in { from { transform: translateY(6px); } to { transform: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -219,4 +220,65 @@ body {
 @media print {
   .no-print { display: none !important; }
   body { background: white; }
+}
+
+/* Popup promo naik dari bawah */
+@keyframes promo-up { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
+.animate-promo-up { animation: promo-up 380ms var(--ease-out-soft); }
+
+/* Popover kecil: skala dan fade */
+@keyframes pop-in { from { transform: scale(0.96) translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
+.animate-pop-in { animation: pop-in 150ms var(--ease-out-soft); }
+
+/* Lonceng bergoyang saat ada notifikasi baru */
+@keyframes bell-ring { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(14deg); } 30% { transform: rotate(-12deg); } 45% { transform: rotate(9deg); } 60% { transform: rotate(-6deg); } 75% { transform: rotate(3deg); } }
+.animate-bell { animation: bell-ring 900ms ease-in-out; }
+
+/* Baris tujuan hasil pencarian disorot sebentar */
+@keyframes row-flash { 0%, 60% { box-shadow: 0 0 0 3px var(--color-plum-400); background-color: var(--color-plum-100); } 100% { box-shadow: 0 0 0 3px transparent; } }
+.row-flash { animation: row-flash 2.4s ease-out; border-radius: 10px; }
+
+/* Gerak melayang pelan untuk kartu hiasan hero (hanya transform) */
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.animate-float { animation: float 5.5s ease-in-out infinite; }
+.animate-float-slow { animation: float 7.5s ease-in-out -2s infinite; }
+
+/* Tiket bonus: takik setengah lingkaran di garis sobekan (jarak dari kanan = lebar stub), tanpa gambar */
+.ticket {
+  --stub: 112px; --r: 11px;
+  border-radius: 18px;
+  -webkit-mask: radial-gradient(circle at calc(100% - var(--stub)) 0, #0000 var(--r), #000 calc(var(--r) + 0.5px)) top / 100% 51% no-repeat,
+    radial-gradient(circle at calc(100% - var(--stub)) 100%, #0000 var(--r), #000 calc(var(--r) + 0.5px)) bottom / 100% 51% no-repeat;
+  mask: radial-gradient(circle at calc(100% - var(--stub)) 0, #0000 var(--r), #000 calc(var(--r) + 0.5px)) top / 100% 51% no-repeat,
+    radial-gradient(circle at calc(100% - var(--stub)) 100%, #0000 var(--r), #000 calc(var(--r) + 0.5px)) bottom / 100% 51% no-repeat;
+}
+/* Nota: tepi bawah bergerigi seperti struk */
+.receipt {
+  border-radius: 14px 14px 0 0;
+  -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 9px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 18px 9px repeat-x;
+  mask: linear-gradient(#000 0 0) top / 100% calc(100% - 9px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 18px 9px repeat-x;
+}
+
+/* Tiket bonus versi ringkas */
+.ticket-sm { --stub: 96px; --r: 9px; border-radius: 16px; }
+
+/* Cincin hitung mundur menggambar dirinya sekali saat tampil */
+@keyframes ring-draw { from { stroke-dashoffset: var(--ring-from); } }
+@media (prefers-reduced-motion: no-preference) {
+  .animate-ring { animation: ring-draw 1.1s var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1)) both; }
+}
+
+/* Tombol ajakan utama: kilau menyapu, cincin berdenyut lembut, panah bergeser. Hanya bila gerak tidak dikurangi. */
+@keyframes btn-shine { 0%, 55% { transform: translateX(-140%) skewX(-20deg); } 100% { transform: translateX(380%) skewX(-20deg); } }
+@keyframes btn-pulse { 0% { box-shadow: 0 0 0 0 rgba(169, 85, 126, 0.5); } 70%, 100% { box-shadow: 0 0 0 14px rgba(169, 85, 126, 0); } }
+@keyframes btn-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .btn-glow { position: relative; overflow: hidden; animation: btn-pulse 2.4s ease-out infinite; }
+  .btn-glow::after {
+    content: ""; position: absolute; inset-block: 0; left: 0; width: 28%; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: btn-shine 3.8s ease-in-out infinite;
+  }
+  .btn-glow > svg:last-child { animation: btn-nudge 1.6s ease-in-out infinite; }
+  .btn-glow:hover, .btn-glow:focus-visible { animation-play-state: paused; }
 }

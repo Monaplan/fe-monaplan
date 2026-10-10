@@ -4,10 +4,11 @@ import type { Metadata } from "next";
 export const SITE = {
   name: "Monaplan",
   url: (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, ""),
-  title: "Monaplan: Aplikasi Wedding Planner Digital untuk Calon Pengantin",
-  shortTitle: "Monaplan: Digital Wedding Planner",
+  slogan: "Satu tempat untuk semua rencana nikahmu",
+  title: "Monaplan: Satu tempat untuk semua rencana nikahmu",
+  shortTitle: "Monaplan: Satu tempat untuk semua rencana nikahmu",
   description:
-    "Aplikasi wedding planner all-in-one: checklist persiapan nikah, budgeting, kelola vendor, daftar tamu dan RSVP via WhatsApp, rundown hari H, mahar dan seserahan, hingga dokumen KUA dalam satu dashboard.",
+    "Monaplan, satu tempat untuk semua rencana nikahmu. Aplikasi wedding planner all-in-one: checklist persiapan nikah, budgeting, kelola vendor, daftar tamu dan RSVP via WhatsApp, rundown hari H, mahar dan seserahan, hingga dokumen KUA dalam satu dashboard.",
   keywords: [
     "wedding planner", "aplikasi wedding planner", "checklist persiapan pernikahan", "budget pernikahan",
     "daftar tamu pernikahan", "RSVP online", "undangan WhatsApp", "rundown pernikahan", "mahar dan seserahan",

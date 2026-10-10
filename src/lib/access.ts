@@ -114,6 +114,7 @@ export const getMyProjects = cache(async () => {
 
 export type Project = {
   id: string;
+  created_at?: string;
   slug?: string | null;
   storage_prefix?: string | null;
   owner_id: string;
@@ -128,6 +129,7 @@ export type Project = {
   total_budget_idr: number;
   guest_target: number | null;
   rsvp_deadline: string | null;
+  rsvp_template?: string;
   cover_image_path: string | null;
   onboarding_completed_at: string | null;
   archived_at: string | null;
@@ -139,8 +141,8 @@ export type Member = {
   profiles: { full_name: string | null; email: string; avatar_url: string | null } | null;
 };
 
-// Pemetaan slug ke ID disimpan di memori proses. Aman karena slug tidak pernah dipakai ulang untuk proyek lain
-// (riwayat slug mencegahnya), dan keanggotaan tetap diperiksa lewat RLS pada setiap permintaan.
+// Pemetaan slug ke ID disimpan di memori proses. Keanggotaan tetap diperiksa lewat RLS pada setiap permintaan, dan
+// pemetaan yang usang (slug dipakai ulang setelah proyek dihapus) dibuang otomatis saat konteksnya tidak ditemukan.
 const SLUG_CACHE = new Map<string, string>();
 const SLUG_CACHE_MAX = 1000;
 // Zona waktu proyek, diisi setelah konteks termuat. Dipakai layout untuk memulai query lencana tanpa menunggu konteks.
@@ -170,9 +172,21 @@ export async function getProjectContext(ref: string) {
   const user = await getAuthUser();
   if (!user) redirect("/login");
   const supabase = await createClient();
-  const projectId = await resolveProjectId(ref, supabase);
+  let projectId = await resolveProjectId(ref, supabase);
   if (!projectId) notFound();
-  const ctx = await loadProjectContext(projectId);
+  let ctx;
+  try {
+    ctx = await loadProjectContext(projectId);
+  } catch (e) {
+    // Slug dari memori bisa usang (proyek dihapus lalu slug yang sama dipakai proyek lain): buang dan cari ulang di database sekali
+    const gone = typeof (e as { digest?: unknown })?.digest === "string" && String((e as { digest: string }).digest).includes("404");
+    if (!gone || UUID_RE.test(ref) || !SLUG_CACHE.has(ref)) throw e;
+    SLUG_CACHE.delete(ref);
+    TZ_CACHE.delete(projectId);
+    projectId = await resolveProjectId(ref, supabase);
+    if (!projectId) notFound();
+    ctx = await loadProjectContext(projectId);
+  }
   if (TZ_CACHE.size >= SLUG_CACHE_MAX) TZ_CACHE.clear();
   TZ_CACHE.set(projectId, ctx.project.timezone);
   if (ctx.project.slug && !UUID_RE.test(ref)) {
@@ -212,4 +226,19 @@ export async function requireAdmin() {
   const session = await requireUser();
   if (session.profile?.role !== "admin") notFound();
   return session;
+}
+
+// Mulai mengambil data halaman bersamaan dengan konteks proyek. Bila proyek sudah dikenal di memori (peekProject),
+// satu putaran ke database terhemat; bila belum, data diambil setelah konteks seperti biasa. RLS tetap membatasi
+// data, dan konteks yang gagal (bukan anggota, tidak ada) tetap mengalihkan atau 404.
+export async function withProjectData<T>(ref: string, load: (projectId: string, supabase: Awaited<ReturnType<typeof createClient>>, timezone: string) => Promise<T>) {
+  const hint = peekProject(ref);
+  const ctxPromise = getProjectContext(ref);
+  const early = hint ? createClient().then((s) => load(hint.projectId, s, hint.timezone)) : null;
+  // Bila konteks gagal lebih dulu, hasil data yang menggantung tidak boleh menjadi galat tak tertangani
+  early?.catch(() => {});
+  const ctx = await ctxPromise;
+  // Tebakan dari memori ternyata usang (slug dipakai ulang proyek lain): ambil ulang untuk proyek yang benar
+  if (early && hint!.projectId === ctx.projectId) return [ctx, await early] as const;
+  return [ctx, await load(ctx.projectId, ctx.supabase, ctx.project.timezone)] as const;
 }

@@ -91,13 +91,6 @@ export async function markInvitationSent(projectId: string, ids: string[], sent 
   return error ? dbError(error) : { ok: true, message: sent ? (ids.length > 1 ? `${ids.length} tamu ditandai terkirim.` : undefined) : "Tanda terkirim dihapus." };
 }
 
-export async function regenerateRsvpToken(projectId: string, id: string): Promise<ActionResult> {
-  const { supabase } = await getProjectContext(projectId);
-  const bytes = crypto.getRandomValues(new Uint8Array(9));
-  const token = Buffer.from(bytes).toString("base64").replace(/\+/g, "-").replace(/\//g, "_");
-  const { error } = await supabase.from("guests").update({ rsvp_token: token }).eq("id", id).eq("project_id", projectId);
-  return done(projectId, error, "Link RSVP lama dicabut, link baru dibuat.");
-}
 
 const ImportRow = z.object({
   name: z.string().min(1).max(120),

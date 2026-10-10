@@ -22,13 +22,18 @@ const LABEL: Record<string, string> = { lifetime: "Selamanya", timed: "Berjangka
 const trialLabel = (state: string) => (state === "timed" ? "Trial" : LABEL[state]!);
 
 // ADM-06: lihat lisensi dan daftar proyek tanpa membuka isi data proyek
-export default async function UsersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+import { parseSort } from "@/lib/sort";
+import { SortSelect } from "@/components/app/sort-select";
+
+export default async function UsersPage({ searchParams }: { searchParams: Promise<{ q?: string; sort?: string; dir?: string }> }) {
   const { t, lang } = await getI18n();
   const { user: me } = await requireAdmin();
-  const { q } = await searchParams;
+  const sp = await searchParams;
+  const { q } = sp;
+  const sort = parseSort(sp, { daftar: { column: "created_at", dir: "desc" }, nama: { column: "full_name", dir: "asc" }, email: { column: "email", dir: "asc" } }, "daftar");
   const admin = createAdminClient();
   let query = admin.from("profiles").select("id, email, full_name, role, created_at, licenses!licenses_user_id_fkey(status, starts_at, ends_at, source), wedding_projects!wedding_projects_owner_id_fkey(id, title, archived_at, created_at)")
-    .order("created_at", { ascending: false }).limit(50);
+    .order(sort.column, { ascending: sort.ascending, nullsFirst: false }).order("created_at", { ascending: false }).limit(50);
   if (q) query = query.ilike("email", `%${q.replace(/[%_]/g, "")}%`);
   const [{ data: users }, settings] = await Promise.all([query, getSettings()]);
 
@@ -36,7 +41,8 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <>
       <ProductTour id="admin-pengguna" steps={TOURS["admin-pengguna"]!} />
       <PageHeader tour="admin-pengguna" title={t("Pengguna")} description={t("Atur peran dan akses, lihat proyek, atau hapus akun.")} />
-      <form className="mb-4"><Input name="q" defaultValue={q} placeholder={t("Cari email")} className="max-w-xs" /></form>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><form>{sp.sort && <input type="hidden" name="sort" value={sort.key} />}{sp.dir && <input type="hidden" name="dir" value={sort.dir} />}<Input name="q" defaultValue={q} placeholder={t("Cari email")} className="max-w-xs" /></form>
+        <SortSelect value={sort.key} dir={sort.dir} options={[{ key: "daftar", label: t("Tanggal daftar") }, { key: "nama", label: t("Nama") }, { key: "email", label: t("Email") }]} /></div>
       <Card tour="admin-pengguna-main" className="p-0 sm:p-0">
         {(users ?? []).map((u: any) => {
           const s = computeLicenseState(u.licenses ?? []);

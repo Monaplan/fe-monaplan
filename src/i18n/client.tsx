@@ -2,13 +2,14 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { DEFAULT_LANG, type Lang } from "./config";
-import { makeT, type TFn } from "./translate";
+import { makeT, type Dict, type TFn } from "./translate";
 
 type Ctx = { lang: Lang; t: TFn };
 const I18nCtx = createContext<Ctx>({ lang: DEFAULT_LANG, t: makeT(DEFAULT_LANG) });
 
-export function I18nProvider({ lang, children }: { lang: Lang; children: ReactNode }) {
-  const value = useMemo(() => ({ lang, t: makeT(lang) }), [lang]);
+// dict hanya dikirim untuk bahasa Inggris; pengguna berbahasa Indonesia tidak mengunduh kamus sama sekali
+export function I18nProvider({ lang, dict, children }: { lang: Lang; dict?: Dict; children: ReactNode }) {
+  const value = useMemo(() => ({ lang, t: makeT(lang, dict) }), [lang, dict]);
   return <I18nCtx.Provider value={value}>{children}</I18nCtx.Provider>;
 }
 

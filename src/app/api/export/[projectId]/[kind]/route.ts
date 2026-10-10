@@ -4,7 +4,9 @@ import { GUEST_CATEGORY, PARTY_SIDE, PAYMENT_KIND, PHASE_LABEL, PURCHASE_STATUS,
 
 function csv(rows: (string | number | null | undefined)[][]) {
   const esc = (v: string | number | null | undefined) => {
-    const s = v == null ? "" : String(v);
+    let s = v == null ? "" : String(v);
+    // Sel teks yang diawali = + - @ dibaca Excel/Sheets sebagai rumus. Ucapan RSVP berasal dari tamu, jadi diberi awalan apostrof.
+    if (typeof v === "string" && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
     return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return "﻿" + rows.map((r) => r.map(esc).join(",")).join("\r\n");

@@ -157,3 +157,20 @@ supabase/
 - Migrasi baru: jalankan `20261009000004` dan `20261009000005` di Supabase SQL Editor.
 - Pemeriksaan domain: `npm run check:domain`. Uji: `npm run test:db`, `test:lib`, `test:i18n`.
 - Bahasa: kamus Inggris di `src/i18n/en*.ts`; kunci adalah teks sumber Indonesia.
+
+## Promo, RSVP, notifikasi, dan pencarian
+
+- **Kode promo**: dibuat di Admin, Promo. Kode diketik sendiri (3 sampai 32 karakter) dan setiap promo punya periode mulai dan berakhir. Promo tanpa kode berlaku otomatis; promo berkode hanya berlaku bila pengguna memasukkannya di halaman Aktivasi. Promo boleh ditampilkan sebagai popup dari bawah layar (sasaran dan teks diatur admin).
+- **Bantuan WhatsApp**: isi `NEXT_PUBLIC_SUPPORT_WHATSAPP` (08xx atau 62xx). Kosong berarti tombol WhatsApp disembunyikan.
+- **Undangan digital**: tautan tamu berbentuk `domain/slug-pengantin?to=Nama Tamu`. Nama di `?to=` ditampilkan sebagai sapaan dan dicocokkan ke daftar tamu (huruf besar-kecil dan sapaan diabaikan); nama yang belum ada tercatat sebagai tamu baru bertanda "Mendaftar sendiri" (maksimal 50 per hari per undangan). Alamat proyek yang sama dengan nama rute aplikasi (admin, login, api, dst.) tidak diizinkan. Lima tema gratis (Elegan Minimalis, Klasik Emas, Bali dengan aksara Bali, Noir Luxury, Botanical Soft) dipilih di Pengaturan Pernikahan, tab Undangan RSVP; contohnya di `/rsvp/contoh`.
+- **Notifikasi**: konfirmasi RSVP masuk ke lonceng pemilik dan editor lewat Supabase Realtime, dengan polling 45 detik sebagai cadangan.
+- **Pencarian**: kotak pencarian di header mencari semua modul (`/api/search`); Ctrl K memfokus kotak.
+- Migrasi undangan: jalankan `20261010000002_rsvp_by_name.sql` lalu `20261010000003_rsvp_name_exact.sql` (nama persis dicocokkan dulu, baru nama tanpa sapaan, sehingga "Bapak Budi" dan "Ibu Budi" tidak dianggap kembar) (tema baru, pencocokan nama, pembuangan tabel tiket bantuan dan kolom `rsvp_token`). Statistik sistem di Admin, Sistem memakai `20261010000001_system_stats.sql`.
+- Migrasi lama: jalankan `20261009000006_promo_code_rsvp_notify.sql` di Supabase SQL Editor. Bila Realtime belum menyala untuk tabel `notifications`, aktifkan di Database, Replication.
+- Header `Content-Security-Policy-Report-Only` aktif; periksa konsol peramban, lalu ganti namanya menjadi `Content-Security-Policy` di `next.config.ts` untuk memberlakukannya.
+
+## Bonus: Rona Impian dan Honeymoon Planner
+
+- **Rona Impian** (`/app/<slug>/rona-impian`): papan ide dekorasi, busana, bunga, venue, makeup, dan katering dengan foto, tautan, warna, dan favorit; palet warna terbentuk dari ide yang disimpan.
+- **Honeymoon Planner** (`/app/<slug>/honeymoon-planner`): tujuan, tanggal, anggaran, dan rencana per hari lengkap dengan status sudah dipesan.
+- Tabelnya dibuat migrasi `20261009000008_inspiration_trip.sql` (jalankan di Supabase SQL Editor). Nilai bonus di landing diatur di `src/content/bonus.ts` (Rp30.000 dan Rp55.000).

@@ -76,8 +76,8 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
           <span className="tabular text-[13px] text-neutral-600">{done}/{optimistic.length} · <b className="text-neutral-900">{formatPercent(optimistic.length ? done / optimistic.length : 0)}</b></span>
         </div>
         <ProgressBar value={optimistic.length ? done / optimistic.length : 0} />
-        <div data-tour="checklist-filter" className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="relative lg:col-span-1">
+        <div data-tour="checklist-filter" className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-5">
+          <div className="relative col-span-2 lg:col-span-1">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
             <Input placeholder={t("Cari judul")} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" aria-label={t("Cari tugas")} />
           </div>
@@ -132,7 +132,7 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
                       const late = isLate(task);
                       const m = task.assignee_id ? memberById[task.assignee_id] : null;
                       return (
-                        <li key={task.id} className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3 last:border-b-0 hover:bg-plum-50 sm:px-5">
+                        <li key={task.id} data-row-id={task.id} className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3 last:border-b-0 hover:bg-plum-50 sm:px-5">
                           <input
                             type="checkbox"
                             className="animate-check size-[18px] shrink-0 cursor-pointer accent-plum-600 disabled:cursor-default"

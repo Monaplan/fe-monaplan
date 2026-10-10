@@ -3,6 +3,7 @@ import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { DEFAULT_LANG, LANG_COOKIE, fromAcceptLanguage, isLang, type Lang } from "./config";
 import { makeT, type TFn } from "./translate";
+import { EN } from "./en";
 
 // Bahasa permintaan ini: cookie pilihan pengguna, lalu Accept-Language peramban, lalu Indonesia
 export const getLang = cache(async (): Promise<Lang> => {
@@ -16,11 +17,12 @@ export const getLang = cache(async (): Promise<Lang> => {
 });
 
 export async function getT(): Promise<TFn> {
-  return makeT(await getLang());
+  const lang = await getLang();
+  return makeT(lang, lang === "en" ? EN : undefined);
 }
 
 // Dipakai komponen server yang butuh t dan lang sekaligus (mis. untuk memformat tanggal)
 export async function getI18n() {
   const lang = await getLang();
-  return { lang, t: makeT(lang) };
+  return { lang, t: makeT(lang, lang === "en" ? EN : undefined) };
 }

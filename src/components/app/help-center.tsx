@@ -1,26 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { LifeBuoy, MessageSquare, Play, RotateCcw, Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LifeBuoy, MessageCircle, Play, RotateCcw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Field, Input, Textarea } from "@/components/ui/form";
-import { StatusPill } from "@/components/ui/pill";
-import { ActionForm, SubmitButton } from "@/components/ui/action-form";
+import { Input } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/components/ui/cn";
-import { createTicket } from "@/features/support/actions";
+import { supportWhatsappUrl } from "@/lib/support";
 import { HELP_CATEGORIES, HELP_FAQ, HELP_TOURS } from "@/content/help";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
-import { formatDateCompact } from "@/lib/format";
 import { useI18n } from "@/i18n/client";
 
-type Ticket = { id: string; subject: string; status: string; created_at: string };
-
-export function HelpCenter({ base, projectId, tickets }: { base: string | null; projectId: string | null; tickets: Ticket[] }) {
+export function HelpCenter({ base }: { base: string | null }) {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   const { t, lang } = useI18n();
   const [q, setQ] = useState("");
@@ -31,6 +27,7 @@ export function HelpCenter({ base, projectId, tickets }: { base: string | null; 
     return HELP_FAQ.filter((f) => (!cat || f.cat === cat) && (!needle || `${f.q[lang]} ${f.a[lang]}`.toLowerCase().includes(needle)));
   }, [q, cat, lang]);
 
+  const wa = supportWhatsappUrl(`Halo admin Monaplan, saya butuh bantuan.\nHalaman: ${pathname}`);
   const tours = HELP_TOURS.filter((x) => (x.scope === "app" ? !!base : true));
   const goTour = (id: string, path: string, scope: "app" | "akun") => {
     try { localStorage.removeItem(`mp-tour:v1:${id}`); } catch {}
@@ -54,13 +51,13 @@ export function HelpCenter({ base, projectId, tickets }: { base: string | null; 
           <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label={t("Kategori")}>
             {[{ key: null as string | null, label: t("Semua") }, ...HELP_CATEGORIES.map((c) => ({ key: c.key as string | null, label: c.label[lang] }))].map((c) => (
               <button key={c.label} onClick={() => setCat(c.key)} aria-pressed={cat === c.key}
-                className={cn("h-8 rounded-full px-3.5 text-[13px] font-medium transition-colors", cat === c.key ? "bg-plum-600 text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200")}>
+                className={cn("h-10 rounded-full px-3.5 text-[13px] md:h-8 font-medium transition-colors", cat === c.key ? "bg-plum-600 text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200")}>
                 {c.label}
               </button>
             ))}
           </div>
           {list.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-neutral-500">{t("Tidak ada yang cocok. Coba kata lain atau kirim pertanyaan di samping.")}</p>
+            <p className="py-6 text-center text-[13px] text-neutral-500">{t("Tidak ada yang cocok. Coba kata lain atau chat admin di samping.")}</p>
           ) : (
             <div className="flex flex-col gap-2">
               {list.map((f) => (
@@ -95,31 +92,20 @@ export function HelpCenter({ base, projectId, tickets }: { base: string | null; 
 
       <div className="flex flex-col gap-4">
         <Card tour="help-contact">
-          <CardHeader icon={<MessageSquare />} title={t("Hubungi kami")} subtitle={t("Kami balas lewat email.")} />
-          <ActionForm action={createTicket} reset>
-            {projectId && <input type="hidden" name="project_id" value={projectId} />}
-            <Field label={t("Subjek")} htmlFor="hc-subject"><Input id="hc-subject" name="subject" required minLength={3} maxLength={120} /></Field>
-            <Field label={t("Pesan")} htmlFor="hc-message"><Textarea id="hc-message" name="message" required minLength={5} maxLength={4000} rows={5} /></Field>
-            <div><SubmitButton>{t("Kirim")}</SubmitButton></div>
-          </ActionForm>
+          <CardHeader icon={<MessageCircle />} title={t("Hubungi kami")} subtitle={t("Chat langsung dengan admin Monaplan.")} />
+          {wa ? (
+            <>
+              <p className="text-[13.5px] leading-6 text-neutral-600">{t("Tidak ketemu jawabannya? Ceritakan kendalamu lewat WhatsApp, kami bantu secepatnya di jam kerja.")}</p>
+              <a href={wa} target="_blank" rel="noopener noreferrer"
+                className="hover-lift mt-4 flex items-center gap-3 rounded-2xl border border-[#1FA855]/30 bg-[#1FA855]/10 p-4 text-neutral-900">
+                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1FA855] text-white"><MessageCircle className="size-5" /></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{t("Chat WhatsApp admin")}</span><span className="block text-xs text-neutral-600">{t("Balasan lebih cepat di jam kerja.")}</span></span>
+              </a>
+            </>
+          ) : (
+            <p className="text-[13.5px] leading-6 text-neutral-600">{t("Kontak admin belum diatur. Silakan coba lagi nanti.")}</p>
+          )}
         </Card>
-
-        {tickets.length > 0 && (
-          <Card>
-            <CardHeader title={t("Pertanyaanmu")} />
-            <ul className="divide-y divide-neutral-200">
-              {tickets.map((x) => (
-                <li key={x.id} className="flex items-center gap-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{x.subject}</p>
-                    <p className="text-xs text-neutral-500">{formatDateCompact(x.created_at, undefined, lang)}</p>
-                  </div>
-                  <StatusPill tone={x.status === "open" ? "caution" : "positive"}>{x.status === "open" ? t("Menunggu") : t("Selesai")}</StatusPill>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        )}
       </div>
     </div>
   );

@@ -71,7 +71,7 @@ export function ThemeSwitcher({ className, compact }: { className?: string; comp
           onClick={() => set(o.key)}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 rounded-full text-[12.5px] font-medium transition-colors [&_svg]:size-3.5",
-            compact ? "h-7" : "h-8 px-3",
+            compact ? "h-9 md:h-7" : "h-10 px-3 md:h-8",
             pref === o.key ? "bg-surface text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-neutral-200" : "text-neutral-500 hover:text-neutral-800",
           )}
         >

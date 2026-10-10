@@ -76,7 +76,7 @@ export function RundownClient({ projectId, tz, coupleName, events, active, items
             const sameTimePrev = idx > 0 && items[idx - 1]!.start_time === it.start_time;
             const sameTimeNext = idx < items.length - 1 && items[idx + 1]!.start_time === it.start_time;
             return (
-              <li key={it.id} className="grid grid-cols-[64px_1fr] gap-3 break-inside-avoid sm:grid-cols-[88px_1fr]">
+              <li key={it.id} data-row-id={it.id} className="grid grid-cols-[64px_1fr] gap-3 break-inside-avoid sm:grid-cols-[88px_1fr]">
                 <div className="tabular pt-4 text-right">
                   <p className="text-sm font-semibold text-neutral-900">{formatTime(it.start_time, tz, undefined, lang)}</p>
                   {it.end_time && <p className="text-xs text-neutral-500">{formatTime(it.end_time, tz, undefined, lang)}</p>}

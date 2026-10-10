@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { bustPublicCache } from "@/lib/ttl-cache";
 import { z } from "zod";
 import { adminContext as ctx } from "./context";
 import { dbError, fail, okm, type ActionResult } from "@/lib/result";
@@ -8,7 +9,8 @@ import { generateAccessCode } from "@/lib/codes";
 import { parseIDR } from "@/lib/format";
 import { getPaymentProvider } from "@/lib/payments/midtrans";
 import { applyProviderStatus } from "@/lib/payments/process";
-import { deletePrefix, storagePrefix } from "@/lib/storage";
+import { findOrphanFiles, purgeOldRecords, purgeStaleOrders } from "@/lib/order-cleanup";
+import { deleteObjects, deletePrefix, storagePrefix } from "@/lib/storage";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
@@ -37,6 +39,7 @@ export async function savePlan(fd: FormData): Promise<ActionResult> {
   const res = id ? await admin.from("plans").update(row).eq("id", id).select("id").single() : await admin.from("plans").insert(row).select("id").single();
   if (res.error) return dbError(res.error);
   await audit(id ? "plan.update" : "plan.create", "plan", res.data.id, row);
+  bustPublicCache();
   revalidatePath("/admin/paket");
   return { ok: true, message: "Paket tersimpan." };
 }
@@ -81,6 +84,7 @@ export async function createBatch(fd: FormData): Promise<ActionResult> {
     remaining -= inserted?.length ?? 0;
   }
   await audit("batch.create", "access_code_batch", batch.id, { name: d.name, quantity: d.quantity, plan_id: d.plan_id });
+  bustPublicCache();
   revalidatePath("/admin/kode");
   return okm("{n} kode dibuat.", { n: d.quantity }, { id: batch.id });
 }
@@ -90,6 +94,7 @@ export async function revokeCode(codeId: string, reason: string): Promise<Action
   const { error } = await admin.from("access_codes").update({ status: "revoked", revoked_at: new Date().toISOString(), revoked_reason: reason }).eq("id", codeId);
   if (error) return dbError(error);
   await audit("code.revoke", "access_code", codeId, { reason });
+  bustPublicCache();
   revalidatePath("/admin/kode", "layout");
   return { ok: true, message: "Kode dicabut." };
 }
@@ -101,6 +106,7 @@ export async function revokeBatch(batchId: string): Promise<ActionResult> {
   const { error } = await admin.from("access_codes").update({ status: "revoked", revoked_at: now, revoked_reason: "Batch dicabut" }).eq("batch_id", batchId).eq("status", "available");
   if (error) return dbError(error);
   await audit("batch.revoke", "access_code_batch", batchId);
+  bustPublicCache();
   revalidatePath("/admin/kode", "layout");
   return { ok: true, message: "Semua kode yang belum terpakai di batch ini dicabut." };
 }
@@ -115,6 +121,7 @@ export async function recheckOrder(orderId: string): Promise<ActionResult> {
     if (!status.transactionStatus) return fail("Transaksi belum ada di Midtrans (user belum memilih metode bayar).");
     const res = await applyProviderStatus(admin, order, status);
     await audit("order.recheck", "order", orderId, { transaction_status: status.transactionStatus });
+    bustPublicCache();
     revalidatePath("/admin/order");
     return okm(res.granted ? "Status Midtrans: {status}, lisensi diterbitkan." : "Status Midtrans: {status}.", { status: status.transactionStatus });
   } catch (e) {
@@ -126,6 +133,7 @@ export async function setOrderReviewed(orderId: string): Promise<ActionResult> {
   const { admin, audit } = await ctx();
   const { error } = await admin.from("orders").update({ needs_review: false }).eq("id", orderId);
   await audit("order.reviewed", "order", orderId);
+  bustPublicCache();
   revalidatePath("/admin/order");
   return error ? dbError(error) : { ok: true, message: "Order ditandai sudah ditinjau." };
 }
@@ -141,6 +149,7 @@ export async function grantLicense(fd: FormData): Promise<ActionResult> {
   const { data, error } = await admin.rpc("issue_license", { p_user_id: user.id, p_plan_id: planId, p_source: "admin_grant", p_granted_by: adminId });
   if (error) return fail(error.message.includes("ALREADY_LIFETIME") ? "Pengguna sudah punya akses selamanya." : error.message);
   await audit("license.grant", "license", (data as any).id, { email, plan_id: planId, reason: str(fd.get("reason")) });
+  bustPublicCache();
   revalidatePath("/admin/lisensi");
   return { ok: true, message: "Lisensi diberikan." };
 }
@@ -154,6 +163,7 @@ export async function extendLicense(licenseId: string, days: number): Promise<Ac
   const { error } = await admin.from("licenses").update({ ends_at: new Date(base + days * 86_400_000).toISOString() }).eq("id", licenseId);
   if (error) return dbError(error);
   await audit("license.extend", "license", licenseId, { days });
+  bustPublicCache();
   revalidatePath("/admin/lisensi");
   return okm("Diperpanjang {days} hari.", { days });
 }
@@ -164,6 +174,7 @@ export async function revokeLicense(licenseId: string, reason: string): Promise<
   const { error } = await admin.from("licenses").update({ status: "revoked", revoked_at: new Date().toISOString(), revoked_reason: reason }).eq("id", licenseId);
   if (error) return dbError(error);
   await audit("license.revoke", "license", licenseId, { reason });
+  bustPublicCache();
   revalidatePath("/admin/lisensi");
   return { ok: true, message: "Lisensi dicabut." };
 }
@@ -173,8 +184,24 @@ export async function restoreLicense(licenseId: string): Promise<ActionResult> {
   const { error } = await admin.from("licenses").update({ status: "active", revoked_at: null, revoked_reason: null }).eq("id", licenseId);
   if (error) return dbError(error);
   await audit("license.restore", "license", licenseId);
+  bustPublicCache();
   revalidatePath("/admin/lisensi");
   return { ok: true, message: "Lisensi dipulihkan." };
+}
+
+// Hanya lisensi yang sudah dicabut yang boleh dihapus. Order tetap utuh (referensi lisensinya menjadi kosong).
+// Catatan: penebusan kode akses yang terkait ikut terhapus, jadi pengguna itu bisa menebus kodenya lagi bila kodenya masih berlaku.
+export async function deleteLicense(licenseId: string): Promise<ActionResult> {
+  const { admin, audit } = await ctx();
+  const { data: lic } = await admin.from("licenses").select("id, user_id, plan_id, source, status, starts_at, ends_at, revoked_reason").eq("id", licenseId).maybeSingle();
+  if (!lic) return fail("Lisensi tidak ditemukan.");
+  if (lic.status !== "revoked") return fail("Hanya lisensi yang sudah dicabut yang bisa dihapus. Cabut dulu bila memang ingin menghapusnya.");
+  const { error } = await admin.from("licenses").delete().eq("id", licenseId).eq("status", "revoked");
+  if (error) return dbError(error);
+  await audit("license.delete", "license", licenseId, lic as unknown as Record<string, unknown>);
+  bustPublicCache();
+  revalidatePath("/admin/lisensi");
+  return { ok: true, message: "Lisensi dihapus." };
 }
 
 // ---------- Pengguna (hapus akun) ----------
@@ -208,6 +235,42 @@ export async function deleteUserAccount(userId: string, confirmEmail: string): P
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) return fail("Gagal menghapus akun: {error}", { error: error.message });
 
+  bustPublicCache();
+
   revalidatePath("/admin", "layout");
   return okm("Akun {email} dihapus.", { email: target.email });
+}
+
+export async function purgeUnusedOrders(): Promise<ActionResult> {
+  const { admin, audit } = await ctx();
+  const n = await purgeStaleOrders(admin);
+  const old = await purgeOldRecords(admin);
+  const rest = Object.values(old).reduce((a, b) => a + b, 0);
+  await audit("order.purge", "order", null, { orders: n, ...old });
+  bustPublicCache();
+  revalidatePath("/admin/order");
+  return okm("{n} order dan {rest} data lama dibersihkan.", { n, rest });
+}
+
+// Berkas R2 yang tidak dirujuk database. Pemeriksaan hanya menghitung; penghapusan menghitung ulang sendiri.
+export async function scanOrphanFiles(): Promise<ActionResult> {
+  const { admin } = await ctx();
+  try {
+    const { orphans, bytes } = await findOrphanFiles(admin);
+    return okm("Ditemukan {n} berkas yatim ({mb} MB).", { n: orphans.length, mb: (bytes / 1048576).toFixed(1) });
+  } catch (e) {
+    return fail("Gagal memeriksa: {error}", { error: (e as Error).message });
+  }
+}
+
+export async function deleteOrphanFiles(): Promise<ActionResult> {
+  const { admin, audit } = await ctx();
+  try {
+    const { orphans, bytes } = await findOrphanFiles(admin);
+    await deleteObjects(orphans.map((o) => o.key));
+    await audit("storage.purge", "storage", null, { count: orphans.length, bytes });
+    return okm("{n} berkas yatim dihapus ({mb} MB).", { n: orphans.length, mb: (bytes / 1048576).toFixed(1) });
+  } catch (e) {
+    return fail("Gagal menghapus: {error}", { error: (e as Error).message });
+  }
 }

@@ -17,11 +17,11 @@ const VARIANT: Record<ButtonVariant, string> = {
   white: "bg-[#FFFFFF] text-[#3E1A2D] hover:bg-[#FBF5F8]",
 };
 const SIZE: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-[13px] gap-1.5",
+  sm: "h-10 px-3.5 text-[13px] gap-1.5 md:h-8 md:px-3",
   md: "h-10 px-4 text-sm gap-2",
   lg: "h-12 px-5 text-[15px] gap-2",
   icon: "h-10 w-10 justify-center",
-  "icon-sm": "h-8 w-8 justify-center",
+  "icon-sm": "h-10 w-10 justify-center md:h-8 md:w-8",
 };
 
 export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", extra?: string) {

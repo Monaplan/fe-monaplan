@@ -44,6 +44,15 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "mahar-actions", title: "Tambah item", body: "Isi nama, jenis, estimasi harga, dan tautan toko. Foto barang bisa diunggah." },
     { target: "mahar-main", title: "Pantau statusnya", body: "Ubah status dari rencana sampai diterima. Total estimasi dan realisasi dihitung otomatis." },
   ],
+  inspirasi: [
+    { target: "inspirasi-header", title: "Rona Impian", body: "Kumpulkan ide dekorasi, busana, bunga, venue, dan warna. Tambah foto, tautan sumber, dan catatan di setiap ide." },
+    { target: "inspirasi-palette", title: "Palet warna", body: "Warna dari ide-idemu terkumpul di sini. Klik satu warna untuk melihat ide yang cocok." },
+    { target: "inspirasi-main", title: "Ide yang terkumpul", body: "Tandai favorit dengan bintang, saring per kategori, dan bagikan ke pasangan lewat satu ruang kerja yang sama." },
+  ],
+  perjalanan: [
+    { target: "perjalanan-header", title: "Honeymoon Planner", body: "Susun perjalanan setelah hari H: tujuan, tanggal, anggaran, dan rencana per hari." },
+    { target: "perjalanan-main", title: "Ringkasan perjalanan", body: "Lihat tujuan, durasi, dan berapa hari setelah hari H kalian berangkat. Anggaran dibandingkan dengan biaya yang direncanakan." },
+  ],
   dokumen: [
     { target: "dokumen-header", title: "Dokumen penting", body: "Checklist administrasi nikah dan arsip berkas dalam satu halaman." },
     { target: "dokumen-actions", title: "Unggah berkas", body: "Format PDF, JPG, PNG, atau WEBP, maksimal 5 MB per file. Foto dikompres otomatis supaya hemat kuota." },
@@ -69,7 +78,7 @@ export const TOURS: Record<string, TourStep[]> = {
   bantuan: [
     { target: "help-faq", title: "Cari jawabannya dulu", body: "Ketik kata kunci atau pilih kategori untuk melihat pertanyaan yang sering diajukan." },
     { target: "help-tours", title: "Putar ulang tur halaman", body: "Pilih halaman mana pun untuk melihat tur singkatnya lagi, atau ulangi semua tur sekaligus." },
-    { target: "help-contact", title: "Tidak ketemu jawabannya?", body: "Kirim pertanyaan di sini. Kami balas lewat email, dan riwayatnya tampil di bawah formulir." },
+    { target: "help-contact", title: "Tidak ketemu jawabannya?", body: "Chat admin lewat WhatsApp. Pesan awalnya sudah terisi, tinggal kirim." },
   ],
   akun: [
     { target: "akun-profil", title: "Profil dan notifikasi", body: "Ubah nama dan nomor WhatsApp, serta atur apakah pengingat dikirim ke email." },
@@ -78,13 +87,14 @@ export const TOURS: Record<string, TourStep[]> = {
   ],
   aktivasi: [
     { target: "aktivasi-plans", title: "Pilih paket", body: "Bayar sekali untuk akses selamanya. Promo yang sedang berlaku dan kredit upgrade sudah dihitung di harga." },
+    { target: "aktivasi-promo", title: "Kode promo", body: "Ketik kode promo lalu tekan Terapkan. Harga di kartu paket langsung berubah bila kodenya berlaku." },
     { target: "aktivasi-code", title: "Punya kode akses?", body: "Masukkan kode dari reseller atau promo untuk mengaktifkan akses tanpa membayar." },
   ],
 
   // ---- Panel admin ----
   admin: [
-    { target: "admin-header", title: "Panel admin", body: "Ringkasan penjualan, pengguna, dan kode akses. Menu di sidebar mengelompokkan Penjualan, Konfigurasi, dan Pelanggan." },
-    { target: "admin-main", title: "Angka utama", body: "Pendapatan, pengguna aktif, dan batch kode terbaru. Order yang perlu ditinjau ditandai merah." },
+    { target: "admin-header", title: "Dashboard admin", body: "Grafik pendapatan, pendaftaran, dan status order, plus hal yang perlu ditindaklanjuti. Menu di sidebar mengelompokkan Penjualan, Konfigurasi, dan Pelanggan." },
+    { target: "admin-main", title: "Grafik pendapatan", body: "Pendapatan 12 bulan terakhir. Bulan berjalan disorot, dan kartu di atasnya menunjukkan perubahan dibanding bulan lalu." },
   ],
   "admin-paket": [
     { target: "admin-paket-header", title: "Paket dan tingkat", body: "Semua paket berlaku selamanya. Beri tingkat (tier) pada tiap paket: upgrade ke tier lebih tinggi hanya membayar selisih." },
@@ -119,10 +129,6 @@ export const TOURS: Record<string, TourStep[]> = {
   "admin-email": [
     { target: "admin-email-header", title: "Pratinjau email", body: "Lihat semua email yang dikirim Monaplan lewat Resend, dalam Indonesia dan Inggris." },
     { target: "admin-email-main", title: "Kirim contoh ke emailmu", body: "Pilih jenis email di kiri, periksa tampilannya di desktop dan HP, lalu kirim contoh ke kotak masukmu." },
-  ],
-  "admin-bantuan": [
-    { target: "admin-bantuan-header", title: "Bantuan masuk", body: "Pertanyaan dari pengguna lewat Pusat Bantuan." },
-    { target: "admin-bantuan-main", title: "Balas dan selesaikan", body: "Klik Balas untuk membuka email, lalu tandai Selesai. Pesan lengkap muncul saat barisnya dibuka." },
   ],
   "admin-audit": [
     { target: "admin-audit-header", title: "Log audit", body: "Setiap aksi admin tercatat: siapa, kapan, dan apa yang diubah." },

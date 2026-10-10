@@ -2,20 +2,21 @@ import Link from "next/link";
 import {
   ArrowDown, ArrowRight, ArrowUp, BookOpen, CalendarDays, FileText, Heart, ListChecks, MapPin, Target, Timer, Users, Wallet,
 } from "lucide-react";
-import { getProjectContext } from "@/lib/access";
-import { getGuideStatus } from "@/lib/guide";
+import { withProjectData } from "@/lib/access";
+import { guideFrom } from "@/lib/guide";
 import { Card, CardHeader, IconTile, StatCard } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/pill";
 import { ProgressBar, ProgressRow } from "@/components/ui/progress";
 import { cn } from "@/components/ui/cn";
-import { SpendingChart } from "@/components/app/charts";
+import { SpendingChart } from "@/components/app/charts-lazy";
 import { PHASES } from "@/lib/constants";
 import {
   addDaysISO, diffDays, formatDateCompact, formatDateShort, formatIDR, formatIDRShort, formatPercent, formatTime,
   isoDateInTz, relativeDay, todayISO,
 } from "@/lib/format";
 import { QuickAdd } from "./quick-add";
+import { CountdownHero } from "./countdown-hero";
 import { CountUp } from "@/components/ui/count-up";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
@@ -26,23 +27,37 @@ const monthNames = (lang: "id" | "en") => Array.from({ length: 12 }, (_, i) => n
 export default async function DashboardPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { t, lang } = await getI18n();
   const { projectId: ref } = await params;
-  const { supabase, project, canWrite, projectId } = await getProjectContext(ref);
-  const tz = project.timezone;
-  const today = todayISO(tz);
-  const in14 = addDaysISO(today, 14);
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
 
-  const [{ data: tasks }, { data: items }, { data: payments }, { data: guests }, { data: docs }, { data: events }, { data: feed }, { data: vendors }, guide] = await Promise.all([
-    supabase.from("tasks").select("phase_key, status").eq("project_id", projectId),
-    supabase.from("budget_items").select("id, name, actual_idr, estimated_idr").eq("project_id", projectId),
-    supabase.from("expense_payments").select("id, label, kind, amount_idr, due_date, status, paid_at, vendors(name)").eq("project_id", projectId),
-    supabase.from("guests").select("rsvp_status, pax_confirmed, rsvp_responded_at").eq("project_id", projectId),
-    supabase.from("document_checklist_items").select("is_done").eq("project_id", projectId),
-    supabase.from("wedding_events").select("name, type, starts_at, venue_name").eq("project_id", projectId).order("sort_order").order("starts_at"),
-    supabase.from("calendar_feed").select("*").eq("project_id", projectId).gte("starts_at", addDaysISO(today, -1)).lte("starts_at", addDaysISO(in14, 1)).order("starts_at"),
-    supabase.from("vendors").select("id, name").eq("project_id", projectId),
-    getGuideStatus(supabase, project),
-  ]);
+  // Data dashboard mulai diambil bersamaan dengan konteks proyek. Panduan dihitung dari data yang sama
+  // (hanya empat query tambahan) sehingga tidak ada belasan query hitungan terpisah.
+  const [{ project, canWrite, projectId }, d] = await withProjectData(ref, async (pid, supabase, tz) => {
+    const today = todayISO(tz);
+    const in14 = addDaysISO(today, 14);
+    const head = { count: "exact" as const, head: true };
+    const [tasks, items, payments, guests, docs, events, feed, vendors, allocated, templates, rundown, manual] = await Promise.all([
+      supabase.from("tasks").select("phase_key, status").eq("project_id", pid),
+      supabase.from("budget_items").select("id, name, actual_idr, estimated_idr").eq("project_id", pid),
+      supabase.from("expense_payments").select("id, label, kind, amount_idr, due_date, status, paid_at, vendors(name)").eq("project_id", pid),
+      supabase.from("guests").select("rsvp_status, pax_confirmed, rsvp_responded_at, invitation_sent_at").eq("project_id", pid),
+      supabase.from("document_checklist_items").select("is_done").eq("project_id", pid),
+      supabase.from("wedding_events").select("name, type, starts_at, venue_name").eq("project_id", pid).order("sort_order").order("starts_at"),
+      supabase.from("calendar_feed").select("*").eq("project_id", pid).gte("starts_at", addDaysISO(today, -1)).lte("starts_at", addDaysISO(in14, 1)).order("starts_at"),
+      supabase.from("vendors").select("id, name").eq("project_id", pid),
+      supabase.from("budget_categories").select("*", head).eq("project_id", pid).gt("allocated_idr", 0),
+      supabase.from("message_templates").select("created_at, updated_at").eq("project_id", pid),
+      supabase.from("rundown_items").select("*", head).eq("project_id", pid),
+      supabase.from("guide_progress").select("step_key").eq("project_id", pid),
+    ]);
+    return { today, in14, tasks: tasks.data, items: items.data, payments: payments.data, guests: guests.data, docs: docs.data, events: events.data, feed: feed.data, vendors: vendors.data, allocated: allocated.count ?? 0, templates: templates.data ?? [], rundown: rundown.count ?? 0, manual: (manual.data ?? []).map((m) => m.step_key as string) };
+  });
+  const { today, in14, tasks, items, payments, guests, docs, events, feed, vendors } = d;
+  const tz = project.timezone;
+  const guide = guideFrom(project, {
+    events: (events ?? []).length, allocated: d.allocated, tasksDone: (tasks ?? []).filter((x) => x.status === "done").length, vendors: (vendors ?? []).length,
+    guests: (guests ?? []).length, templates: d.templates, sent: (guests ?? []).filter((g) => g.invitation_sent_at).length, rundown: d.rundown,
+    docAll: (docs ?? []).length, docDone: (docs ?? []).filter((x) => x.is_done).length, manual: d.manual,
+  });
 
   // Hitung mundur
   const daysLeft = project.wedding_date ? diffDays(today, project.wedding_date) : null;
@@ -106,24 +121,13 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
 
       <div className="stagger grid gap-4 lg:grid-cols-12">
         <Card tour="countdown" className="lg:col-span-5 lg:row-span-2">
-          <CardHeader icon={<Timer />} title={t("Hitung Mundur")} />
-          {daysLeft !== null ? (
-            <>
-              <p className="font-display text-[44px] leading-[52px] font-medium text-neutral-900">
-                {daysLeft > 0 ? <><CountUp value={daysLeft} /> <span className="text-[28px]">{t("hari lagi")}</span></> : daysLeft === 0 ? t("Hari ini!") : t("Selamat menikah")}
-              </p>
-              <p className="mt-1 flex items-center gap-1.5 text-[13px] text-neutral-600">
-                <MapPin className="size-4" />{formatDateShort(project.wedding_date, undefined, lang)}{(mainEvent?.venue_name || project.city) && `, ${mainEvent?.venue_name ?? project.city}`}
-              </p>
-            </>
-          ) : (
-            <p className="text-[13px] text-neutral-600">{t("Tanggal pernikahan belum diisi.")}{" "}<Link href={`/app/${ref}/pengaturan?tab=budget`} className="font-medium text-plum-600 underline">{t("Atur sekarang")}</Link></p>
-          )}
+          <CountdownHero weddingDate={project.wedding_date} createdAt={project.created_at ?? new Date().toISOString()} today={today} tz={tz}
+            place={mainEvent?.venue_name ?? project.city ?? null} settingsHref={`/app/${ref}/pengaturan?tab=budget`} />
           {canWrite && <div className="mt-4"><QuickAdd projectId={projectId} tz={tz} items={items ?? []} vendors={vendors ?? []} mode="countdown" /></div>}
 
           <div className="mt-6 mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-neutral-800">{t("Progress per Fase")}</h3>
-            <Link href={`/app/${ref}/checklist`} className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-200">{t("Semua")}</Link>
+            <Link href={`/app/${ref}/checklist`} className="inline-flex h-10 items-center rounded-full bg-neutral-100 px-3.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200 md:h-8">{t("Semua")}</Link>
           </div>
           {shownPhases.length ? (
             <div className="grid grid-cols-2 gap-2">

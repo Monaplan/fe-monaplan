@@ -1,4 +1,4 @@
-import { getProjectContext } from "@/lib/access";
+import { withProjectData } from "@/lib/access";
 import { ChecklistClient } from "./checklist-client";
 import { getT } from "@/i18n/server";
 
@@ -9,11 +9,10 @@ export async function generateMetadata() {
 
 export default async function ChecklistPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: ref } = await params;
-  const { supabase, project, members, canWrite, projectId } = await getProjectContext(ref);
-  const [{ data: tasks }, { data: vendors }] = await Promise.all([
-    supabase.from("tasks").select("*").eq("project_id", projectId).order("sort_order").order("due_date", { nullsFirst: false }),
-    supabase.from("vendors").select("id, name").eq("project_id", projectId).order("name"),
-  ]);
+  const [{ project, members, canWrite, projectId }, [{ data: tasks }, { data: vendors }]] = await withProjectData(ref, (pid, supabase) => Promise.all([
+    supabase.from("tasks").select("*").eq("project_id", pid).order("sort_order").order("due_date", { nullsFirst: false }),
+    supabase.from("vendors").select("id, name").eq("project_id", pid).order("name"),
+  ]));
 
   return (
     <ChecklistClient

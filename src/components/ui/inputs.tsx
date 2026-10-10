@@ -11,7 +11,7 @@ function fmt(n: string) {
 }
 
 // Input Rupiah: prefix Rp, format ribuan otomatis, keyboard numerik
-export function CurrencyInput({ name, defaultValue, className, ...rest }: Omit<ComponentProps<"input">, "defaultValue"> & { defaultValue?: number | null }) {
+export function CurrencyInput({ name, defaultValue, className, onValueChange, ...rest }: Omit<ComponentProps<"input">, "defaultValue"> & { defaultValue?: number | null; onValueChange?: (n: number) => void }) {
   const t = useT();
   const [value, setValue] = useState(defaultValue ? fmt(String(defaultValue)) : "");
   return (
@@ -22,7 +22,7 @@ export function CurrencyInput({ name, defaultValue, className, ...rest }: Omit<C
         inputMode="numeric"
         className={cn(inputClass, "tabular pl-9", className)}
         value={value}
-        onChange={(e) => setValue(fmt(e.target.value))}
+        onChange={(e) => { const v = fmt(e.target.value); setValue(v); onValueChange?.(Number(v.replace(/\D/g, "")) || 0); }}
       />
       <input type="hidden" name={name} value={value.replace(/\D/g, "")} />
     </div>

@@ -63,7 +63,7 @@ export async function AccessStatusCard({ access, isOwner, base, canInvite, compa
       {isCollab ? (
         <p className="mt-2.5 text-[11.5px] text-white/70">{t("Hubungi pemilik ruang kerja.")}</p>
       ) : primary && (
-        <Link href={primary.href} className={buttonClass("white", "sm", "mt-3 h-8 w-full text-[12.5px]")}>{primary.label}</Link>
+        <Link href={primary.href} className={buttonClass("white", "sm", "mt-3 h-10 w-full text-[12.5px] md:h-8")}>{primary.label}</Link>
       )}
     </div>
   );

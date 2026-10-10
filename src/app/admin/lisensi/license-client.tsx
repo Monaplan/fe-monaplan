@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/form";
 import { Modal } from "@/components/ui/modal";
@@ -11,7 +11,7 @@ import { StatusPill } from "@/components/ui/pill";
 import { useToast } from "@/components/ui/toast";
 import { usePrompt } from "@/components/ui/dialogs";
 import { formatDateCompact } from "@/lib/format";
-import { extendLicense, grantLicense, restoreLicense, revokeLicense } from "@/features/admin/actions";
+import { deleteLicense, extendLicense, grantLicense, restoreLicense, revokeLicense } from "@/features/admin/actions";
 import { useT } from "@/i18n/client";
 import { useI18n } from "@/i18n/client";
 
@@ -60,6 +60,7 @@ export function LicenseRow({ license: l }: { license: any }) {
           if (r) run(() => revokeLicense(l.id, r));
         } },
         { label: t("Pulihkan"), hidden: l.status !== "revoked", action: () => restoreLicense(l.id) },
+        { label: t("Hapus"), icon: <Trash2 />, danger: true, hidden: l.status !== "revoked", confirm: t("Hapus lisensi {email} secara permanen? Order terkait tetap tersimpan.", { email: l.profiles?.email }), action: () => deleteLicense(l.id) },
       ]} />
     </div>
   );

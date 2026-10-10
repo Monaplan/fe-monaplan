@@ -35,7 +35,7 @@ export function PasswordInput({ id, name, autoComplete, placeholder = "•••
       <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-neutral-400"><Lock className="size-4" /></span>
       <Input id={id} name={name} type={show ? "text" : "password"} required autoComplete={autoComplete} placeholder={placeholder} className="h-11 pr-11 pl-10" />
       <button type="button" onClick={() => setShow(!show)} aria-label={show ? t("Sembunyikan password") : t("Tampilkan password")}
-        className="absolute top-1/2 right-2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
+        className="absolute top-1/2 right-1 inline-flex size-10 -translate-y-1/2 md:right-2 md:size-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
         {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>
     </div>

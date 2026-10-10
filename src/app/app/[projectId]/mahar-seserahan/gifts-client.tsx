@@ -64,7 +64,7 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
           {list.map((i) => (
-            <div key={i.id} className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-surface">
+            <div key={i.id} data-row-id={i.id} className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-surface">
               <div className="relative aspect-[4/3] bg-plum-50">
                 {i.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element

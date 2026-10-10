@@ -4,14 +4,16 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock,
-  FileText, Gift, Hourglass, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield,
-  ScrollText, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X,
+  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock,
+  FileText, Gift, Hourglass, MessageCircle, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield,
+  ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X,
 } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { initials } from "@/lib/format";
-import { markNotificationsRead } from "@/features/notifications/actions";
-import { startPageTour } from "./product-tour";
+import { NotificationBell, type Notif } from "./notification-bell";
+import { HelpMenu } from "./help-menu";
+import { SearchBox } from "./search-box";
+import { supportWhatsappUrl } from "@/lib/support";
 import { ThemeSwitcher, ThemeToggle } from "./theme";
 import { LanguageSwitcher } from "./language-switcher";
 import { useT } from "@/i18n/client";
@@ -21,13 +23,12 @@ const ICONS = {
   dashboard: LayoutGrid, checklist: ListChecks, budget: Wallet, vendor: Store, tamu: Mail, rundown: Clock, gift: Gift,
   dokumen: FileText, kalender: CalendarDays, pengaturan: SlidersHorizontal, panduan: BookOpen, bantuan: CircleHelp,
   home: House, user: UserRound, tagihan: ReceiptText, admin: Shield, paket: Package, kode: KeyRound, order: ReceiptText,
-  lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail,
+  palette: Palette, plane: Plane, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail,
 } as const;
 export type IconKey = keyof typeof ICONS;
 
-export type NavItem = { href: string; label: string; icon: IconKey; badge?: number; badgeTone?: "danger" | "neutral"; exact?: boolean; external?: boolean };
+export type NavItem = { tag?: string; href: string; label: string; icon: IconKey; badge?: number; badgeTone?: "danger" | "neutral"; exact?: boolean; external?: boolean };
 export type NavGroup = { title: string; items: NavItem[] };
-type Notif = { id: string; title: string; body: string | null; link_path: string | null; read_at: string | null; created_at: string };
 type ShellUser = { name: string | null; email: string; avatar: string | null; isAdmin: boolean };
 
 function Icon({ name, className }: { name: IconKey; className?: string }) {
@@ -36,7 +37,7 @@ function Icon({ name, className }: { name: IconKey; className?: string }) {
 }
 
 export function SidebarShell({
-  context, contextHref, contextLabel, groups, user, notifications, searchBase, footer, mobileTabs, helpHref, children,
+  context, contextHref, contextLabel, groups, user, notifications, userId, searchBase, footer, mobileTabs, helpHref, children,
 }: {
   context: string;
   contextLabel: string;
@@ -44,6 +45,7 @@ export function SidebarShell({
   groups: NavGroup[];
   user: ShellUser;
   notifications?: Notif[];
+  userId?: string;
   searchBase?: string;
   footer?: ReactNode;
   mobileTabs?: NavItem[];
@@ -55,10 +57,15 @@ export function SidebarShell({
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [sheet, setSheet] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
+  // Judul grup yang ditutup pengguna; tersimpan di peramban. Grup berisi halaman aktif selalu terbuka.
+  const [closed, setClosed] = useState<string[]>([]);
 
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("mp-sidebar") === "1"); } catch {}
+    try {
+      const saved = JSON.parse(localStorage.getItem("mp-nav-groups") ?? "[]");
+      if (Array.isArray(saved)) setClosed(saved.filter((x): x is string => typeof x === "string"));
+    } catch {}
   }, []);
   useEffect(() => setSheet(false), [pathname]);
   useEscape(sheet, () => setSheet(false));
@@ -69,21 +76,18 @@ export function SidebarShell({
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, [sheet]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && searchRef.current) {
-        e.preventDefault();
-        searchRef.current.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
 
   const toggle = () => {
     const next = !collapsed;
     setCollapsed(next);
     try { localStorage.setItem("mp-sidebar", next ? "1" : "0"); } catch {}
+  };
+  // Kunci grup memakai alamat item pertamanya, bukan judul, supaya pilihan buka-tutup tetap berlaku saat bahasa diganti
+  const gkey = (g: NavGroup) => g.items[0]?.href ?? g.title;
+  const toggleGroup = (key: string) => {
+    const next = closed.includes(key) ? closed.filter((x) => x !== key) : [...closed, key];
+    setClosed(next);
+    try { localStorage.setItem("mp-nav-groups", JSON.stringify(next)); } catch {}
   };
   const isActive = (item: NavItem) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/"));
   const activeItem = groups.flatMap((g) => g.items).filter(isActive).sort((a, b) => b.href.length - a.href.length)[0];
@@ -106,10 +110,24 @@ export function SidebarShell({
 
 
       <nav data-tour="nav" className="scrollbar-thin flex-1 overflow-y-auto px-3 pb-4" aria-label={t("Navigasi")}>
-        {groups.map((g) => (
+        {groups.map((g) => {
+          const foldable = g.items.length > 1;
+          const open = !foldable || rail || !closed.includes(gkey(g)) || g.items.some(isActive);
+          const headCls = "overflow-hidden px-3 text-[10.5px] font-semibold tracking-[0.12em] whitespace-nowrap text-neutral-400 uppercase transition-[max-height,opacity,margin] duration-300 ease-[var(--ease-out-soft)]";
+          return (
           <div key={g.title} className="mb-4">
-            <p className={cn("overflow-hidden px-3 text-[10.5px] font-semibold tracking-[0.12em] whitespace-nowrap text-neutral-400 uppercase transition-[max-height,opacity,margin] duration-300 ease-[var(--ease-out-soft)]", rail ? "mb-0 max-h-0 opacity-0" : "mb-1.5 max-h-5 opacity-100")} aria-hidden={rail}>{t(g.title)}</p>
+            {foldable && !rail ? (
+              <button type="button" onClick={() => toggleGroup(gkey(g))} aria-expanded={open} aria-controls={`nav-${gkey(g)}`}
+                className={cn(headCls, "mb-1.5 flex max-h-5 w-full items-center justify-between rounded-md opacity-100 hover:text-neutral-600 focus-visible:ring-2 focus-visible:ring-plum-300 focus-visible:outline-none")}>
+                <span>{t(g.title)}</span>
+                <ChevronDown className={cn("size-3.5 shrink-0 transition-transform duration-300", !open && "-rotate-90")} aria-hidden="true" />
+              </button>
+            ) : (
+              <p className={cn(headCls, rail ? "mb-0 max-h-0 opacity-0" : "mb-1.5 max-h-5 opacity-100")} aria-hidden={rail}>{t(g.title)}</p>
+            )}
             <div className={cn("mx-auto h-px bg-neutral-200 transition-[width,opacity,margin] duration-300 ease-[var(--ease-out-soft)]", rail ? "mb-2 w-6 opacity-100" : "mb-0 w-0 opacity-0")} />
+            <div id={`nav-${gkey(g)}`} inert={!open} className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-[var(--ease-out-soft)]", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+            <div className="-mx-3 min-h-0 overflow-hidden px-3">
             <ul className="flex flex-col gap-0.5">
               {g.items.map((item) => {
                 const active = isActive(item);
@@ -123,6 +141,7 @@ export function SidebarShell({
                     <span className={cn("absolute top-2 bottom-2 -left-3 w-[3px] origin-center rounded-r-full bg-plum-600 transition-transform duration-300 ease-[var(--ease-out-soft)]", active ? "scale-y-100" : "scale-y-0")} />
                     <Icon name={item.icon} className={cn("size-[18px] shrink-0 transition-[color,transform] duration-200 group-hover:scale-110", active ? "text-plum-600" : "text-neutral-400 group-hover:text-neutral-600")} />
                     <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-300 ease-[var(--ease-out-soft)]", rail ? "ml-0 max-w-0 flex-none opacity-0" : "ml-3 max-w-[200px] flex-1 truncate opacity-100")} aria-hidden={rail}>{t(item.label)}</span>
+                    {item.tag && !rail && <span className="rounded-full bg-plum-100 px-1.5 text-[10px] leading-4 font-semibold tracking-wide text-plum-700 uppercase">{t(item.tag)}</span>}
                     {!!item.badge && (rail
                       ? <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-danger" />
                       : <span className={cn("tabular rounded-full px-1.5 text-[11px] leading-5 font-semibold", item.badgeTone === "danger" ? "bg-danger-bg text-danger" : "bg-plum-100 text-plum-700")}>{item.badge}</span>)}
@@ -137,8 +156,11 @@ export function SidebarShell({
                 );
               })}
             </ul>
+            </div>
+            </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className={cn("flex flex-col gap-3 border-t border-neutral-200/80 p-3", rail && "items-center")}>
@@ -164,36 +186,29 @@ export function SidebarShell({
       </aside>
 
       {/* Menu HP: bottom sheet seperti aplikasi mobile */}
-      {sheet && <MobileSheet groups={groups} user={user} footer={footer} isActive={isActive} onClose={() => setSheet(false)} />}
+      {sheet && <MobileSheet groups={groups} user={user} footer={footer} isActive={isActive} closed={closed} onToggle={toggleGroup} onClose={() => setSheet(false)} />}
 
       <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-300 ease-[var(--ease-out-soft)]", collapsed ? "md:pl-[92px]" : "md:pl-[92px] xl:pl-[280px]")}>
         {/* Top bar */}
         <header className="no-print sticky top-0 z-20 border-b border-neutral-200/60 bg-canvas/80 pt-[env(safe-area-inset-top)] backdrop-blur-md md:border-0 md:bg-transparent md:pt-0 md:backdrop-blur-none">
           <div className="flex h-14 items-center gap-1 px-4 md:h-[72px] md:gap-2 md:px-6">
-            <div className="min-w-0 flex-1">
+            {/* HP: hanya logo dan nama Monaplan; judul halaman sudah ada di isi halaman */}
+            <Link href={contextHref} aria-label={t("Monaplan")} className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">
+              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#A9557E] to-[#5A2541] font-display text-xl font-semibold text-white italic shadow-btn">{t("M")}</span>
+              <span className="font-display text-[22px] leading-6 font-semibold text-neutral-900">{t("Monaplan")}</span>
+            </Link>
+            <div className="hidden min-w-0 flex-1 md:block">
               <p className="truncate text-[11.5px] leading-4 text-neutral-500 md:text-[12px]">{context}{contextLabel && <span className="hidden text-neutral-400 md:inline"> · {contextLabel}</span>}</p>
               <p className="truncate text-[16px] leading-5 font-semibold text-neutral-900 md:text-base">{activeItem ? t(activeItem.label) : context}</p>
             </div>
-            {searchBase && (
-              <form data-tour="search" className="relative hidden w-72 lg:block" onSubmit={(e) => {
-                e.preventDefault();
-                const q = new FormData(e.currentTarget).get("q");
-                if (q) router.push(`${searchBase}?q=${encodeURIComponent(String(q))}`);
-              }}>
-                <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-neutral-400" />
-                <input ref={searchRef} name="q" placeholder={t("Cari tugas, vendor, tamu")} aria-label={t("Cari")}
-                  className="h-10 w-full rounded-full border border-neutral-200/80 bg-surface pr-16 pl-10 text-sm shadow-[0_1px_2px_rgba(62,26,45,0.04)] outline-none focus:border-plum-400 focus:ring-[3px] focus:ring-plum-100" />
-                <kbd className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md border border-neutral-200 bg-neutral-50 px-1.5 text-[10.5px] text-neutral-500">{t("Ctrl K")}</kbd>
-              </form>
-            )}
+            {searchBase && <SearchBox base={searchBase} className="hidden lg:block" />}
             {searchBase && (
               <Link href={searchBase} aria-label={t("Cari")} className="inline-flex size-10 items-center justify-center rounded-full text-neutral-700 hover:bg-surface lg:hidden"><Search className="size-5" /></Link>
             )}
             <LanguageSwitcher compact className="mr-1 ml-2 hidden sm:inline-flex" />
-            <button data-tour="help" onClick={() => { if (!startPageTour()) router.push(helpHref ?? "/akun/bantuan"); }} aria-label={t("Bantuan dan tur halaman")} title={t("Tur halaman ini")}
-              className="inline-flex size-10 items-center justify-center rounded-full text-neutral-600 hover:bg-surface"><CircleHelp className="size-5" /></button>
+            <HelpMenu helpHref={helpHref ?? "/akun/bantuan"} context={context} />
             <span className="hidden sm:block"><ThemeToggle className="hover:bg-surface" /></span>
-            {notifications && <NotificationBell notifications={notifications} />}
+            {notifications && userId && <NotificationBell initial={notifications} userId={userId} />}
           </div>
         </header>
 
@@ -228,14 +243,17 @@ export function SidebarShell({
 }
 
 // Lembar menu penuh untuk HP: semua tujuan dalam grid ikon, kartu akses, tema, dan keluar
-function MobileSheet({ groups, user, footer, isActive, onClose }: {
+function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle }: {
   groups: NavGroup[];
+  closed: string[];
+  onToggle: (title: string) => void;
   user: ShellUser;
   footer?: ReactNode;
   isActive: (item: NavItem) => boolean;
   onClose: () => void;
 }) {
   const t = useT();
+  const pathname = usePathname();
   const links: { href: string; icon: IconKey; label: string }[] = [
     { href: "/mulai", icon: "home", label: t("Ruang kerja") },
     { href: "/akun", icon: "user", label: t("Profil & Lisensi") },
@@ -257,9 +275,24 @@ function MobileSheet({ groups, user, footer, isActive, onClose }: {
         </div>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          {groups.map((g) => (
+          {groups.map((g) => {
+            const foldable = g.items.length > 1;
+            const open = !foldable || !closed.includes(g.items[0]?.href ?? g.title) || g.items.some(isActive);
+            return (
             <section key={g.title} aria-label={t(g.title)} className="mb-5">
-              <h2 className="mb-2.5 text-[10.5px] font-semibold tracking-[0.12em] text-neutral-400 uppercase">{t(g.title)}</h2>
+              {foldable ? (
+                <h2 className="mb-2.5">
+                  <button type="button" onClick={() => onToggle(g.items[0]?.href ?? g.title)} aria-expanded={open}
+                    className="flex w-full items-center justify-between text-[10.5px] font-semibold tracking-[0.12em] text-neutral-400 uppercase">
+                    {t(g.title)}
+                    <ChevronDown className={cn("size-4 transition-transform duration-300", !open && "-rotate-90")} aria-hidden="true" />
+                  </button>
+                </h2>
+              ) : (
+                <h2 className="mb-2.5 text-[10.5px] font-semibold tracking-[0.12em] text-neutral-400 uppercase">{t(g.title)}</h2>
+              )}
+              <div inert={!open} className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-[var(--ease-out-soft)]", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+              <div className="min-h-0 overflow-hidden">
               <ul className="grid grid-cols-4 gap-x-2 gap-y-3">
                 {g.items.map((item) => {
                   const active = isActive(item);
@@ -282,8 +315,11 @@ function MobileSheet({ groups, user, footer, isActive, onClose }: {
                   );
                 })}
               </ul>
+              </div>
+              </div>
             </section>
-          ))}
+            );
+          })}
 
           {footer && <div className="mb-5">{footer}</div>}
 
@@ -296,6 +332,11 @@ function MobileSheet({ groups, user, footer, isActive, onClose }: {
 
           <div className="flex flex-col">
             {links.map((l) => <MenuLink key={l.href} href={l.href} icon={l.icon} label={t(l.label)} onClick={onClose} />)}
+            {supportWhatsappUrl("Halo admin Monaplan, saya butuh bantuan.") && (
+              <a href={supportWhatsappUrl(`Halo admin Monaplan, saya butuh bantuan.
+Halaman: ${pathname}`)!} target="_blank" rel="noopener noreferrer" onClick={onClose}
+                className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] text-neutral-700 hover:bg-neutral-100"><MessageCircle className="size-4 text-[#1FA855]" />{t("Chat WhatsApp admin")}</a>
+            )}
             <form action="/auth/signout" method="post">
               <button className="flex h-11 w-full items-center gap-2.5 rounded-lg px-3 text-[14px] font-medium text-danger hover:bg-danger-bg"><LogOut className="size-4" />{t("Keluar")}</button>
             </form>
@@ -385,40 +426,3 @@ function MenuLink({ href, icon, label, onClick }: { href: string; icon: IconKey;
   );
 }
 
-function NotificationBell({ notifications }: { notifications: Notif[] }) {
-  const t = useT();
-  const [open, setOpen] = useState(false);
-  useEscape(open, () => setOpen(false));
-  const [, start] = useTransition();
-  const unread = notifications.filter((n) => !n.read_at).length;
-  return (
-    <div className="relative">
-      <button
-        aria-label={t("Notifikasi{v1}", { v1: unread ? `, ${unread} belum dibaca` : "" })}
-        onClick={() => {
-          setOpen(!open);
-          if (!open && unread) start(() => { markNotificationsRead(); });
-        }}
-        className="relative inline-flex size-10 items-center justify-center rounded-full text-neutral-600 hover:bg-surface"
-      >
-        <Bell className="size-5" />
-        {unread > 0 && <span className="absolute top-2 right-2.5 size-2 rounded-full bg-danger ring-2 ring-canvas" />}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="fixed inset-x-4 top-16 z-50 max-h-[70dvh] overflow-y-auto rounded-2xl border border-neutral-200 bg-surface p-2 shadow-pop md:absolute md:inset-x-auto md:top-auto md:right-0 md:mt-2 md:w-80">
-            <p className="px-2 py-1.5 text-sm font-semibold">{t("Notifikasi")}</p>
-            {notifications.length === 0 && <p className="px-2 py-8 text-center text-[13px] text-neutral-500">{t("Belum ada notifikasi.")}</p>}
-            {notifications.map((n) => (
-              <Link key={n.id} href={n.link_path ?? "#"} onClick={() => setOpen(false)} className={cn("block rounded-xl px-3 py-2.5 hover:bg-neutral-50", !n.read_at && "bg-plum-50")}>
-                <span className="block text-[13px] font-medium text-neutral-800">{n.title}</span>
-                {n.body && <span className="block text-xs text-neutral-500">{n.body}</span>}
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}

@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/paths";
 import { fail, type ActionResult, okm } from "@/lib/result";
 
 const Email = z.string().trim().toLowerCase().email("Format email belum benar.");
@@ -16,8 +17,7 @@ async function origin() {
 }
 
 function safeNext(next: FormDataEntryValue | null) {
-  const n = typeof next === "string" ? next : "";
-  return n.startsWith("/") && !n.startsWith("//") ? n : "/mulai";
+  return safeNextPath(next);
 }
 
 function authMessage(msg: string) {

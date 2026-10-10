@@ -15,7 +15,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 // Muat kamus EN dengan transpilasi sementara
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "mp-i18n-"));
-for (const rel of ["en.ts", "en/part1.ts", "en/part2.ts", "en/part3.ts", "en/part4.ts", "en/part5.ts"]) {
+for (const rel of ["en.ts", "en/part1.ts", "en/part2.ts", "en/part3.ts", "en/part4.ts", "en/part5.ts", "en/part6.ts", "en/part7.ts", "en/part8.ts"]) {
   const src = fs.readFileSync(path.join(ROOT, "src/i18n", rel), "utf8");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/from "(\.{1,2}\/[^"]+)"/g, 'from "$1.mjs"');
   const dest = path.join(tmp, rel.replace(/\.ts$/, ".mjs"));
@@ -44,7 +44,7 @@ const noPlaceholderLeak = Object.entries(EN).filter(([, v]) => /&(quot|amp|nbsp|
 check("tidak ada entitas HTML mentah di terjemahan", noPlaceholderLeak.length === 0);
 
 // Teks mentah di dalam komponen yang belum dibungkus t(): analisis tanpa transformasi tidak boleh menemukan suntingan
-const SKIP = [/^src\/i18n\//, /^src\/lib\/email/, /^src\/content\//, /^src\/lib\/format\.ts$/, /^src\/lib\/constants\.ts$/, /^src\/lib\/seo\.ts$/, /^src\/app\/privasi\//, /^src\/app\/rsvp\//, /^src\/app\/api\//, /opengraph-image|apple-icon|\/icon\.tsx$|manifest|sitemap|robots/, /^src\/lib\/pdf\//];
+const SKIP = [/^src\/i18n\//, /^src\/lib\/email/, /^src\/content\//, /^src\/lib\/format\.ts$/, /^src\/lib\/constants\.ts$/, /^src\/lib\/seo\.ts$/, /^src\/app\/privasi\//, /^src\/app\/rsvp\//, /^src\/app\/\[slug\]\//, /^src\/components\/rsvp\//, /rsvp-theme-picker\.tsx$/, /^src\/app\/api\//, /opengraph-image|apple-icon|\/icon\.tsx$|manifest|sitemap|robots/, /^src\/lib\/pdf\//];
 const raw = [];
 (function walk(d) {
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {

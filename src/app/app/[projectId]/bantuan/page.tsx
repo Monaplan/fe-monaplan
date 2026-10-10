@@ -13,12 +13,11 @@ export async function generateMetadata() {
 export default async function HelpPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { t } = await getI18n();
   const { projectId: ref } = await params;
-  const { supabase, project, projectId, session } = await getProjectContext(ref);
-  const { data: tickets } = await supabase.from("support_tickets").select("id, subject, status, created_at").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(5);
+  const { project } = await getProjectContext(ref);
   return (
     <>
       <PageHeader title={t("Pusat Bantuan")} />
-      <HelpCenter base={projectPath(project)} projectId={projectId} tickets={tickets ?? []} />
+      <HelpCenter base={projectPath(project)} />
     </>
   );
 }

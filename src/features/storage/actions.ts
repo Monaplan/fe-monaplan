@@ -7,7 +7,7 @@ import { createUploadTicket, storagePrefix, type UploadTicket } from "@/lib/stor
 import { ALLOWED_MIME, MAX_FILE_BYTES, MAX_FILE_MB } from "@/lib/limits";
 import { getStorageUsage } from "@/features/documents/actions";
 
-type Folder = "documents" | "gifts" | "cover";
+type Folder = "documents" | "gifts" | "cover" | "inspiration";
 const EXT: Record<string, string> = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 // Izin dicek di server sebelum URL unggah dibuat: hanya Owner/Editor dengan lisensi aktif
@@ -15,7 +15,7 @@ export async function requestUpload(projectId: string, folder: Folder, fileName:
   Promise<{ ok: true; ticket: UploadTicket } | { ok: false; error: string }> {
   const { canWrite, project } = await getProjectContext(projectId);
   if (!canWrite) return { ok: false, error: "Kamu tidak punya izin mengunggah ke ruang kerja ini." };
-  if (!["documents", "gifts", "cover"].includes(folder)) return { ok: false, error: "Folder tidak valid." };
+  if (!["documents", "gifts", "cover", "inspiration"].includes(folder)) return { ok: false, error: "Folder tidak valid." };
   if (!(ALLOWED_MIME as readonly string[]).includes(contentType)) return { ok: false, error: "Format file harus PDF, JPG, PNG, atau WEBP." };
   if (!(size > 0 && size <= MAX_FILE_BYTES)) return { ok: false, error: withI18n("Ukuran file maksimal {mb} MB.", { mb: MAX_FILE_MB }) };
 

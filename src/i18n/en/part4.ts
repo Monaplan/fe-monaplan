@@ -299,5 +299,6 @@ export const EN4: Record<string, string> = {
   "Ada isian yang nilainya belum sesuai.": "Some values are not valid.",
   "Monaplan: Aplikasi Wedding Planner Digital untuk Calon Pengantin": "Monaplan: Digital Wedding Planner for Couples",
   "Aplikasi wedding planner all-in-one: checklist persiapan nikah, budgeting, kelola vendor, daftar tamu dan RSVP via WhatsApp, rundown hari H, mahar dan seserahan, hingga dokumen KUA dalam satu dashboard.": "An all-in-one wedding planner: checklist, budgeting, vendor management, guest list and RSVP via WhatsApp, event rundown, gifts, and wedding documents in one dashboard.",
+  "Monaplan, satu tempat untuk semua rencana nikahmu. Aplikasi wedding planner all-in-one: checklist persiapan nikah, budgeting, kelola vendor, daftar tamu dan RSVP via WhatsApp, rundown hari H, mahar dan seserahan, hingga dokumen KUA dalam satu dashboard.": "Monaplan, one place for all your wedding plans. An all-in-one wedding planner: checklist, budgeting, vendor management, guest list and RSVP via WhatsApp, event rundown, gifts, and wedding documents in one dashboard.",
   "STORAGE_DRIVER=r2 tetapi kredensial R2 belum lengkap": "STORAGE_DRIVER=r2 but the R2 credentials are incomplete",
 };

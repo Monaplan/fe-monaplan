@@ -1,5 +1,5 @@
 import { CalendarDays } from "lucide-react";
-import { getProjectContext } from "@/lib/access";
+import { withProjectData } from "@/lib/access";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { RundownClient } from "./rundown-client";
@@ -15,13 +15,12 @@ export default async function RundownPage({ params, searchParams }: { params: Pr
   const { t } = await getI18n();
   const { projectId: ref } = await params;
   const { acara } = await searchParams;
-  const { supabase, project, canWrite, projectId } = await getProjectContext(ref);
-  // Acara, seluruh butir rundown, dan vendor diambil serentak; butir difilter per acara di memori
-  const [{ data: events }, { data: allItems }, { data: vendors }] = await Promise.all([
-    supabase.from("wedding_events").select("id, name, type, starts_at, venue_name").eq("project_id", projectId).order("sort_order").order("starts_at"),
-    supabase.from("rundown_items").select("*, vendors(name)").eq("project_id", projectId).order("start_time").order("sort_order"),
-    supabase.from("vendors").select("id, name").eq("project_id", projectId).order("name"),
-  ]);
+  // Acara, seluruh butir rundown, dan vendor diambil serentak dengan konteks; butir difilter per acara di memori
+  const [{ project, canWrite, projectId }, [{ data: events }, { data: allItems }, { data: vendors }]] = await withProjectData(ref, (pid, supabase) => Promise.all([
+    supabase.from("wedding_events").select("id, name, type, starts_at, venue_name").eq("project_id", pid).order("sort_order").order("starts_at"),
+    supabase.from("rundown_items").select("*, vendors(name)").eq("project_id", pid).order("start_time").order("sort_order"),
+    supabase.from("vendors").select("id, name").eq("project_id", pid).order("name"),
+  ]));
 
   if (!events?.length) {
     return (

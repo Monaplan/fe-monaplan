@@ -86,21 +86,21 @@ export function VendorListClient({ projectId, vendors, packages, categories, can
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-plum-100 text-xs font-semibold text-plum-700">{v.name[0]?.toUpperCase()}</span>
                     <div className="min-w-0">
-                      <Link href={href(v)} className="block truncate text-sm font-medium text-neutral-800 hover:text-plum-700">{v.name}</Link>
+                      <Link href={href(v)} className="-my-1.5 block truncate py-1.5 text-sm font-medium text-neutral-800 hover:text-plum-700">{v.name}</Link>
                       {v.rating && <span className="flex items-center gap-0.5 text-xs text-plum-600">{Array.from({ length: v.rating }).map((_, i) => <Star key={i} className="size-3 fill-current" />)}</span>}
                     </div>
                   </div>
-                  <div className="col-start-2 row-start-1 md:hidden">{menu(v)}</div>
+                  <div className="col-start-2 row-start-1 justify-self-end md:hidden">{menu(v)}</div>
                   <p className="text-[13px] text-neutral-600">{v.category}</p>
-                  <p className="truncate text-[13px] text-neutral-600">{v.contact_person ?? (v.phone_e164 ? formatPhone(v.phone_e164) : "-")}</p>
+                  <p className="truncate text-right text-[13px] text-neutral-600 md:text-left">{v.contact_person ?? (v.phone_e164 ? formatPhone(v.phone_e164) : "-")}</p>
                   <p className="tabular text-sm font-semibold text-neutral-900 md:text-right">{v.deal_amount_idr ? formatIDR(v.deal_amount_idr) : pkgOf(v) ? formatIDR(pkgOf(v)!.price_idr) : "-"}</p>
-                  <div><StatusPill tone={statusTone(v.status)}>{t(labelOf(VENDOR_STATUS, v.status))}</StatusPill></div>
+                  <div className="justify-self-end md:justify-self-auto"><StatusPill tone={statusTone(v.status)}>{t(labelOf(VENDOR_STATUS, v.status))}</StatusPill></div>
                   <div className="hidden md:block">{menu(v)}</div>
                 </div>
               ))}
             </Card>
           ) : (
-            <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-5 md:px-0">
+            <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-5 md:px-0">
               {VENDOR_STATUS.map((s) => {
                 const col = list.filter((v) => v.status === s.key);
                 return (
@@ -122,7 +122,7 @@ export function VendorListClient({ projectId, vendors, packages, categories, can
                         <div key={v.id} draggable={canWrite} onDragStart={(e) => e.dataTransfer.setData("text/vendor", v.id)}
                           className="rounded-md border border-neutral-200 bg-surface p-3">
                           <p className="text-xs text-neutral-500">{v.category}</p>
-                          <Link href={href(v)} className="mt-0.5 block text-sm font-semibold text-neutral-800 hover:text-plum-700">{v.name}</Link>
+                          <Link href={href(v)} className="-my-1 mt-0.5 block py-1 text-sm font-semibold text-neutral-800 hover:text-plum-700">{v.name}</Link>
                           <p className="tabular mt-1 text-[13px] text-neutral-600">{v.deal_amount_idr ? formatIDR(v.deal_amount_idr) : pkgOf(v) ? formatIDR(pkgOf(v)!.price_idr) : t("Belum ada harga")}</p>
                           <div className="mt-2 flex items-center justify-between">
                             {v.phone_e164 ? (

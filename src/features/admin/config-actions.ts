@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { bustPublicCache } from "@/lib/ttl-cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, okm, type ActionResult } from "@/lib/result";
 import { parseIDR } from "@/lib/format";
@@ -29,6 +30,7 @@ export async function saveTrialSettings(fd: FormData): Promise<ActionResult> {
   const { error } = await writeSetting("trial", value, adminId);
   if (error) return missingTable(error) ?? dbError(error);
   await audit("settings.trial", "app_settings", "trial", value);
+  bustPublicCache();
   revalidatePath("/", "layout");
   return { ok: true, message: value.enabled ? `Trial ${days} hari aktif.` : "Trial dimatikan." };
 }
@@ -41,6 +43,7 @@ export async function setFeatureEnabled(key: "trial" | "promo", enabled: boolean
   const { error } = await writeSetting(key, value, adminId);
   if (error) return missingTable(error) ?? dbError(error);
   await audit(`settings.${key}`, "app_settings", key, value);
+  bustPublicCache();
   revalidatePath("/", "layout");
   return { ok: true, message: `${key === "trial" ? "Trial" : "Promo"} ${enabled ? "diaktifkan" : "dimatikan"}.` };
 }
@@ -54,6 +57,17 @@ export async function savePromo(fd: FormData): Promise<ActionResult> {
   if (!Number.isFinite(value) || value <= 0) return fail("Nilai diskon harus lebih dari 0.");
   if (type === "percent" && (value > 100 || !Number.isInteger(value))) return fail("Diskon persen berupa bilangan bulat 1 sampai 100.");
   const startsAt = str(fd.get("starts_at")), endsAt = str(fd.get("ends_at"));
+  // Kode ditulis bebas oleh admin; disimpan huruf besar. Kosong berarti promo otomatis.
+  const code = (str(fd.get("code")) ?? "").toUpperCase() || null;
+  if (code && !/^[A-Z0-9_-]{3,32}$/.test(code)) return fail("Kode promo 3 sampai 32 karakter: huruf, angka, strip, atau garis bawah, tanpa spasi.");
+  const maxRaw = str(fd.get("max_uses"));
+  const maxUses = maxRaw === null ? null : Number(maxRaw);
+  if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 1_000_000)) return fail("Batas pemakaian harus bilangan bulat 1 atau lebih, atau kosongkan untuk tanpa batas.");
+  const popupEnabled = fd.get("popup_enabled") === "on";
+  const audience = String(fd.get("popup_audience") ?? "all");
+  if (!["all", "guest", "no_license", "trial"].includes(audience)) return fail("Sasaran popup tidak valid.");
+  const popupTitle = str(fd.get("popup_title")), popupText = str(fd.get("popup_text")), popupCta = str(fd.get("popup_cta"));
+  if ((popupTitle?.length ?? 0) > 80 || (popupText?.length ?? 0) > 200 || (popupCta?.length ?? 0) > 30) return fail("Teks popup terlalu panjang (judul 80, isi 200, tombol 30 karakter).");
   const row = {
     name,
     description: str(fd.get("description")),
@@ -63,15 +77,32 @@ export async function savePromo(fd: FormData): Promise<ActionResult> {
     starts_at: startsAt ? new Date(`${startsAt}T00:00:00+07:00`).toISOString() : null,
     ends_at: endsAt ? new Date(`${endsAt}T23:59:59+07:00`).toISOString() : null,
     is_active: fd.get("is_active") === "on",
+    code,
+    max_uses: maxUses,
+    popup_enabled: popupEnabled,
+    popup_title: popupTitle ?? (popupEnabled ? name : null),
+    popup_text: popupText,
+    popup_cta: popupCta,
+    popup_audience: audience,
   };
   if (row.starts_at && row.ends_at && row.ends_at <= row.starts_at) return fail("Tanggal berakhir harus setelah tanggal mulai.");
   const id = str(fd.get("id"));
+  if (code) {
+    const { data: dup } = await admin.from("promos").select("id").ilike("code", code).limit(1);
+    if (dup?.some((d) => d.id !== id)) return fail("Kode {code} sudah dipakai promo lain.", { code });
+  }
   const res = id
     ? await admin.from("promos").update(row).eq("id", id).select("id").single()
     : await admin.from("promos").insert(row).select("id").single();
-  if (res.error) return missingTable(res.error) ?? dbError(res.error);
+  if (res.error) {
+    // Kolom baru belum ada: migrasi 6 (kode, popup) atau 7 (batas pemakaian) belum dijalankan
+    if (/column|schema cache/i.test(res.error.message ?? "")) return fail("Kolom promo baru belum ada di database. Jalankan migrasi 20261009000006 dan 20261009000007 di Supabase SQL Editor, lalu coba lagi.");
+    return missingTable(res.error) ?? dbError(res.error);
+  }
   await audit(id ? "promo.update" : "promo.create", "promo", res.data.id, row);
+  bustPublicCache();
   revalidatePath("/admin/promo");
+  bustPublicCache();
   revalidatePath("/", "layout");
   return { ok: true, message: "Promo tersimpan." };
 }
@@ -81,7 +112,9 @@ export async function setPromoActive(promoId: string, active: boolean): Promise<
   const { error } = await admin.from("promos").update({ is_active: active }).eq("id", promoId);
   if (error) return dbError(error);
   await audit("promo.toggle", "promo", promoId, { active });
+  bustPublicCache();
   revalidatePath("/admin/promo");
+  bustPublicCache();
   revalidatePath("/", "layout");
   return { ok: true, message: active ? "Promo diaktifkan." : "Promo dimatikan." };
 }
@@ -91,7 +124,9 @@ export async function deletePromo(promoId: string): Promise<ActionResult> {
   const { error } = await admin.from("promos").delete().eq("id", promoId);
   if (error) return dbError(error);
   await audit("promo.delete", "promo", promoId);
+  bustPublicCache();
   revalidatePath("/admin/promo");
+  bustPublicCache();
   revalidatePath("/", "layout");
   return { ok: true, message: "Promo dihapus. Order lama tetap mencatat potongannya." };
 }
@@ -107,6 +142,7 @@ export async function setUserRole(userId: string, role: "user" | "admin"): Promi
   const { error } = await admin.from("profiles").update({ role }).eq("id", userId);
   if (error) return dbError(error);
   await audit("user.role", "user", userId, { email: target.email, from: target.role, to: role });
+  bustPublicCache();
   revalidatePath("/admin/pengguna");
   return okm(role === "admin" ? "{email} sekarang admin." : "{email} sekarang pengguna biasa.", { email: target.email });
 }
@@ -130,6 +166,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
     const { data, error } = await admin.rpc("issue_license", { p_user_id: userId, p_plan_id: plan.id, p_source: "admin_grant", p_granted_by: adminId });
     if (error) return fail(error.message.includes("ALREADY_LIFETIME") ? "Pengguna ini sudah punya akses selamanya." : error.message);
     await audit("access.lifetime", "user", userId, { email: target.email, license_id: (data as { id: string }).id });
+    bustPublicCache();
     revalidatePath("/admin", "layout");
     return okm("{email} mendapat akses selamanya.", { email: target.email });
   }
@@ -147,6 +184,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
     });
     if (error) return dbError(error);
     await audit("access.trial", "user", userId, { email: target.email, days });
+    bustPublicCache();
     revalidatePath("/admin", "layout");
     return okm("{email} mendapat trial {days} hari.", { email: target.email, days });
   }
@@ -160,6 +198,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
     if (error) return dbError(error);
     if (!data?.length) return fail("Pengguna ini tidak punya akses aktif untuk dicabut.");
     await audit("access.revoke", "user", userId, { email: target.email, reason, licenses: data.length });
+    bustPublicCache();
     revalidatePath("/admin", "layout");
     return okm("Akses {email} dicabut.", { email: target.email });
   }
@@ -170,6 +209,7 @@ export async function setUserAccess(userId: string, input: UserAccessOp): Promis
   if (error) return dbError(error);
   if (!data?.length) return fail("Tidak ada akses yang dicabut untuk dipulihkan.");
   await audit("access.restore", "user", userId, { email: target.email, licenses: data.length });
+  bustPublicCache();
   revalidatePath("/admin", "layout");
   return okm("Akses {email} dipulihkan.", { email: target.email });
 }
