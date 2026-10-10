@@ -3,8 +3,9 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Papa from "papaparse";
 import {
-  CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageCircle, MessageSquareText, Pencil, Plus, Search, Send, Trash2, Users, X,
+  CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageSquareText, Pencil, Plus, Search, Send, Trash2, Users, X
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { Checkbox, Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
@@ -192,7 +193,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
                 {g.invitation_sent_at ? (
                   <span className="inline-flex items-center gap-1 text-xs text-plum-700"><CircleCheck className="size-3.5" />{t("Terkirim")}</span>
                 ) : canWrite && g.phone_e164 ? (
-                  <Button data-tour="tamu-send" size="sm" variant="secondary" icon={<MessageCircle />} onClick={() => sendWA(g)}>{t("Kirim WA")}</Button>
+                  <Button data-tour="tamu-send" size="sm" variant="secondary" icon={<WhatsAppIcon />} onClick={() => sendWA(g)}>{t("Kirim WA")}</Button>
                 ) : <span className="text-xs text-neutral-400">{t("Belum")}</span>}
               </span>
               <div className="hidden md:block">{rowMenu(g)}</div>
@@ -237,7 +238,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
   function rowMenu(g: Guest) {
     return (
       <RowMenu items={[
-        { label: t("Kirim via WhatsApp"), icon: <MessageCircle />, hidden: !g.phone_e164, onClick: () => sendWA(g) },
+        { label: t("Kirim via WhatsApp"), icon: <WhatsAppIcon />, hidden: !g.phone_e164, onClick: () => sendWA(g) },
         { label: t("Salin link RSVP"), icon: <Copy />, onClick: () => { navigator.clipboard.writeText(link(g)); toast(t("Link RSVP disalin.")); } },
         { label: t("Buka halaman RSVP"), icon: <Link2 />, href: link(g), external: true },
         { label: t("Ubah"), icon: <Pencil />, hidden: !canWrite, onClick: () => setForm(g) },
@@ -460,7 +461,7 @@ function SequentialModal({ guests, onSend, onClose }: { guests: Guest[]; onSend:
           <p className="tabular text-[13px] text-neutral-600">{formatPhone(g.phone_e164)}</p>
           <div className="mt-2 flex gap-2">
             <Button variant="secondary" onClick={() => setI(i + 1)}>{t("Lewati")}</Button>
-            <Button size="lg" icon={<MessageCircle />} onClick={() => { onSend(g); setI(i + 1); }}>{t("Kirim via WhatsApp")}</Button>
+            <Button size="lg" icon={<WhatsAppIcon />} onClick={() => { onSend(g); setI(i + 1); }}>{t("Kirim via WhatsApp")}</Button>
           </div>
         </div>
       ) : (

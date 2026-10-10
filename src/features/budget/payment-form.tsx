@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { Button } from "@/components/ui/button";
 import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
@@ -53,7 +54,7 @@ export function PaymentFormModal({ projectId, open, onClose, payment, items, ven
           </Field>
           <Field label={t("Label")} htmlFor="pay-label"><Input id="pay-label" name="label" placeholder={t("DP 30% katering")} defaultValue={p?.label ?? ""} /></Field>
           <Field label={t("Nominal")} htmlFor="pay-amount"><CurrencyInput id="pay-amount" name="amount_idr" required defaultValue={p?.amount_idr} /></Field>
-          <Field label={t("Jatuh tempo")} htmlFor="pay-due"><Input id="pay-due" type="date" name="due_date" defaultValue={p?.due_date ?? ""} /></Field>
+          <Field label={t("Jatuh tempo")} htmlFor="pay-due"><DateField id="pay-due" name="due_date" defaultValue={p?.due_date ?? ""} /></Field>
           <Field label={t("Status")} htmlFor="pay-status">
             <Select id="pay-status" name="status" value={status} onChange={(e) => setStatus(e.target.value as Payment["status"])}>
               <option value="belum_bayar">{t("Belum dibayar")}</option>
@@ -61,7 +62,7 @@ export function PaymentFormModal({ projectId, open, onClose, payment, items, ven
             </Select>
           </Field>
           {status === "sudah_bayar" && (
-            <Field label={t("Tanggal bayar")} htmlFor="pay-paid"><Input id="pay-paid" type="date" name="paid_at" defaultValue={p?.paid_at ?? ""} /></Field>
+            <Field label={t("Tanggal bayar")} htmlFor="pay-paid"><DateField id="pay-paid" name="paid_at" defaultValue={p?.paid_at ?? ""} /></Field>
           )}
           <Field label={t("Metode")} htmlFor="pay-method"><Input id="pay-method" name="payment_method" placeholder={t("Transfer BCA")} defaultValue={p?.payment_method ?? ""} /></Field>
           {documents.length > 0 && (

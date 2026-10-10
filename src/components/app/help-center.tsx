@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LifeBuoy, MessageCircle, Play, RotateCcw, Search } from "lucide-react";
+import { LifeBuoy, Play, RotateCcw, Search } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/form";
@@ -92,13 +93,13 @@ export function HelpCenter({ base }: { base: string | null }) {
 
       <div className="flex flex-col gap-4">
         <Card tour="help-contact">
-          <CardHeader icon={<MessageCircle />} title={t("Hubungi kami")} subtitle={t("Chat langsung dengan admin Monaplan.")} />
+          <CardHeader icon={<WhatsAppIcon />} title={t("Hubungi kami")} subtitle={t("Chat langsung dengan admin Monaplan.")} />
           {wa ? (
             <>
               <p className="text-[13.5px] leading-6 text-neutral-600">{t("Tidak ketemu jawabannya? Ceritakan kendalamu lewat WhatsApp, kami bantu secepatnya di jam kerja.")}</p>
               <a href={wa} target="_blank" rel="noopener noreferrer"
                 className="hover-lift mt-4 flex items-center gap-3 rounded-2xl border border-[#1FA855]/30 bg-[#1FA855]/10 p-4 text-neutral-900">
-                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1FA855] text-white"><MessageCircle className="size-5" /></span>
+                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1FA855] text-white"><WhatsAppIcon className="size-5" /></span>
                 <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{t("Chat WhatsApp admin")}</span><span className="block text-xs text-neutral-600">{t("Balasan lebih cepat di jam kerja.")}</span></span>
               </a>
             </>

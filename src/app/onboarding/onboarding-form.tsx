@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
@@ -41,7 +42,7 @@ export function OnboardingForm() {
         </div>
         <div className={cn("flex flex-col gap-4", step !== 1 && "hidden")}>
           <Field label={t("Tanggal pernikahan")} htmlFor="date" help={t("Untuk menghitung due date checklist. Boleh dikosongkan.")}>
-            <Input id="date" type="date" name="wedding_date" />
+            <DateField id="date" name="wedding_date" />
           </Field>
           <FormGrid>
             <Field label={t("Kota")} htmlFor="city"><Input id="city" name="city" placeholder={t("Bandung")} /></Field>

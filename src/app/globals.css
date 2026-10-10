@@ -282,3 +282,7 @@ body {
   .btn-glow > svg:last-child { animation: btn-nudge 1.6s ease-in-out infinite; }
   .btn-glow:hover, .btn-glow:focus-visible { animation-play-state: paused; }
 }
+
+/* Notifikasi muncul dari atas (pojok kanan atas) */
+@keyframes toast-in { from { transform: translateY(-12px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.animate-toast-in { animation: toast-in 220ms var(--ease-out-soft); }

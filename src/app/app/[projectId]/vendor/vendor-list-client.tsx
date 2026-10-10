@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRightLeft, Eye, Handshake, MessageCircle, Pencil, Plus, Star, Store, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Eye, Handshake, Pencil, Plus, Star, Store, Trash2 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { Select } from "@/components/ui/form";
@@ -42,7 +43,7 @@ export function VendorListClient({ projectId, vendors, packages, categories, can
   const menu = (v: Vendor) => (
     <RowMenu items={[
       { label: t("Lihat detail"), icon: <Eye />, href: href(v) },
-      { label: t("Chat WhatsApp"), icon: <MessageCircle />, href: waLink(v.phone_e164), external: true, hidden: !v.phone_e164 },
+      { label: t("Chat WhatsApp"), icon: <WhatsAppIcon />, href: waLink(v.phone_e164), external: true, hidden: !v.phone_e164 },
       { label: t("Tandai deal"), icon: <Handshake />, hidden: !canWrite || v.status === "deal", onClick: () => setDeal(v) },
       { label: t("Ubah"), icon: <Pencil />, hidden: !canWrite, onClick: () => setForm(v) },
       { label: t("Hapus"), icon: <Trash2 />, danger: true, hidden: !canWrite, confirm: t("Hapus vendor {name}?", { name: v.name }), action: () => deleteVendor(projectId, v.id) },
@@ -126,7 +127,7 @@ export function VendorListClient({ projectId, vendors, packages, categories, can
                           <p className="tabular mt-1 text-[13px] text-neutral-600">{v.deal_amount_idr ? formatIDR(v.deal_amount_idr) : pkgOf(v) ? formatIDR(pkgOf(v)!.price_idr) : t("Belum ada harga")}</p>
                           <div className="mt-2 flex items-center justify-between">
                             {v.phone_e164 ? (
-                              <a href={waLink(v.phone_e164)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-plum-600 hover:underline"><MessageCircle className="size-3.5" />{t("WhatsApp")}</a>
+                              <a href={waLink(v.phone_e164)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-plum-600 hover:underline"><WhatsAppIcon className="size-3.5" />{t("WhatsApp")}</a>
                             ) : <span />}
                             {menu(v)}
                           </div>

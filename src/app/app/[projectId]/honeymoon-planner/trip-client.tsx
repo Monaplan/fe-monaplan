@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { DateField, TimeField } from "@/components/ui/date-field";
 import { BedDouble, Bus, CircleAlert, MapPin, MoreHorizontal, Pencil, Plane, Plus, Sparkles, Trash2, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, StatCard } from "@/components/ui/card";
@@ -159,8 +160,8 @@ export function TripClient({ projectId, canWrite, weddingDate, plan, items }: { 
           <ActionForm action={(fd) => saveTripPlan(projectId, fd)} onSuccess={() => setPlanForm(false)}>
             <FormGrid>
               <Field label={t("Tujuan")} htmlFor="tp-dest" className="sm:col-span-2"><Input id="tp-dest" name="destination" maxLength={120} defaultValue={plan?.destination ?? ""} placeholder={t("Labuan Bajo")} /></Field>
-              <Field label={t("Berangkat")} htmlFor="tp-start"><Input id="tp-start" type="date" name="start_date" defaultValue={plan?.start_date ?? ""} /></Field>
-              <Field label={t("Pulang")} htmlFor="tp-end"><Input id="tp-end" type="date" name="end_date" defaultValue={plan?.end_date ?? ""} /></Field>
+              <Field label={t("Berangkat")} htmlFor="tp-start"><DateField id="tp-start" name="start_date" defaultValue={plan?.start_date ?? ""} /></Field>
+              <Field label={t("Pulang")} htmlFor="tp-end"><DateField id="tp-end" name="end_date" defaultValue={plan?.end_date ?? ""} /></Field>
               <Field label={t("Anggaran")} htmlFor="tp-budget" className="sm:col-span-2"><CurrencyInput id="tp-budget" name="budget_idr" defaultValue={plan?.budget_idr} /></Field>
             </FormGrid>
             <Field label={t("Catatan")} htmlFor="tp-notes"><Textarea id="tp-notes" name="notes" maxLength={1000} defaultValue={plan?.notes ?? ""} /></Field>
@@ -179,8 +180,8 @@ export function TripClient({ projectId, canWrite, weddingDate, plan, items }: { 
                 <Select id="ti-kind" name="kind" defaultValue={form.item?.kind ?? "kegiatan"}>{KINDS.map((k) => <option key={k.key} value={k.key}>{t(k.label)}</option>)}</Select>
               </Field>
               <Field label={t("Biaya")} htmlFor="ti-cost"><CurrencyInput id="ti-cost" name="cost_idr" defaultValue={form.item?.cost_idr} /></Field>
-              <Field label={t("Tanggal")} htmlFor="ti-day" help={t("Kosongkan bila belum dijadwalkan.")}><Input id="ti-day" type="date" name="day_date" min={plan?.start_date ?? undefined} max={plan?.end_date ?? undefined} defaultValue={form.item?.day_date ?? form.day ?? ""} /></Field>
-              <Field label={t("Jam")} htmlFor="ti-time"><Input id="ti-time" type="time" name="start_time" defaultValue={form.item?.start_time?.slice(0, 5) ?? ""} /></Field>
+              <Field label={t("Tanggal")} htmlFor="ti-day" help={t("Kosongkan bila belum dijadwalkan.")}><DateField id="ti-day" name="day_date" min={plan?.start_date ?? undefined} max={plan?.end_date ?? undefined} defaultValue={form.item?.day_date ?? form.day ?? ""} /></Field>
+              <Field label={t("Jam")} htmlFor="ti-time"><TimeField id="ti-time" name="start_time" defaultValue={form.item?.start_time?.slice(0, 5) ?? ""} /></Field>
               <Field label={t("Lokasi")} htmlFor="ti-loc" className="sm:col-span-2"><Input id="ti-loc" name="location" maxLength={160} defaultValue={form.item?.location ?? ""} /></Field>
             </FormGrid>
             <Field label={t("Catatan")} htmlFor="ti-notes"><Textarea id="ti-notes" name="notes" maxLength={500} defaultValue={form.item?.notes ?? ""} /></Field>

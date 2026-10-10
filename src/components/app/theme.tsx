@@ -27,13 +27,13 @@ export function setThemePref(p: ThemePref) {
 }
 
 export function useTheme() {
-  const [pref, setPref] = useState<ThemePref>("system");
+  const [pref, setPref] = useState<ThemePref>("light");
   useEffect(() => {
-    let saved: ThemePref = "system";
-    try { saved = (localStorage.getItem(KEY) as ThemePref) || "system"; } catch {}
+    let saved: ThemePref = "light";
+    try { saved = (localStorage.getItem(KEY) as ThemePref) || "light"; } catch {}
     setPref(saved);
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => { if ((localStorage.getItem(KEY) ?? "system") === "system") apply("system"); };
+    const onChange = () => { if ((localStorage.getItem(KEY) ?? "light") === "system") apply("system"); };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
@@ -103,8 +103,8 @@ export function ThemeToggle({ className }: { className?: string }) {
 // Menerapkan ulang tema setelah hidrasi. Pengaman bila React merender ulang <html> dan kelas .dark hilang.
 export function ThemeSync() {
   useEffect(() => {
-    let pref: ThemePref = "system";
-    try { pref = (localStorage.getItem(KEY) as ThemePref) || "system"; } catch {}
+    let pref: ThemePref = "light";
+    try { pref = (localStorage.getItem(KEY) as ThemePref) || "light"; } catch {}
     const dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (document.documentElement.classList.contains("dark") !== dark) apply(pref);
   }, []);

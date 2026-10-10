@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { useProjectBase } from "@/components/app/project-base";
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,7 @@ export function DealModal({ projectId, vendor, packages, categories, open, onClo
           <Field label={t("Nilai deal")} htmlFor="d-amount">
             <CurrencyInput key={pkgId} id="d-amount" name="deal_amount_idr" required defaultValue={vendor.deal_amount_idr ?? pkg?.price_idr} />
           </Field>
-          <Field label={t("Tanggal deal")} htmlFor="d-date"><Input id="d-date" type="date" name="deal_date" defaultValue={vendor.deal_date ?? ""} /></Field>
+          <Field label={t("Tanggal deal")} htmlFor="d-date"><DateField id="d-date" name="deal_date" defaultValue={vendor.deal_date ?? ""} /></Field>
         </FormGrid>
         <label className="flex items-center gap-2 rounded-md bg-neutral-50 px-3 py-3 text-sm font-medium">
           <Checkbox name="create_budget" checked={createBudget} onChange={(e) => setCreateBudget(e.target.checked)} />{t("Buat item budget dan jadwal pembayaran")}</label>
@@ -117,9 +118,9 @@ export function DealModal({ projectId, vendor, packages, categories, open, onClo
               </Select>
             </Field>
             <Field label={t("Nominal DP")} htmlFor="d-dp"><CurrencyInput id="d-dp" name="dp_amount_idr" /></Field>
-            <Field label={t("Jatuh tempo DP")} htmlFor="d-dpdue"><Input id="d-dpdue" type="date" name="dp_due_date" /></Field>
+            <Field label={t("Jatuh tempo DP")} htmlFor="d-dpdue"><DateField id="d-dpdue" name="dp_due_date" /></Field>
             <Field label={t("Jatuh tempo pelunasan")} htmlFor="d-final" help={t("Sisa nilai deal setelah DP.")}>
-              <Input id="d-final" type="date" name="final_due_date" />
+              <DateField id="d-final" name="final_due_date" />
             </Field>
           </FormGrid>
         )}

@@ -62,7 +62,7 @@ export async function CountdownHero({ weddingDate, createdAt, today, tz, place, 
               </>
             ) : (
               <>
-                <span className="font-display text-[44px] leading-[44px] font-medium [font-variant-numeric:lining-nums]"><CountUp value={daysLeft} /></span>
+                <span className="font-display text-[44px] leading-[44px] font-medium [font-variant-numeric:lining-nums]"><CountUp value={daysLeft} className="[font-variant-numeric:lining-nums_tabular-nums]" /></span>
                 <span className="mt-0.5 text-[11px] font-medium tracking-wide text-[#EDD1DF] uppercase">{t("hari lagi")}</span>
               </>
             )}

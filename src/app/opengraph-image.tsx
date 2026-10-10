@@ -11,7 +11,7 @@ export default function OpengraphImage() {
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, color: "white", background: "radial-gradient(circle at 0% 0%, #A9557E 0%, transparent 55%), linear-gradient(160deg, #3E1A2D 0%, #26101C 100%)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 18, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, fontStyle: "italic", fontWeight: 700 }}>M</div>
+          <svg width={64} height={64} viewBox="0 0 48 48"><rect width="48" height="48" rx="13.5" fill="#FFFFFF" /><path d="M13 36V20.2a3.3 3.3 0 0 1 5.7-2.3L24 24.2l5.3-6.3A3.3 3.3 0 0 1 35 20.2V36" fill="none" stroke="#3E1A2D" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" /><path d="M24 17.6c-3.9-2.5-5.7-4.4-5.7-6.6a3.1 3.1 0 0 1 5.7-1.7 3.1 3.1 0 0 1 5.7 1.7c0 2.2-1.8 4.1-5.7 6.6z" fill="#B8638D" /></svg>
           <div style={{ fontSize: 40, fontWeight: 700 }}>Monaplan</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>

@@ -1,4 +1,5 @@
-import { ArrowRight, BellRing, Check, CircleCheck, LayoutGrid, MessageCircle, Palette, Plane, Printer, ShieldCheck, Tag, Users, Briefcase } from "lucide-react";
+import { ArrowRight, BellRing, Check, CircleCheck, LayoutGrid, Palette, Plane, Printer, ShieldCheck, Tag, Users, Briefcase } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { ButtonLink } from "@/components/ui/button";
 import { CountUp } from "@/components/ui/count-up";
 import { formatDateCompact, formatIDR } from "@/lib/format";
@@ -20,7 +21,7 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { pl
 
   const points = (p: PricedPlan) => [
     { icon: <LayoutGrid />, text: t("11 modul lengkap, dari checklist dan budget sampai rundown hari H") },
-    { icon: <MessageCircle />, text: t("Undangan digital lewat WhatsApp dengan 5 tema, termasuk tema Bali beraksara Bali") },
+    { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema, termasuk tema Bali beraksara Bali") },
     { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
     { icon: <Users />, text: t("Ajak hingga {n} pasangan atau keluarga ikut mengerjakan, tanpa bayar tambahan", { n: p.max_collaborators }) },
     { icon: <CircleCheck />, text: t("Notifikasi langsung saat tamu mengonfirmasi hadir") },

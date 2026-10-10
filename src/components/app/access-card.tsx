@@ -4,6 +4,7 @@ import { buttonClass } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress";
 import { formatDateCompact } from "@/lib/format";
 import type { AccessState } from "@/lib/access";
+import { LiveCountdown } from "./live-countdown";
 import { getI18n } from "@/i18n/server";
 
 // Kartu Status Akses di sidebar (DESIGN.md 6.3)
@@ -29,7 +30,8 @@ export async function AccessStatusCard({ access, isOwner, base, canInvite, compa
   } else if (access.state === "timed") {
     icon = <Hourglass />;
     title = trial ? (soon ? t("Trial segera berakhir") : t("Masa trial")) : soon ? t("Akses segera berakhir") : t("Akses aktif");
-    body = soon ? t("Berakhir {date}", { date: formatDateCompact(access.endsAt, undefined, lang) }) : t("{left} hari lagi", { left: days });
+    // Trial menampilkan sisa waktu yang berdetak (hari, jam, menit, detik); akses berbayar tetap dalam hari
+    body = trial && access.endsAt ? <><LiveCountdown endsAt={access.endsAt} /> {t("lagi")}</> : soon ? t("Berakhir {date}", { date: formatDateCompact(access.endsAt, undefined, lang) }) : t("{left} hari lagi", { left: days });
     primary = { href: "/aktivasi", label: trial ? t("Dapatkan Akses Selamanya") : t("Upgrade ke Selamanya") };
   } else if (access.state === "expired" || access.state === "revoked") {
     icon = <Lock />;

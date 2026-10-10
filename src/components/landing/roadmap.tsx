@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarDays, Pencil } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { useI18n } from "@/i18n/client";
+import { DatePopover } from "@/components/ui/date-popover";
 
 export type RoadmapPhase = { key: string; count: number };
 
@@ -22,7 +23,8 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 
 export function Roadmap({ counts }: { counts: RoadmapPhase[] }) {
   const { t, lang } = useI18n();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
   const [date, setDate] = useState("");
   const [today, setToday] = useState("");
 
@@ -46,49 +48,32 @@ export function Roadmap({ counts }: { counts: RoadmapPhase[] }) {
     const [y, m, d] = date.split("-").map(Number);
     const dt = new Date(Date.UTC(y!, (m ?? 1) - 1, d ?? 1));
     const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(lang === "en" ? "en-US" : "id-ID", { ...o, timeZone: "UTC" }).format(dt);
-    return { day: f({ day: "numeric" }), month: f({ month: "short" }), year: f({ year: "numeric" }), weekday: f({ weekday: "long" }) };
+    return { day: f({ day: "numeric" }), month: f({ month: "short" }), monthLong: f({ month: "long" }), year: f({ year: "numeric" }), weekday: f({ weekday: "long" }) };
   }, [date, lang]);
   const span = useMemo(() => {
     if (days === null || days <= 0) return "";
     const bits: [number, string][] = [[Math.floor(days / 30), t("bulan")], [Math.floor((days % 30) / 7), t("minggu")], [(days % 30) % 7, t("hari")]];
     return bits.filter(([n]) => n > 0).map(([n, u]) => `${n} ${u}`).join(" · ");
   }, [days, t]);
-  const addMonths = (n: number) => { const x = new Date(); x.setMonth(x.getMonth() + n); return iso(x); };
   const active = days === null ? -1 : days < 0 ? PHASES.length - 1 : PHASES.findIndex((p) => days >= p.from);
   const total = counts.reduce((s, c) => s + c.count, 0);
   const countOf = (k: string) => counts.find((c) => c.key === k)?.count ?? 0;
 
   return (
     <div>
-      <div className="mx-auto mb-10 max-w-2xl">
-        <div className="flex flex-col items-center gap-5 rounded-3xl border border-neutral-200/80 bg-surface p-5 shadow-card sm:flex-row sm:items-center">
-          {/* Lembar kalender: bulan di atas, tanggal besar di tengah, nama hari di bawah */}
-          <div aria-hidden="true" className="w-24 shrink-0 overflow-hidden rounded-2xl border border-plum-200 bg-surface text-center shadow-pop">
-            <div className="bg-plum-600 py-1 text-[11px] font-semibold tracking-[0.14em] text-white uppercase">{parts ? `${parts.month} ${parts.year}` : " "}</div>
-            <div key={date} className="animate-pop-in font-display text-[44px] leading-[52px] font-medium text-neutral-900 [font-variant-numeric:lining-nums]">{parts?.day ?? "-"}</div>
-            <div className="pb-2 text-[12px] font-medium text-plum-700">{parts?.weekday ?? " "}</div>
-          </div>
-          <div className="min-w-0 flex-1 text-center sm:text-left">
-            <label htmlFor="rm-date" className="text-[11px] font-semibold tracking-[0.14em] text-plum-600 uppercase">{t("Tanggal pernikahanmu")}</label>
-            <p className="mt-1 font-display text-[24px] leading-7 font-medium text-neutral-900" aria-live="polite">
-              {days === null ? "" : days < 0 ? t("Tanggal itu sudah lewat.") : days === 0 ? t("Hari ini hari H!") : span}
-            </p>
-            {days !== null && days > 0 && <p className="mt-0.5 text-[13px] text-neutral-600">{t("{n} hari lagi", { n: days })}</p>}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <button type="button" onClick={() => { const el = inputRef.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); el.click(); } }}
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-neutral-200 bg-surface px-3.5 text-[13px] font-medium text-neutral-800 transition-colors hover:border-plum-300 hover:bg-plum-50">
-                <Pencil className="size-3.5 text-plum-600" aria-hidden="true" />{t("Ubah tanggal")}
-              </button>
-              {[[3, t("3 bulan lagi")], [6, t("6 bulan lagi")], [12, t("1 tahun lagi")]].map(([m, label]) => (
-                <button key={m as number} type="button" onClick={() => setDate(addMonths(m as number))}
-                  className="inline-flex h-9 items-center rounded-full bg-plum-50 px-3.5 text-[13px] font-medium text-plum-700 transition-colors hover:bg-plum-100">
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <input ref={inputRef} id="rm-date" type="date" value={date} min={today || undefined} onChange={(e) => e.target.value && setDate(e.target.value)} className="sr-only" />
-        </div>
+      {/* Pemilih tanggal sederhana: satu baris, klik untuk mengubah */}
+      <div className="relative mx-auto mb-10 flex max-w-md flex-col items-center gap-2">
+        <span className="text-[12px] font-semibold tracking-[0.14em] text-plum-600 uppercase">{t("Tanggal pernikahanmu")}</span>
+        <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="dialog" aria-expanded={open} aria-label={t("Ubah tanggal")}
+          className="inline-flex h-12 items-center gap-3 rounded-full border border-neutral-200 bg-surface px-5 text-[15px] font-medium text-neutral-900 shadow-card transition-colors hover:border-plum-300">
+          <CalendarDays className="size-5 text-plum-600" aria-hidden="true" />
+          <span key={date} className="animate-pop-in">{parts ? `${parts.weekday}, ${parts.day} ${parts.monthLong} ${parts.year}` : " "}</span>
+          <Pencil className="size-3.5 text-neutral-400" aria-hidden="true" />
+        </button>
+        <p className="text-[14px] text-neutral-600" aria-live="polite">
+          {days === null ? " " : days < 0 ? t("Tanggal itu sudah lewat.") : days === 0 ? t("Hari ini hari H!") : <><span className="font-semibold text-plum-700">{t("{n} hari lagi", { n: days })}</span>{span && <span> · {span}</span>}</>}
+        </p>
+        {open && date && <DatePopover standalone value={date} min={today || undefined} onChange={setDate} onClose={close} className="absolute inset-x-0 top-[4.5rem] z-30 mx-auto" />}
       </div>
 
       <ol className="relative grid gap-3 md:grid-cols-5 md:gap-0">

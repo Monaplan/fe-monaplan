@@ -2,9 +2,9 @@ import { Suspense, type ReactNode } from "react";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
 import {
-  ArrowRight, BookOpen, CalendarDays, Check, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, MessageCircle, ShieldCheck,
-  SlidersHorizontal, Sparkles, Store, Wallet,
+  ArrowRight, BookOpen, CalendarDays, Check, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, ShieldCheck, SlidersHorizontal, Sparkles, Store, Wallet
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Logo } from "@/components/app/logo";
 import { ButtonLink } from "@/components/ui/button";
 import { HeroMockup } from "@/components/landing/hero-mockup";
@@ -211,7 +211,7 @@ export default async function LandingPage() {
           <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-3 px-4 py-5 text-[13px] text-neutral-700 sm:px-6 md:grid-cols-4">
             {[
               [<Wallet key="a" />, t("Rupiah, zona WIB, WITA, dan WIT")],
-              [<MessageCircle key="b" />, t("RSVP lewat WhatsApp")],
+              [<WhatsAppIcon key="b" />, t("RSVP lewat WhatsApp")],
               [<FileText key="c" />, t("Dokumen KUA dan catatan sipil")],
               [<ShieldCheck key="d" />, t("Data privat per pernikahan")],
             ].map(([icon, label], i) => (
@@ -355,7 +355,7 @@ export default async function LandingPage() {
               <p className="flex items-center gap-3 text-[11px] font-semibold tracking-[0.18em] text-plum-600 uppercase before:h-px before:w-6 before:bg-plum-300">{t("Tanya jawab")}</p>
               <h2 id="faq-title" className="[font-variant-numeric:lining-nums] mt-3 font-display text-[34px] leading-[1.1] font-medium text-neutral-900 md:text-[44px]">{t("Pertanyaan yang sering")} <em className={em}>{t("muncul.")}</em></h2>
               <p className="mt-4 max-w-sm text-[15px] leading-7 text-neutral-600">{t("Belum menemukan jawabannya? Tanyakan langsung, kami balas secepatnya.")}</p>
-              {wa && <ButtonLink href={wa} variant="outline" className="mt-5" target="_blank" rel="noopener noreferrer"><MessageCircle className="text-[#1FA855]" />{t("Chat WhatsApp admin")}</ButtonLink>}
+              {wa && <ButtonLink href={wa} variant="outline" className="mt-5" target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="text-[#1FA855]" />{t("Chat WhatsApp admin")}</ButtonLink>}
             </div>
             <div className="flex flex-col gap-3">
               {FAQ.map((f) => (

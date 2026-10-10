@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { CircleAlert, Dices, Megaphone, Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -218,8 +219,8 @@ export function PromoClient({ enabled: initial, promos, plans, migrated, sortCon
                 ))}
               </div>
               <FormGrid>
-                <Field label={t("Mulai")} htmlFor="pr-from"><Input id="pr-from" name="starts_at" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
-                <Field label={t("Berakhir")} htmlFor="pr-to" error={badRange ? t("Tanggal berakhir harus setelah tanggal mulai.") : null}><Input id="pr-to" name="ends_at" type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} /></Field>
+                <Field label={t("Mulai")} htmlFor="pr-from"><DateField id="pr-from" name="starts_at" value={from} onChange={setFrom} /></Field>
+                <Field label={t("Berakhir")} htmlFor="pr-to" error={badRange ? t("Tanggal berakhir harus setelah tanggal mulai.") : null}><DateField id="pr-to" name="ends_at" value={to} min={from || undefined} onChange={setTo} /></Field>
               </FormGrid>
               <p className="mt-3 text-[13px] text-neutral-600" aria-live="polite">{summary}</p>
             </fieldset>

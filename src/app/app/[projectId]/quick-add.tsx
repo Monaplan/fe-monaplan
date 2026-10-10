@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronDown, ListChecks, Plus, UserPlus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export function QuickAdd({ projectId, tz, items, vendors, mode }: Props) {
         <ActionForm action={(fd) => saveTask(projectId, fd)} onSuccess={() => setOpen(null)}>
           <Field label={t("Judul")} htmlFor="qa-title"><Input id="qa-title" name="title" required autoFocus /></Field>
           <FormGrid>
-            <Field label={t("Due date")} htmlFor="qa-due"><Input id="qa-due" type="date" name="due_date" /></Field>
+            <Field label={t("Due date")} htmlFor="qa-due"><DateField id="qa-due" name="due_date" /></Field>
             <Field label={t("Fase")} htmlFor="qa-phase">
               <Select id="qa-phase" name="phase_key" defaultValue="m3_1">{PHASES.map((p) => <option key={p.key} value={p.key}>{t(p.label)}</option>)}</Select>
             </Field>

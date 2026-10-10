@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, Gift, KeyRound, LayoutGrid, MessageCircle, Printer, ShieldCheck, Sparkles, Tag, Users, X } from "lucide-react";
+import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, Gift, KeyRound, LayoutGrid, Printer, ShieldCheck, Tag, Users, X } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { BONUSES, BONUS_TOTAL } from "@/content/bonus";
 import { Button } from "@/components/ui/button";
 import { AccessCodeInput } from "@/components/ui/inputs";
@@ -134,10 +135,9 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
           const price = pricing[p.id] ?? { original: p.price_idr, final: p.price_idr, credit: 0, promoName: null, promoEndsAt: null, promoDaysLeft: null };
           const promo = price.final < price.original - price.credit;
           const base = price.original - price.credit;
-          const pct = promo && base > 0 ? Math.round((1 - price.final / base) * 100) : 0;
           const points = [
             { icon: <LayoutGrid />, text: t("11 modul lengkap, dari checklist dan budget sampai rundown hari H") },
-            { icon: <MessageCircle />, text: t("Undangan digital lewat WhatsApp dengan 5 tema, termasuk tema Bali beraksara Bali") },
+            { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema, termasuk tema Bali beraksara Bali") },
             { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
             { icon: <Users />, text: t("Ajak hingga {n} pasangan atau keluarga ikut mengerjakan, tanpa bayar tambahan", { n: p.max_collaborators }) },
             { icon: <CircleCheck />, text: t("Notifikasi langsung saat tamu mengonfirmasi hadir") },
@@ -150,6 +150,10 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
               {embed?.planId === p.id ? t("Pilih metode pembayaran di bawah") : label}{!loadingPlan && !embed && <ArrowRight className="ml-0.5" />}
             </Button>
           );
+          // Pembelian baru satu paket: harga coret adalah total nilai (paket ditambah bonus), sama dengan rincian di bawahnya
+          const showValue = !isUpgrade && lifetime && sorted.length === 1;
+          const valueTotal = price.original + BONUS_TOTAL;
+          const valueSaved = valueTotal - price.final;
           const priceBlock = (
             <>
               {promo && (
@@ -161,17 +165,14 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
               )}
               <p className="tabular mt-4 text-[52px] leading-[56px] font-bold tracking-tight"><CountUp value={price.final} kind="idr" duration={900} /></p>
               <p className="mt-1 flex flex-wrap items-center gap-x-2.5 text-[14px] text-white/75">
-                {(promo || price.credit > 0) && <s className="tabular">{formatIDR(price.original)}</s>}
-                {pct > 0 && <span className="rounded-full bg-[#EDD1DF] px-2 py-0.5 text-[11px] font-bold text-plum-900">{t("Hemat {n}%", { n: pct })}</span>}
+                {showValue ? (valueTotal > price.final && <s className="tabular">{formatIDR(valueTotal)}</s>) : (promo || price.credit > 0) && <s className="tabular">{formatIDR(price.original)}</s>}
               </p>
               {price.credit > 0 && <p className="mt-1 text-[13px] text-white/75">{t("Sudah dikurangi kredit {v1} dari paket sebelumnya.", { v1: formatIDR(price.credit) })}</p>}
               <p className="mt-1 text-[13px] text-white/75">{lifetime ? t("Sekali bayar, akses selamanya") : t("aktif {v1} bulan, bisa diperpanjang", { v1: Math.round((p.duration_days ?? 0) / 30) })}</p>
             </>
           );
           // Rincian nilai: paket, dua bonus, total nilai, dan hemat. Hanya untuk pembelian baru (pada upgrade bonusnya sudah dimiliki).
-          const valueTotal = price.original + BONUS_TOTAL;
-          const valueSaved = valueTotal - price.final;
-          const receipt = !isUpgrade && lifetime && sorted.length === 1 ? (
+          const receipt = showValue ? (
             <div className="relative mt-6 rounded-2xl border border-white/15 bg-white/10 p-4 text-[13.5px]">
               <p className="mb-3 text-[11px] font-semibold tracking-[0.16em] text-white/65 uppercase">{t("Rincian nilai")}</p>
               <ul className="space-y-2">
@@ -188,7 +189,12 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
                 <span className="font-semibold">{t("Total nilai")}</span>
                 <span className="tabular text-[16px] font-semibold">{formatIDR(valueTotal)}</span>
               </div>
-              {valueSaved > 0 && <p className="mt-2 text-[12.5px] font-medium text-[#EDD1DF]">{t("Hari ini cukup bayar {v1}, hemat {v2}", { v1: formatIDR(price.final), v2: formatIDR(valueSaved) })}</p>}
+              {valueSaved > 0 && (
+                <div className="mt-3 rounded-xl bg-[#F3C969] px-4 py-3.5 text-[#3E1A2D] shadow-sm">
+                  <p className="text-[20px] leading-6 font-extrabold tracking-tight">{t("Kamu hemat {v1}!", { v1: formatIDR(valueSaved) })}</p>
+                  <p className="tabular mt-1 text-[13px] leading-5 font-medium">{t("Hari ini cukup bayar {v1}, harga sudah didiskon.", { v1: formatIDR(price.final) })}</p>
+                </div>
+              )}
             </div>
           ) : null;
 
@@ -198,7 +204,7 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
                 <div className="brand-canvas relative flex flex-col overflow-hidden p-7 text-white sm:p-9">
                   <span aria-hidden="true" className="pointer-events-none absolute -right-16 -bottom-16 size-64 rounded-full border border-white/10" />
                   <span aria-hidden="true" className="pointer-events-none absolute -right-6 -bottom-6 size-40 rounded-full border border-white/10" />
-                  <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase"><Sparkles className="size-3" aria-hidden="true" />{lifetime ? t("Akses selamanya") : t("Paket")}</p>
+                  <p className="inline-flex w-fit items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase">{lifetime ? t("Akses selamanya") : t("Paket")}</p>
                   <h2 className="mt-3 font-display text-[36px] leading-10 font-medium">{p.name}</h2>
                   {priceBlock}
                   {receipt}

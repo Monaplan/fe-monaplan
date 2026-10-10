@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export function NewBatchButton({ plans }: { plans: { id: string; name: string }[
             </Field>
             <Field label={t("Jumlah kode")} htmlFor="b-qty" help={t("Maksimal 10.000")}><Input id="b-qty" type="number" min={1} max={10000} name="quantity" required defaultValue={10} /></Field>
             <Field label={t("Kuota pakai per kode")} htmlFor="b-max"><Input id="b-max" type="number" min={1} name="max_redemptions_per_code" defaultValue={1} /></Field>
-            <Field label={t("Berlaku sampai")} htmlFor="b-until" help={t("Kosongkan bila tanpa batas")}><Input id="b-until" type="date" name="valid_until" /></Field>
+            <Field label={t("Berlaku sampai")} htmlFor="b-until" help={t("Kosongkan bila tanpa batas")}><DateField id="b-until" name="valid_until" /></Field>
           </FormGrid>
           <Field label={t("Catatan")} htmlFor="b-notes"><Textarea id="b-notes" name="notes" /></Field>
           <FormActions><Button variant="secondary" onClick={() => setOpen(false)}>{t("Batal")}</Button><SubmitButton>{t("Buat Kode")}</SubmitButton></FormActions>

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleHelp, LifeBuoy, MessageCircle, Play } from "lucide-react";
+import { CircleHelp, LifeBuoy, Play } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { startPageTour } from "./product-tour";
 import { supportWhatsappUrl } from "@/lib/support";
 import { useT } from "@/i18n/client";
@@ -47,7 +48,7 @@ export function HelpMenu({ helpHref, context }: { helpHref: string; context: str
           </Link>
           {wa && (
             <a role="menuitem" href={wa} target="_blank" rel="noopener noreferrer" className={item} onClick={() => setOpen(false)}>
-              <MessageCircle className="size-4 text-[#1FA855]" />
+              <WhatsAppIcon className="size-4 text-[#1FA855]" />
               <span className="flex-1">{t("Chat WhatsApp admin")}</span>
             </a>
           )}

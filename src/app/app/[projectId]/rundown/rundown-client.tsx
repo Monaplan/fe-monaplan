@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TimeField } from "@/components/ui/date-field";
 import { ArrowDown, ArrowUp, CircleAlert, Download, MapPin, Pencil, Plus, Sparkles, Store, Trash2, UserRound } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
@@ -117,8 +118,8 @@ export function RundownClient({ projectId, tz, coupleName, events, active, items
             <input type="hidden" name="event_id" value={active.id} />
             {form !== "new" && <input type="hidden" name="id" value={form.id} />}
             <FormGrid>
-              <Field label={t("Jam mulai")} htmlFor="r-start"><Input id="r-start" type="time" name="start_time" required defaultValue={form !== "new" ? form.start_time.slice(0, 5) : ""} /></Field>
-              <Field label={t("Jam selesai")} htmlFor="r-end"><Input id="r-end" type="time" name="end_time" defaultValue={form !== "new" ? form.end_time?.slice(0, 5) ?? "" : ""} /></Field>
+              <Field label={t("Jam mulai")} htmlFor="r-start"><TimeField id="r-start" name="start_time" required defaultValue={form !== "new" ? form.start_time.slice(0, 5) : ""} /></Field>
+              <Field label={t("Jam selesai")} htmlFor="r-end"><TimeField id="r-end" name="end_time" defaultValue={form !== "new" ? form.end_time?.slice(0, 5) ?? "" : ""} /></Field>
             </FormGrid>
             <Field label={t("Kegiatan")} htmlFor="r-title"><Input id="r-title" name="title" required defaultValue={form !== "new" ? form.title : ""} /></Field>
             <Field label={t("Deskripsi")} htmlFor="r-desc"><Textarea id="r-desc" name="description" defaultValue={form !== "new" ? form.description ?? "" : ""} /></Field>

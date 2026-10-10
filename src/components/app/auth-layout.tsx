@@ -1,3 +1,4 @@
+import { LogoMark } from "./logo-mark";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { CalendarHeart, Users, Wallet } from "lucide-react";
@@ -14,7 +15,7 @@ export async function AuthLayout({ title, subtitle, children, footer }: { title?
       {/* Panel kiri menempel setinggi layar: tidak ikut bergeser walau formulir di kanan lebih panjang (Masuk vs Daftar) */}
       <aside className="brand-canvas relative hidden overflow-hidden p-12 text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="inline-flex size-10 items-center justify-center rounded-xl bg-white/10 font-display text-2xl font-semibold italic ring-1 ring-white/20">{t("M")}</span>
+          <LogoMark tone="light" className="size-10" />
           <span className="font-display text-2xl font-semibold">{t("Monaplan")}</span>
         </Link>
         <div className="mt-auto max-w-md">
@@ -43,7 +44,7 @@ export async function AuthLayout({ title, subtitle, children, footer }: { title?
           <ThemeToggle />
         </div>
         <Link href="/" className="mb-10 flex items-center gap-2 lg:hidden">
-          <span className="inline-flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#A9557E] to-[#5A2541] font-display text-xl font-semibold text-white italic">{t("M")}</span>
+          <LogoMark className="size-9" />
           <span className="font-display text-[22px] leading-7 font-semibold">{t("Monaplan")}</span>
         </Link>
         <div className="mx-auto w-full max-w-[400px] lg:mt-[clamp(0px,9dvh,96px)]">

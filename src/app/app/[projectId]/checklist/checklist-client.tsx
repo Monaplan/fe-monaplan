@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useOptimistic, useState, useTransition } from "react";
+import { DateField } from "@/components/ui/date-field";
 import { ArrowDown, ArrowUp, ChevronDown, ListChecks, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
@@ -193,7 +194,7 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
                     {PHASES.map((p) => <option key={p.key} value={p.key}>{t(p.label)}</option>)}
                   </Select>
                 </Field>
-                <Field label={t("Due date")} htmlFor="t-due"><Input id="t-due" type="date" name="due_date" defaultValue={editing !== "new" ? editing.due_date ?? "" : ""} /></Field>
+                <Field label={t("Due date")} htmlFor="t-due"><DateField id="t-due" name="due_date" defaultValue={editing !== "new" ? editing.due_date ?? "" : ""} /></Field>
                 <Field label={t("Kategori")} htmlFor="t-cat">
                   <Select id="t-cat" name="category" defaultValue={editing !== "new" ? editing.category ?? "" : ""}>
                     <option value="">{t("Tanpa kategori")}</option>

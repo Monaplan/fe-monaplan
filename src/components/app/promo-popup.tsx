@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Check, Copy, X } from "lucide-react";
+import { ArrowRight, Check, Copy, X } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { buttonClass } from "@/components/ui/button";
 import { formatDateCompact, formatIDR } from "@/lib/format";
@@ -80,6 +80,31 @@ export function PromoPopupCard({ promo, onClose, preview }: { promo: PopupPromo;
   );
 }
 
+
+// Versi ringkas untuk HP: satu baris kecil di dasar layar (nama dan harga, rincian, satu tombol)
+export function PromoBar({ promo, onClose }: { promo: PopupPromo; onClose: () => void }) {
+  const { t } = useI18n();
+  const href = promo.code ? `/aktivasi?promo=${encodeURIComponent(promo.code)}` : "/aktivasi";
+  const pct = promo.price && promo.price.final < promo.price.original ? Math.round((1 - promo.price.final / promo.price.original) * 100) : null;
+  const sub = [promo.code ? t("Kode {code}", { code: promo.code }) : null, promo.price && promo.price.final < promo.price.original ? formatIDR(promo.price.original) : null, pct !== null ? `-${pct}%` : null].filter(Boolean);
+  return (
+    <div role="dialog" aria-label={promo.title} className="pointer-events-auto relative flex items-center gap-3 rounded-2xl border border-neutral-200 bg-surface py-3 pr-3 pl-4 shadow-modal">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] leading-5 font-semibold text-neutral-900">
+          {promo.title} <span className="text-neutral-400">—</span> <span className="tabular text-plum-600">{promo.price ? formatIDR(promo.price.final) : promo.label}</span>
+        </p>
+        {sub.length > 0 && <p className="tabular truncate text-[12px] leading-4 text-neutral-500">{sub.map((x, i) => <span key={i}>{i > 0 && " · "}{i === 1 && promo.price && promo.price.final < promo.price.original ? <s>{x}</s> : x}</span>)}</p>}
+      </div>
+      <Link href={href} onClick={onClose} className={buttonClass("dark", "sm", "shrink-0 px-4 text-[13px] font-semibold")}>
+        {promo.cta || t("Pakai promo")}<ArrowRight className="ml-0.5 size-4" />
+      </Link>
+      <button onClick={onClose} aria-label={t("Tutup")} className="absolute -top-3 -right-1 inline-flex size-8 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-500 shadow-sm">
+        <X className="size-4" />
+      </button>
+    </div>
+  );
+}
+
 export function PromoPopup({ promos }: { promos: PopupPromo[] }) {
   const pathname = usePathname();
   // ?popup=tes mengabaikan batas "sekali per sesi" dan "24 jam setelah ditutup", untuk menguji tampilan
@@ -119,10 +144,17 @@ export function PromoPopup({ promos }: { promos: PopupPromo[] }) {
 
   if (!visible || !shown || blocked) return null;
   return (
-    <div className={cn("no-print pointer-events-none fixed inset-x-0 bottom-[calc(12px+env(safe-area-inset-bottom))] z-40 flex justify-center px-3 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:block sm:w-[380px] sm:px-0")}>
-      <div className="animate-promo-up w-full max-w-[420px] sm:max-w-none">
-        <PromoPopupCard promo={shown} onClose={close} />
+    <>
+      {/* HP: bar kecil di dasar layar */}
+      <div className="no-print pointer-events-none fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-40 sm:hidden">
+        <div className="animate-promo-up"><PromoBar promo={shown} onClose={close} /></div>
       </div>
-    </div>
+      {/* Tablet dan desktop: kartu lengkap di pojok kanan bawah */}
+      <div className="no-print pointer-events-none fixed right-5 bottom-5 z-40 hidden w-[380px] sm:block">
+        <div className="animate-promo-up w-full">
+          <PromoPopupCard promo={shown} onClose={close} />
+        </div>
+      </div>
+    </>
   );
 }

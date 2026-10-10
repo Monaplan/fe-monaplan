@@ -4,10 +4,10 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock,
-  FileText, Gift, Hourglass, MessageCircle, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield,
-  ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X,
+  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock, FileText, Gift, Hourglass, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield, ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X
 } from "lucide-react";
+import { LogoMark } from "./logo-mark";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/components/ui/cn";
 import { initials } from "@/lib/format";
 import { NotificationBell, type Notif } from "./notification-bell";
@@ -100,7 +100,7 @@ export function SidebarShell({
       {/* Brand dan konteks */}
       <div className="flex items-center gap-2 px-3 pt-5 pb-5">
         <Link href={contextHref} className={cn("flex min-w-0 items-center gap-2.5 transition-[padding] duration-300 ease-[var(--ease-out-soft)]", rail && "mx-auto")} aria-label={t("Monaplan")}>
-          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#A9557E] to-[#5A2541] font-display text-xl font-semibold text-white italic shadow-btn">{t("M")}</span>
+          <LogoMark className="size-9 drop-shadow-sm" />
           <span className={cn("min-w-0 overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-[var(--ease-out-soft)]", rail ? "max-w-0 opacity-0" : "max-w-[190px] opacity-100")} aria-hidden={rail}>
             <span className="block font-display text-[21px] leading-6 font-semibold text-neutral-900">{t("Monaplan")}</span>
             <span className="block truncate text-[12px] font-medium text-plum-600">{context}</span>
@@ -194,7 +194,7 @@ export function SidebarShell({
           <div className="flex h-14 items-center gap-1 px-4 md:h-[72px] md:gap-2 md:px-6">
             {/* HP: hanya logo dan nama Monaplan; judul halaman sudah ada di isi halaman */}
             <Link href={contextHref} aria-label={t("Monaplan")} className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">
-              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#A9557E] to-[#5A2541] font-display text-xl font-semibold text-white italic shadow-btn">{t("M")}</span>
+              <LogoMark className="size-9 drop-shadow-sm" />
               <span className="font-display text-[22px] leading-6 font-semibold text-neutral-900">{t("Monaplan")}</span>
             </Link>
             <div className="hidden min-w-0 flex-1 md:block">
@@ -335,7 +335,7 @@ function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle
             {supportWhatsappUrl("Halo admin Monaplan, saya butuh bantuan.") && (
               <a href={supportWhatsappUrl(`Halo admin Monaplan, saya butuh bantuan.
 Halaman: ${pathname}`)!} target="_blank" rel="noopener noreferrer" onClick={onClose}
-                className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] text-neutral-700 hover:bg-neutral-100"><MessageCircle className="size-4 text-[#1FA855]" />{t("Chat WhatsApp admin")}</a>
+                className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] text-neutral-700 hover:bg-neutral-100"><WhatsAppIcon className="size-4 text-[#1FA855]" />{t("Chat WhatsApp admin")}</a>
             )}
             <form action="/auth/signout" method="post">
               <button className="flex h-11 w-full items-center gap-2.5 rounded-lg px-3 text-[14px] font-medium text-danger hover:bg-danger-bg"><LogOut className="size-4" />{t("Keluar")}</button>

@@ -19,9 +19,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      <div className="pointer-events-none fixed inset-x-4 top-4 z-[100] flex flex-col gap-2 md:inset-x-auto md:top-auto md:bottom-6 md:left-6 md:w-96" aria-live="polite">
+      <div className="pointer-events-none fixed inset-x-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-[100] flex flex-col gap-2 md:inset-x-auto md:top-5 md:right-5 md:w-96" aria-live="polite">
         {toasts.map((item) => (
-          <div key={item.id} className="animate-sheet-in pointer-events-auto flex items-start gap-3 rounded-lg border border-neutral-200 bg-surface p-3 shadow-pop">
+          <div key={item.id} className="animate-toast-in pointer-events-auto flex items-start gap-3 rounded-lg border border-neutral-200 bg-surface p-3 shadow-pop">
             <span className={cn("mt-0.5 [&_svg]:size-[18px]", item.tone === "danger" ? "text-danger" : "text-plum-600")}>
               {item.tone === "danger" ? <CircleAlert /> : <CircleCheck />}
             </span>

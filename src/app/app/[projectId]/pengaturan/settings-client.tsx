@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField, TimeField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { Archive, CalendarDays, Copy, Download, ImagePlus, MapPin, Pencil, Plus, Shirt, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -154,7 +155,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
           <ActionForm action={(fd) => updateWeddingInfo(pid, fd)} onSuccess={() => setDateChanged(false)}>
             <fieldset disabled={!canWrite} className="flex flex-col gap-4">
               <FormGrid>
-                <Field label={t("Tanggal pernikahan")} htmlFor="s-date"><Input id="s-date" type="date" name="wedding_date" defaultValue={project.wedding_date ?? ""} onChange={() => setDateChanged(true)} /></Field>
+                <Field label={t("Tanggal pernikahan")} htmlFor="s-date"><DateField id="s-date" name="wedding_date" defaultValue={project.wedding_date ?? ""} onChange={() => setDateChanged(true)} /></Field>
                 <Field label={t("Kota")} htmlFor="s-city"><Input id="s-city" name="city" defaultValue={project.city ?? ""} /></Field>
                 <Field label={t("Zona waktu")} htmlFor="s-tz">
                   <Select id="s-tz" name="timezone" defaultValue={tz}>
@@ -165,7 +166,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
                 </Field>
                 <Field label={t("Total budget")} htmlFor="s-budget"><CurrencyInput id="s-budget" name="total_budget_idr" defaultValue={project.total_budget_idr} /></Field>
                 <Field label={t("Target jumlah tamu")} htmlFor="s-guests"><Input id="s-guests" type="number" min={0} name="guest_target" defaultValue={project.guest_target ?? ""} /></Field>
-                <Field label={t("Batas waktu RSVP")} htmlFor="s-rsvp" help={t("Default H-3.")}><Input id="s-rsvp" type="date" name="rsvp_deadline" defaultValue={project.rsvp_deadline ?? ""} /></Field>
+                <Field label={t("Batas waktu RSVP")} htmlFor="s-rsvp" help={t("Default H-3.")}><DateField id="s-rsvp" name="rsvp_deadline" defaultValue={project.rsvp_deadline ?? ""} /></Field>
               </FormGrid>
               {dateChanged && (
                 <label className="flex items-start gap-2 rounded-md bg-caution-bg px-3 py-3 text-[13px] text-caution">
@@ -321,10 +322,10 @@ function EventForm({ projectId, tz, event, defaultDate, nextOrder, onClose }: { 
           <Select id="e-type" name="type" defaultValue={event?.type ?? "resepsi"}>{EVENT_TYPES.map((ev) => <option key={ev.key} value={ev.key}>{t(ev.label)}</option>)}</Select>
         </Field>
         <Field label={t("Nama acara")} htmlFor="e-name"><Input id="e-name" name="name" defaultValue={event?.name} placeholder={t("Resepsi")} /></Field>
-        <Field label={t("Tanggal")} htmlFor="e-date"><Input id="e-date" type="date" name="date" defaultValue={s.date || defaultDate || ""} /></Field>
+        <Field label={t("Tanggal")} htmlFor="e-date"><DateField id="e-date" name="date" defaultValue={s.date || defaultDate || ""} /></Field>
         <div className="grid grid-cols-2 gap-2">
-          <Field label={t("Mulai")} htmlFor="e-start"><Input id="e-start" type="time" name="start_time" defaultValue={s.time} /></Field>
-          <Field label={t("Selesai")} htmlFor="e-end"><Input id="e-end" type="time" name="end_time" defaultValue={e.time} /></Field>
+          <Field label={t("Mulai")} htmlFor="e-start"><TimeField id="e-start" name="start_time" defaultValue={s.time} /></Field>
+          <Field label={t("Selesai")} htmlFor="e-end"><TimeField id="e-end" name="end_time" defaultValue={e.time} /></Field>
         </div>
         <Field label={t("Nama tempat")} htmlFor="e-venue"><Input id="e-venue" name="venue_name" defaultValue={event?.venue_name ?? ""} /></Field>
         <Field label={t("Dress code")} htmlFor="e-dress"><Input id="e-dress" name="dress_code" defaultValue={event?.dress_code ?? ""} /></Field>

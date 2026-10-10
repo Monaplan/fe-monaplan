@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, AtSign, CircleCheck, FileText, Globe, Handshake, Mail, MapPin, MessageCircle, Package, Pencil, Phone, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, AtSign, CircleCheck, FileText, Globe, Handshake, Mail, MapPin, Package, Pencil, Phone, Plus, Trash2 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
 import { RowMenu } from "@/components/ui/menu";
@@ -62,7 +63,7 @@ export function VendorDetailClient({ projectId, tz, vendor, packages, payments, 
             {vendor.notes && <p className="mt-3 rounded-md bg-neutral-50 px-3 py-2 text-[13px] whitespace-pre-line text-neutral-700">{vendor.notes}</p>}
           </div>
           <div className="flex flex-wrap gap-2 md:flex-col">
-            {vendor.phone_e164 && <ButtonLink href={waLink(vendor.phone_e164)} target="_blank" icon={<MessageCircle />}>{t("Chat WhatsApp")}</ButtonLink>}
+            {vendor.phone_e164 && <ButtonLink href={waLink(vendor.phone_e164)} target="_blank" icon={<WhatsAppIcon />}>{t("Chat WhatsApp")}</ButtonLink>}
             {canWrite && vendor.status !== "deal" && <Button variant="dark" icon={<Handshake />} onClick={() => setDeal(true)}>{t("Tandai Deal")}</Button>}
             {canWrite && <Button variant="secondary" icon={<Pencil />} onClick={() => setEdit(true)}>{t("Ubah")}</Button>}
           </div>

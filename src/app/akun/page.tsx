@@ -10,6 +10,7 @@ import { formatDateCompact } from "@/lib/format";
 import { ProfileForm, DeleteAccountForm } from "./profile-form";
 import { ThemeSwitcher } from "@/components/app/theme";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
+import { LiveCountdown } from "@/components/app/live-countdown";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
 import { getI18n } from "@/i18n/server";
@@ -56,7 +57,7 @@ export default async function AccountPage() {
           {access.state === "lifetime" && <><p className="text-2xl font-bold">{t("Selamanya")}</p><p className="mt-1 text-[13px] text-neutral-600">{owned?.planName ?? current?.plans?.name}</p></>}
           {access.state === "timed" && (
             <>
-              <p className="tabular text-2xl font-bold">{t("{left} hari lagi", { left })}</p>
+              <p className="tabular text-2xl font-bold">{access.isTrial && access.endsAt ? <><LiveCountdown endsAt={access.endsAt} /> <span className="text-base font-medium text-neutral-500">{t("lagi")}</span></> : t("{left} hari lagi", { left })}</p>
               <p className="mt-1 text-[13px] text-neutral-600">{access.isTrial ? t("Masa trial") : current?.plans?.name} · {t("aktif sampai {date}", { date: formatDateCompact(access.endsAt, undefined, lang) })}</p>
             </>
           )}

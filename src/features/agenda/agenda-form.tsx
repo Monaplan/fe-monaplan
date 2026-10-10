@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateField, TimeField } from "@/components/ui/date-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, FormGrid, Input, Textarea } from "@/components/ui/form";
 import { Modal } from "@/components/ui/modal";
@@ -29,12 +30,12 @@ export function AgendaFormModal({ projectId, tz, agenda, defaultDate, onClose }:
       <ActionForm action={(fd) => saveAgenda(projectId, fd)} onSuccess={onClose}>
         {agenda && <input type="hidden" name="id" value={agenda.id} />}
         <Field label={t("Judul")} htmlFor="a-title"><Input id="a-title" name="title" required defaultValue={agenda?.title} placeholder={t("Fitting busana")} /></Field>
-        <Field label={t("Tanggal")} htmlFor="a-date"><Input id="a-date" type="date" name="date" required defaultValue={start.date || defaultDate} /></Field>
+        <Field label={t("Tanggal")} htmlFor="a-date"><DateField id="a-date" name="date" required defaultValue={start.date || defaultDate} /></Field>
         <label className="flex items-center gap-2 text-sm"><Checkbox name="all_day" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />{t("Sepanjang hari")}</label>
         {!allDay && (
           <FormGrid>
-            <Field label={t("Jam mulai")} htmlFor="a-start"><Input id="a-start" type="time" name="start_time" defaultValue={start.time || "09:00"} /></Field>
-            <Field label={t("Jam selesai")} htmlFor="a-end"><Input id="a-end" type="time" name="end_time" defaultValue={end.time} /></Field>
+            <Field label={t("Jam mulai")} htmlFor="a-start"><TimeField id="a-start" name="start_time" defaultValue={start.time || "09:00"} /></Field>
+            <Field label={t("Jam selesai")} htmlFor="a-end"><TimeField id="a-end" name="end_time" defaultValue={end.time} /></Field>
           </FormGrid>
         )}
         <Field label={t("Lokasi")} htmlFor="a-loc"><Input id="a-loc" name="location" defaultValue={agenda?.location ?? ""} /></Field>
