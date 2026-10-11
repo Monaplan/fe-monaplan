@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "./cn";
 
 type TurnstileApi = {
@@ -27,6 +27,19 @@ function loadScript() {
   return loading;
 }
 
+// Tema widget mengikuti tampilan halaman (mode gelap situs atau tema undangan), bukan pengaturan perangkat:
+// diambil dari warna latar terdekat di sekitar widget.
+function surfaceTheme(el: HTMLElement): "light" | "dark" {
+  for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+    const m = getComputedStyle(n).backgroundColor.match(/rgba?\(([^)]+)\)/);
+    if (!m) continue;
+    const [r, g, b, a = "1"] = m[1]!.split(/[ ,/]+/).filter(Boolean);
+    if (Number(a) < 0.5) continue;
+    return (0.2126 * Number(r) + 0.7152 * Number(g) + 0.0722 * Number(b)) / 255 < 0.5 ? "dark" : "light";
+  }
+  return "light";
+}
+
 // Captcha Cloudflare Turnstile. Tanpa NEXT_PUBLIC_TURNSTILE_SITE_KEY komponen ini tidak menampilkan apa pun.
 // Di dalam <form>, tokennya ikut terkirim sebagai kolom "cf-turnstile-response" dan diperbarui otomatis setelah form dikirim
 // (token hanya berlaku sekali). Di luar form, ambil token lewat onToken dan ganti prop key untuk memuat ulang widget.
@@ -34,6 +47,18 @@ export function Turnstile({ onToken, className }: { onToken?: (token: string | n
   const box = useRef<HTMLDivElement>(null);
   const cb = useRef(onToken);
   cb.current = onToken;
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // Pantau pergantian mode gelap pada situs, lalu muat ulang widget dengan tema yang sesuai
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const sync = () => setTheme(surfaceTheme(el));
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme"] });
+    return () => mo.disconnect();
+  }, []);
 
   useEffect(() => {
     const el = box.current;
@@ -45,7 +70,7 @@ export function Turnstile({ onToken, className }: { onToken?: (token: string | n
       id = window.turnstile.render(el, {
         sitekey: SITE_KEY,
         size: "flexible",
-        theme: "auto",
+        theme,
         "response-field-name": "cf-turnstile-response",
         callback: (t: string) => cb.current?.(t),
         "expired-callback": () => cb.current?.(null),
@@ -60,7 +85,7 @@ export function Turnstile({ onToken, className }: { onToken?: (token: string | n
       form?.removeEventListener("submit", renew);
       if (id) window.turnstile?.remove(id);
     };
-  }, []);
+  }, [theme]);
 
   if (!SITE_KEY) return null;
   return <div ref={box} className={cn("min-h-[65px] w-full max-w-full overflow-hidden", className)} />;
