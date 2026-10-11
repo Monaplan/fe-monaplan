@@ -9,17 +9,18 @@ export const TZ_LABEL: Record<string, string> = {
 export function formatIDR(value: number | null | undefined): string {
   const n = Math.round(Number(value ?? 0));
   const sign = n < 0 ? "-" : "";
-  return `${sign}Rp ${Math.abs(n).toLocaleString("id-ID")}`;
+  // Spasi tak-putus (U+00A0) supaya "Rp" dan angkanya tidak pernah terpisah di akhir baris
+  return `${sign}Rp ${Math.abs(n).toLocaleString("id-ID")}`;
 }
 
 export function formatIDRShort(value: number | null | undefined): string {
   const n = Number(value ?? 0);
   const abs = Math.abs(n);
   const fmt = (x: number) => x.toLocaleString("id-ID", { maximumFractionDigits: 1 });
-  if (abs >= 1_000_000_000) return `Rp ${fmt(n / 1_000_000_000)} M`;
-  if (abs >= 1_000_000) return `Rp ${fmt(n / 1_000_000)} jt`;
-  if (abs >= 1_000) return `Rp ${fmt(n / 1_000)} rb`;
-  return `Rp ${fmt(n)}`;
+  if (abs >= 1_000_000_000) return `Rp ${fmt(n / 1_000_000_000)} M`;
+  if (abs >= 1_000_000) return `Rp ${fmt(n / 1_000_000)} jt`;
+  if (abs >= 1_000) return `Rp ${fmt(n / 1_000)} rb`;
+  return `Rp ${fmt(n)}`;
 }
 
 export function formatPercent(ratio: number): string {

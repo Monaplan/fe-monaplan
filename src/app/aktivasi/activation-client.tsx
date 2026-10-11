@@ -162,15 +162,21 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
           const priceBlock = (
             <>
               {promo && (
-                <p className="mt-3 inline-flex w-fit max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
-                  <Tag className="size-3" aria-hidden="true" />{price.promoName ?? t("Promo")}
-                  {price.promoEndsAt && <span className="text-white/80">· {t("sampai")} {formatDateCompact(price.promoEndsAt, undefined, lang)}</span>}
-                  {price.promoDaysLeft !== null && price.promoDaysLeft <= 7 && <b className="text-[#F3C969]">{price.promoDaysLeft <= 1 ? t("berakhir hari ini") : t("{n} hari lagi", { n: price.promoDaysLeft })}</b>}
-                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium whitespace-nowrap">
+                    <Tag className="size-3 shrink-0" aria-hidden="true" /><span className="truncate">{price.promoName ?? t("Promo")}</span>
+                  </span>
+                  {(price.promoEndsAt || (price.promoDaysLeft !== null && price.promoDaysLeft <= 7)) && (
+                    <span className="text-xs text-white/80">
+                      {price.promoEndsAt && <>{t("sampai")} {formatDateCompact(price.promoEndsAt, undefined, lang)}</>}
+                      {price.promoDaysLeft !== null && price.promoDaysLeft <= 7 && <b className="text-[#F3C969]">{price.promoEndsAt && " · "}{price.promoDaysLeft <= 1 ? t("berakhir hari ini") : t("{n} hari lagi", { n: price.promoDaysLeft })}</b>}
+                    </span>
+                  )}
+                </div>
               )}
               <p className="tabular mt-4 text-[52px] leading-[56px] font-bold tracking-tight"><CountUp value={price.final} kind="idr" duration={900} /></p>
               <p className="mt-1 flex flex-wrap items-center gap-x-2.5 text-[14px] text-white/75">
-                {showValue ? (valueTotal > price.final && <s className="tabular">{formatIDR(valueTotal)}</s>) : (promo || price.credit > 0) && <s className="tabular">{formatIDR(price.original)}</s>}
+                {(promo || price.credit > 0 || price.final < price.original) && <s className="tabular">{formatIDR(price.original)}</s>}
               </p>
               {price.credit > 0 && <p className="mt-1 text-[13px] text-white/75">{t("Sudah dikurangi kredit {v1} dari paket sebelumnya.", { v1: formatIDR(price.credit) })}</p>}
               <p className="mt-1 text-[13px] text-white/75">{lifetime ? t("Sekali bayar, akses selamanya") : t("aktif {v1} bulan, bisa diperpanjang", { v1: Math.round((p.duration_days ?? 0) / 30) })}</p>
@@ -183,10 +189,12 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
               <ul className="space-y-2">
                 {[[p.name, price.original, false], [BONUSES[0].name, BONUSES[0].value, true], [BONUSES[1].name, BONUSES[1].value, true]].map(([n, v, bonus]) => (
                   <li key={n as string} className="flex items-baseline gap-2">
-                    <span>{n as string}</span>
-                    {bonus && <span className="self-center rounded-full bg-white/20 px-1.5 py-px text-[9.5px] font-semibold tracking-wide uppercase">{t("Bonus")}</span>}
-                    <span aria-hidden="true" className="min-w-3 flex-1 translate-y-[-3px] border-b border-dotted border-white/35" />
-                    <span className="tabular font-medium">{formatIDR(v as number)}</span>
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{n as string}</span>
+                      {bonus && <span className="shrink-0 rounded-full bg-white/20 px-1.5 py-px text-[9.5px] font-semibold tracking-wide whitespace-nowrap uppercase">{t("Bonus")}</span>}
+                    </span>
+                    <span aria-hidden="true" className="hidden min-w-3 flex-1 translate-y-[-3px] border-b border-dotted border-white/35 sm:block" />
+                    <span className="tabular ml-auto shrink-0 font-medium whitespace-nowrap sm:ml-0">{formatIDR(v as number)}</span>
                   </li>
                 ))}
               </ul>
@@ -219,13 +227,13 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
                     ))}
                   </ul>
                 </div>
-                <div className="flex min-w-0 flex-col overflow-x-clip bg-[#FFFFFF] p-5 sm:p-9">
-                  <p className="text-[11px] font-semibold tracking-[0.18em] text-[#8C3A63] uppercase">{t("Pilih metode pembayaran")}</p>
+                <div className="flex min-w-0 flex-col overflow-x-clip bg-[#FFFFFF] py-5 sm:p-9">
+                  <p className="px-5 text-[11px] font-semibold tracking-[0.18em] text-[#8C3A63] uppercase sm:px-0">{t("Pilih metode pembayaran")}</p>
                   {autoPlan ? (
                     <>
-                      <div key={embed?.token ?? "kosong"} id="snap-container" className={embed ? "mt-4 min-h-[420px] w-full max-w-full overflow-x-hidden" : "hidden"} />
+                      <div key={embed?.token ?? "kosong"} id="snap-container" className={embed ? "mt-4 min-h-[420px] w-full max-w-full overflow-x-auto" : "hidden"} />
                       {!embed && !payError && (
-                        <div role="status" className="mt-4 flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl bg-[#F6F2F4] text-[13px] text-[#6B6368]">
+                        <div role="status" className="mx-5 mt-4 flex min-h-[260px] sm:mx-0 flex-col items-center justify-center gap-3 rounded-2xl bg-[#F6F2F4] text-[13px] text-[#6B6368]">
                           <span className="size-6 animate-spin rounded-full border-2 border-[#EDD1DF] border-t-[#8C3A63]" aria-hidden="true" />{t("Menyiapkan metode pembayaran")}
                         </div>
                       )}
@@ -235,7 +243,7 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
                           <Button variant="outline" size="sm" className="mt-3 !bg-[#FFFFFF] !text-[#2B2528]" onClick={() => window.location.reload()}>{t("Coba lagi")}</Button>
                         </div>
                       )}
-                      <p className="mt-4 flex items-start gap-2 text-[12px] text-[#6B6368]"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#8C3A63]" aria-hidden="true" />{t("Pembayaran diproses langsung oleh Midtrans. Monaplan tidak menyimpan data kartu atau rekeningmu.")}</p>
+                      <p className="mt-4 flex items-start gap-2 px-5 text-[12px] text-[#6B6368] sm:px-0"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#8C3A63]" aria-hidden="true" />{t("Pembayaran diproses langsung oleh Midtrans. Monaplan tidak menyimpan data kartu atau rekeningmu.")}</p>
                     </>
                   ) : (
                     <div className="mt-4 flex flex-1 flex-col justify-end"><div>{cta}</div></div>

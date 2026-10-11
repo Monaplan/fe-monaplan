@@ -312,7 +312,7 @@ body {
 }
 
 /* Bingkai pembayaran Midtrans tidak boleh melebihi layar HP, supaya halaman tidak bisa digeser ke samping */
-#snap-container iframe { width: 100% !important; max-width: 100% !important; }
+#snap-container iframe { width: 100% !important; }
 html, body { overflow-x: clip; }
 
 /* Animasi yang berjalan terus dijeda saat elemennya di luar layar (diatur oleh AnimationGate), supaya tidak membebani pengguliran */

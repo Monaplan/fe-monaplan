@@ -317,10 +317,10 @@ export default async function LandingPage() {
                 {[[t("Prospek"), "bg-neutral-100 text-neutral-600"], [t("Negosiasi"), "bg-caution-bg text-caution"], [t("Deal"), "bg-plum-600 text-white"]].map(([l, c]) => <span key={l} className={`rounded-full px-2.5 py-1 ${c}`}>{l}</span>)}
               </div>
               <ul aria-hidden="true" className="mt-4 space-y-2">
-                {[[t("Katering"), "Rp 15.000.000", t("DP dibayar")], [t("Fotografer"), "Rp 8.500.000", t("Menunggu DP")]].map(([n, v, s]) => (
+                {[[t("Katering"), "Rp 15.000.000", t("DP dibayar")], [t("Fotografer"), "Rp 8.500.000", t("Menunggu DP")]].map(([n, v, s]) => (
                   <li key={n} className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 text-[12px]">
-                    <span className="text-neutral-800">{n}<span className="tabular ml-2 text-neutral-500">{v}</span></span>
-                    <span className="text-neutral-500">{s}</span>
+                    <span className="min-w-0 text-neutral-800">{n}<span className="tabular ml-2 whitespace-nowrap text-neutral-500">{v}</span></span>
+                    <span className="shrink-0 text-neutral-500">{s}</span>
                   </li>
                 ))}
               </ul>

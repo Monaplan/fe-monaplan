@@ -95,7 +95,7 @@ export function Roadmap({ counts }: { counts: RoadmapPhase[] }) {
                     <p className="mt-2.5 text-[12px] font-semibold text-plum-700"><span className="tabular text-[18px]">{countOf(p.key)}</span> {t("tugas rekomendasi")}</p>
                   )}
                   <ul className="mt-2.5 flex flex-wrap gap-1.5 md:justify-center">
-                    {p.tools.map((x) => <li key={x} className="rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">{t(x)}</li>)}
+                    {p.tools.map((x) => <li key={x} className="rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-plum-700">{t(x)}</li>)}
                   </ul>
                   {on && <p className="mt-3 inline-flex rounded-full bg-plum-600 px-2.5 py-1 text-[11px] font-semibold text-white">{t("Kamu di sini")}</p>}
                 </div>
