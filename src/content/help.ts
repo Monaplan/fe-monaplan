@@ -30,19 +30,7 @@ export const HELP_FAQ: { cat: string; q: L; a: L }[] = [
 ];
 
 // Tur halaman: id tur, nama, dan jalur relatif terhadap ruang kerja (kosong = beranda ruang kerja)
+// Tur panduan hanya ada di dashboard pengguna
 export const HELP_TOURS: { id: string; label: L; path: string; scope: "app" | "akun" }[] = [
   { id: "dashboard", label: { id: "Dashboard", en: "Dashboard" }, path: "", scope: "app" },
-  { id: "checklist", label: { id: "To Do Checklist", en: "To-do checklist" }, path: "checklist", scope: "app" },
-  { id: "budget", label: { id: "Budgeting", en: "Budgeting" }, path: "budget", scope: "app" },
-  { id: "vendor", label: { id: "Kelola Vendor", en: "Vendors" }, path: "vendor", scope: "app" },
-  { id: "tamu", label: { id: "Tamu & RSVP", en: "Guests & RSVP" }, path: "tamu", scope: "app" },
-  { id: "rundown", label: { id: "Rundown Hari H", en: "Event rundown" }, path: "rundown", scope: "app" },
-  { id: "mahar", label: { id: "Mahar & Seserahan", en: "Gifts" }, path: "mahar-seserahan", scope: "app" },
-  { id: "dokumen", label: { id: "Dokumen Penting", en: "Documents" }, path: "dokumen", scope: "app" },
-  { id: "kalender", label: { id: "Reminder & Calendar", en: "Reminders & calendar" }, path: "kalender", scope: "app" },
-  { id: "inspirasi", label: { id: "Rona Impian", en: "Rona Impian" }, path: "rona-impian", scope: "app" },
-  { id: "perjalanan", label: { id: "Honeymoon Planner", en: "Honeymoon Planner" }, path: "honeymoon-planner", scope: "app" },
-  { id: "pengaturan", label: { id: "Pengaturan Pernikahan", en: "Wedding settings" }, path: "pengaturan", scope: "app" },
-  { id: "panduan", label: { id: "Panduan Penggunaan", en: "Usage guide" }, path: "panduan", scope: "app" },
-  { id: "akun", label: { id: "Akun & Lisensi", en: "Account & license" }, path: "/akun", scope: "akun" },
 ];

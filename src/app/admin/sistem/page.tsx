@@ -78,7 +78,8 @@ export default async function SystemPage() {
   const stRatio = st ? st.bytes / MB / STORAGE_LIMIT_MB : 0;
 
   const services: [string, boolean, string?][] = [
-    ["Midtrans", !!process.env.MIDTRANS_SERVER_KEY, process.env.MIDTRANS_IS_PRODUCTION === "true" ? t("Produksi") : t("Sandbox")],
+    // Tanpa kunci klien, metode pembayaran tidak bisa ditampilkan di halaman dan pembeli dialihkan ke halaman Midtrans
+    ["Midtrans", !!process.env.MIDTRANS_SERVER_KEY && !!process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY, !process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ? t("Kunci klien kosong") : process.env.MIDTRANS_IS_PRODUCTION === "true" ? t("Produksi") : t("Sandbox")],
     ["Email (Resend)", !!process.env.RESEND_API_KEY],
     ["Cloudflare R2", storageDriver() === "r2"],
     ["Google Calendar", !!process.env.GOOGLE_CLIENT_ID],

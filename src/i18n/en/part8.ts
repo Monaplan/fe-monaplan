@@ -340,4 +340,5 @@ export const EN8: Record<string, string> = {
   "Menit": "Minute",
   "Kamu hemat {v1}!": "You save {v1}!",
   "Hari ini cukup bayar {v1}, harga sudah didiskon.": "Today you only pay {v1}, already discounted.",
+  "Kunci klien kosong": "Client key missing",
 };

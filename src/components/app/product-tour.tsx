@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { useT } from "@/i18n/client";
@@ -22,7 +23,15 @@ function findTarget(target: string): HTMLElement | null {
 
 // Tur panduan: menyorot elemen ber-atribut data-tour, menggelapkan sisanya, dan menampilkan kartu penjelasan.
 // Otomatis tampil sekali per halaman; bisa diputar ulang lewat tombol bantuan di top bar (event "mp:tour-start").
-export function ProductTour({ id, steps, autoStart = true }: { id: string; steps: TourStep[]; autoStart?: boolean }) {
+// Tur panduan hanya untuk dashboard pengguna (/app/<slug>); halaman lain tidak menampilkan tur apa pun.
+const TOUR_PATH = /^\/app\/[^/]+\/?$/;
+
+export function ProductTour(props: { id: string; steps: TourStep[]; autoStart?: boolean }) {
+  const pathname = usePathname();
+  return TOUR_PATH.test(pathname) ? <TourRunner {...props} /> : null;
+}
+
+function TourRunner({ id, steps, autoStart = true }: { id: string; steps: TourStep[]; autoStart?: boolean }) {
   const t = useT();
   const [active, setActive] = useState<TourStep[] | null>(null);
   const [index, setIndex] = useState(0);
