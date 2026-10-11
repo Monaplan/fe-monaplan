@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { jakarta, cormorant } from "./fonts";
 import { ToastProvider } from "@/components/ui/toast";
 import { DialogProvider } from "@/components/ui/dialogs";
@@ -59,6 +61,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <ThemeSync />
           </ToastProvider>
         </I18nProvider>
+        {/* Statistik pengunjung dan kecepatan halaman milik Vercel; hanya aktif di situs yang di-deploy ke Vercel */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
