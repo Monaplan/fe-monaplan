@@ -4,7 +4,7 @@ import { BackToTop } from "@/components/landing/back-to-top";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
 import {
-  ArrowRight, BookOpen, CalendarDays, Check, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, Palette, Plane, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
+  ArrowRight, BookOpen, CalendarDays, Check, CircleCheck, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, Palette, Plane, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Logo } from "@/components/app/logo";
@@ -109,7 +109,7 @@ async function phaseCounts(): Promise<RoadmapPhase[]> {
 }
 
 export default async function LandingPage() {
-  const { t } = await getI18n();
+  const { t, lang } = await getI18n();
   let plans: any[] = [];
   let loggedIn = false;
   let trialDays: number | null = null;
@@ -205,13 +205,18 @@ export default async function LandingPage() {
             <div className="animate-sheet-in text-center lg:text-left">
               <h1 id="hero-title">
                 <span className="block font-display text-[22px] leading-7 font-medium text-neutral-600 md:text-[26px]">{t("Tenang menuju pelaminan,")}</span>
-                <span className="mx-auto mt-3 block max-w-[16ch] font-display text-[46px] leading-[1.05] font-medium tracking-[-0.015em] text-balance text-neutral-900 [font-variant-numeric:lining-nums] md:text-[62px] lg:mx-0">
-                  {t("Persiapannya biar")} <em className={em}>{t("Monaplan yang rapikan.")}</em>
+                <span className={`mx-auto mt-3 block font-display text-[clamp(28px,calc((100vw_-_2rem)/8.6),46px)] leading-[1.1] font-medium tracking-[-0.015em] text-neutral-900 [font-variant-numeric:lining-nums] md:text-[56px] lg:mx-0 lg:max-w-[16ch] lg:text-[62px] lg:leading-[1.05] lg:text-balance ${lang === "id" ? "max-lg:whitespace-nowrap" : "text-balance"}`}>
+                  {t("Persiapannya biar")}{" "}{lang === "id" && <br className="lg:hidden" />}<em className={em}>{t("Monaplan yang rapikan.")}</em>
                 </span>
               </h1>
-              <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[14px] text-neutral-600 lg:justify-start">
-                {[t("Sekali bayar, tanpa langganan"), t("Bisa dibuka dari ponsel"), t("Undang pasangan dan keluarga"), t("Bonus senilai {v1}", { v1: formatIDR(BONUS_TOTAL) })].map((x) => (
-                  <li key={x} className="flex items-center gap-1.5"><Check className="size-4 text-plum-600" aria-hidden="true" />{x}</li>
+              <ul className="mx-auto mt-6 flex max-w-[21rem] flex-wrap justify-center gap-x-5 gap-y-2.5 text-[13.5px] text-neutral-600 lg:mx-0 lg:max-w-none lg:justify-start lg:text-[14px]">
+                {([
+                  [t("Sekali bayar"), t("Sekali bayar, tanpa langganan")],
+                  [t("Bisa lewat ponsel"), t("Bisa dibuka dari ponsel")],
+                  [t("Bareng pasangan"), t("Undang pasangan dan keluarga")],
+                  [t("Bonus {v1}", { v1: formatIDR(BONUS_TOTAL) }), t("Bonus senilai {v1}", { v1: formatIDR(BONUS_TOTAL) })],
+                ] as const).map(([short, long]) => (
+                  <li key={long} className="flex items-center gap-1.5 whitespace-nowrap"><CircleCheck className="size-4 shrink-0 text-plum-600" aria-hidden="true" /><span className="lg:hidden">{short}</span><span className="hidden lg:inline">{long}</span></li>
                 ))}
               </ul>
               <div className="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">

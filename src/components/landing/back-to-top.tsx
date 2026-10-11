@@ -24,7 +24,7 @@ export function BackToTop() {
       tabIndex={show ? 0 : -1}
       onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}
       className={cn(
-        "fixed right-4 bottom-24 z-40 [html[data-promo-open]_&]:max-sm:bottom-60 inline-flex size-12 items-center justify-center rounded-2xl border border-neutral-200 bg-surface text-neutral-800 shadow-pop transition-[opacity,transform,background-color] duration-200 hover:bg-plum-50 hover:text-plum-700 active:scale-95 md:right-6 md:bottom-6",
+        "fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 [html[data-promo-open]_&]:max-sm:bottom-60 [html[data-promo-open]_&]:sm:right-[25.5rem] inline-flex size-12 items-center justify-center rounded-2xl border border-neutral-200 bg-surface text-neutral-800 shadow-pop transition-[opacity,transform,background-color] duration-200 hover:bg-plum-50 hover:text-plum-700 active:scale-95 md:right-6 md:bottom-6",
         show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
       )}
     >
