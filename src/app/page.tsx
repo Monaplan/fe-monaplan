@@ -202,19 +202,19 @@ export default async function LandingPage() {
         {/* Hero */}
         <section aria-labelledby="hero-title" className="relative">
           <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pb-24">
-            <div className="animate-sheet-in">
+            <div className="animate-sheet-in text-center lg:text-left">
               <h1 id="hero-title">
                 <span className="block font-display text-[22px] leading-7 font-medium text-neutral-600 md:text-[26px]">{t("Tenang menuju pelaminan,")}</span>
-                <span className="mt-3 block max-w-[16ch] font-display text-[46px] leading-[1.05] font-medium tracking-[-0.015em] text-balance text-neutral-900 [font-variant-numeric:lining-nums] md:text-[62px]">
+                <span className="mx-auto mt-3 block max-w-[16ch] font-display text-[46px] leading-[1.05] font-medium tracking-[-0.015em] text-balance text-neutral-900 [font-variant-numeric:lining-nums] md:text-[62px] lg:mx-0">
                   {t("Persiapannya biar")} <em className={em}>{t("Monaplan yang rapikan.")}</em>
                 </span>
               </h1>
-              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-neutral-600">
+              <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[14px] text-neutral-600 lg:justify-start">
                 {[t("Sekali bayar, tanpa langganan"), t("Bisa dibuka dari ponsel"), t("Undang pasangan dan keluarga"), t("Bonus senilai {v1}", { v1: formatIDR(BONUS_TOTAL) })].map((x) => (
                   <li key={x} className="flex items-center gap-1.5"><Check className="size-4 text-plum-600" aria-hidden="true" />{x}</li>
                 ))}
               </ul>
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
                 <ButtonLink href={startHref} size="lg">{loggedIn ? t("Mulai Merencanakan") : (trialLabel ?? t("Mulai Merencanakan"))}<ArrowRight className="ml-0.5" /></ButtonLink>
                 <ButtonLink href="#fitur" size="lg" variant="ghost">{t("Lihat isi aplikasinya")}</ButtonLink>
               </div>

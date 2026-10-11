@@ -81,26 +81,47 @@ export function PromoPopupCard({ promo, onClose, preview }: { promo: PopupPromo;
 }
 
 
-// Versi ringkas untuk HP: satu baris kecil di dasar layar (nama dan harga, rincian, satu tombol)
+// Versi ringkas untuk HP: kartu pendek di dasar layar. Judul, harga (asli dicoret dan persen hemat), masa berlaku, kode yang bisa disalin, dan satu tombol.
 export function PromoBar({ promo, onClose }: { promo: PopupPromo; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [copied, setCopied] = useState(false);
   const href = promo.code ? `/aktivasi?promo=${encodeURIComponent(promo.code)}` : "/aktivasi";
-  const pct = promo.price && promo.price.final < promo.price.original ? Math.round((1 - promo.price.final / promo.price.original) * 100) : null;
-  const sub = [promo.code ? t("Kode {code}", { code: promo.code }) : null, promo.price && promo.price.final < promo.price.original ? formatIDR(promo.price.original) : null, pct !== null ? `-${pct}%` : null].filter(Boolean);
+  const hasDiscount = !!promo.price && promo.price.final < promo.price.original;
+  const pct = hasDiscount ? Math.round((1 - promo.price!.final / promo.price!.original) * 100) : null;
+  const left = promo.daysLeft !== null && promo.daysLeft <= 7 ? (promo.daysLeft <= 1 ? t("Berakhir hari ini") : t("{n} hari lagi", { n: promo.daysLeft })) : null;
+  const until = promo.endsAt ? t("Promo berlaku sampai {date}", { date: formatDateCompact(promo.endsAt, undefined, lang) }) : null;
   return (
-    <div role="dialog" aria-label={promo.title} className="pointer-events-auto relative flex items-center gap-3 rounded-2xl border border-neutral-200 bg-surface py-3 pr-3 pl-4 shadow-modal">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] leading-5 font-semibold text-neutral-900">
-          {promo.title} <span className="text-neutral-400">—</span> <span className="tabular text-plum-600">{promo.price ? formatIDR(promo.price.final) : promo.label}</span>
-        </p>
-        {sub.length > 0 && <p className="tabular truncate text-[12px] leading-4 text-neutral-500">{sub.map((x, i) => <span key={i}>{i > 0 && " · "}{i === 1 && promo.price && promo.price.final < promo.price.original ? <s>{x}</s> : x}</span>)}</p>}
-      </div>
-      <Link href={href} onClick={onClose} className={buttonClass("dark", "sm", "shrink-0 px-4 text-[13px] font-semibold")}>
-        {promo.cta || t("Pakai promo")}<ArrowRight className="ml-0.5 size-4" />
-      </Link>
-      <button onClick={onClose} aria-label={t("Tutup")} className="absolute -top-3 -right-1 inline-flex size-8 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-500 shadow-sm">
+    <div role="dialog" aria-label={promo.title} className="pointer-events-auto relative rounded-2xl border border-neutral-200 bg-surface p-4 shadow-modal">
+      <button onClick={onClose} aria-label={t("Tutup")} className="absolute top-1.5 right-1.5 inline-flex size-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-100">
         <X className="size-4" />
       </button>
+      <div className="flex items-center gap-2 pr-10">
+        <span className="rounded-full bg-plum-100 px-2 py-0.5 text-[10.5px] font-semibold tracking-[0.12em] text-plum-700 uppercase">{t("Promo")}</span>
+        {left && <span className="text-xs font-medium text-danger">{left}</span>}
+      </div>
+      <p className="mt-1.5 pr-8 text-[16px] leading-6 font-semibold text-neutral-900">{promo.title}</p>
+      <p className="tabular mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className="text-[22px] leading-7 font-semibold tracking-tight text-neutral-900">{promo.price ? formatIDR(promo.price.final) : promo.label}</span>
+        {!promo.price && <span className="text-sm text-neutral-500">{t("potongan")}</span>}
+        {hasDiscount && <s className="text-[13px] text-neutral-400">{formatIDR(promo.price!.original)}</s>}
+        {pct !== null && <span className="rounded-md bg-plum-600 px-1.5 py-0.5 text-[11px] leading-4 font-semibold text-white">-{pct}%</span>}
+      </p>
+      {(promo.price || until) && <p className="mt-0.5 text-[12px] leading-4 text-neutral-500">{[promo.price?.plan, until].filter(Boolean).join(" · ")}</p>}
+      <div className="mt-3 flex items-center gap-2">
+        {promo.code && (
+          <button
+            onClick={() => { try { navigator.clipboard?.writeText(promo.code!); } catch {} setCopied(true); setTimeout(() => setCopied(false), 1800); }}
+            aria-label={t("Salin kode {code}", { code: promo.code })}
+            className="flex h-11 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-dashed border-plum-300 bg-plum-50 px-3 text-left active:bg-plum-100"
+          >
+            <span className="tabular truncate text-[13px] font-semibold tracking-wide text-plum-800">{promo.code}</span>
+            <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-neutral-600">{copied ? <><Check className="size-3.5 text-plum-600" />{t("Tersalin")}</> : <><Copy className="size-3.5" />{t("Salin")}</>}</span>
+          </button>
+        )}
+        <Link href={href} onClick={onClose} className={buttonClass("dark", "md", cn("h-11 shrink-0 px-4 text-[13.5px] font-semibold", !promo.code && "flex-1"))}>
+          {promo.cta || t("Pakai promo")}<ArrowRight className="ml-0.5 size-4" />
+        </Link>
+      </div>
     </div>
   );
 }
@@ -129,6 +150,13 @@ export function PromoPopup({ promos }: { promos: PopupPromo[] }) {
     }, 4000);
     return () => clearTimeout(timer);
   }, [blocked, promos, pathname, force]);
+
+  // Tandai di <html> saat popup tampil, supaya tombol kembali ke atas di HP naik dan tidak menimpanya
+  useEffect(() => {
+    if (!visible) return;
+    document.documentElement.setAttribute("data-promo-open", "");
+    return () => document.documentElement.removeAttribute("data-promo-open");
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;

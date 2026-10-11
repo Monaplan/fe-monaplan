@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Rea
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "./cn";
+import { useSheetSwipe } from "./use-sheet-swipe";
 import { useT } from "@/i18n/client";
 
 // Tumpukan modal yang terbuka: Escape dan Tab hanya berlaku untuk modal paling atas
@@ -72,6 +73,8 @@ export function Modal({ open, onClose, title, description, children, size = "md"
       if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
     };
   }, [open, id]);
+
+  useSheetSwipe(panel, onClose, open);
 
   if (!open || typeof document === "undefined") return null;
   return createPortal(

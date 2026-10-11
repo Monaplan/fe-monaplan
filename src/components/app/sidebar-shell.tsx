@@ -2,6 +2,7 @@
 
 import { SignOutForm } from "./signout-button";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { useSheetSwipe } from "@/components/ui/use-sheet-swipe";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -256,6 +257,8 @@ function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle
 }) {
   const t = useT();
   const pathname = usePathname();
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useSheetSwipe(sheetRef, onClose);
   const links: { href: string; icon: IconKey; label: string }[] = [
     { href: "/mulai", icon: "home", label: t("Ruang kerja") },
     { href: "/akun", icon: "user", label: t("Profil & Lisensi") },
@@ -265,7 +268,7 @@ function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle
   return (
     <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
       <div className="animate-fade-in absolute inset-0 bg-[rgba(28,22,25,0.45)]" onClick={onClose} />
-      <div className="animate-sheet-up absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-3xl border-t border-neutral-200/70 bg-surface shadow-modal">
+      <div ref={sheetRef} className="animate-sheet-up absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-3xl border-t border-neutral-200/70 bg-surface shadow-modal">
         <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-neutral-300" aria-hidden="true" />
         <div className="flex items-center gap-3 px-5 pt-3 pb-4">
           <Avatar user={user} size={40} />
