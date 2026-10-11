@@ -13,6 +13,7 @@ import { addDaysISO, diffDays, localToISO, parseIDR } from "@/lib/format";
 import { appUrl, EVENT_TYPES } from "@/lib/constants";
 import { sendTemplated } from "@/lib/email";
 import { RSVP_THEME_IDS } from "@/content/rsvp-themes";
+import { WEDDING_STYLES, WEDDING_STYLE_IDS, type WeddingStyleId } from "@/content/wedding-styles";
 import { deleteObjects, deletePrefix, isProjectKey, storagePrefix } from "@/lib/storage";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -27,7 +28,22 @@ const Onboarding = z.object({
   timezone: z.enum(["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"]),
   total_budget_idr: z.number().int().min(0),
   guest_target: z.number().int().min(0).nullable(),
+  wedding_style: z.enum(WEDDING_STYLE_IDS),
 });
+
+// Acara tambahan sesuai adat (siraman, midodareni, dan seterusnya). Acara dengan nama yang sama tidak dibuat dua kali.
+async function addStyleEvents(supabase: Awaited<ReturnType<typeof createClient>>, projectId: string, style: WeddingStyleId, date: string, tz: string) {
+  const wanted = WEDDING_STYLES[style].events;
+  if (!wanted.length) return;
+  const { data: existing } = await supabase.from("wedding_events").select("name, sort_order").eq("project_id", projectId);
+  const names = new Set((existing ?? []).map((e) => e.name));
+  let order = Math.max(0, ...(existing ?? []).map((e) => e.sort_order ?? 0));
+  const rows = wanted.filter((e) => !names.has(e.name)).map((e) => {
+    const day = addDaysISO(date, e.dayOffset);
+    return { project_id: projectId, type: e.type, name: e.name, starts_at: localToISO(day, e.start, tz), ends_at: localToISO(day, e.end, tz), sort_order: ++order };
+  });
+  if (rows.length) await supabase.from("wedding_events").insert(rows);
+}
 
 export async function createProject(fd: FormData): Promise<ActionResult> {
   const { user } = await requireUser();
@@ -43,9 +59,11 @@ export async function createProject(fd: FormData): Promise<ActionResult> {
     timezone: str(fd.get("timezone")) ?? "Asia/Jakarta",
     total_budget_idr: parseIDR(fd.get("total_budget_idr")),
     guest_target: str(fd.get("guest_target")) ? Number(fd.get("guest_target")) : null,
+    wedding_style: str(fd.get("wedding_style")) ?? "umum",
   });
   if (!parsed.success) return fail(parsed.error.issues[0]!.message);
   const d = parsed.data;
+  const { wedding_style: _style, ...rest } = d;
 
   const supabase = await createClient();
   const id = randomUUID();
@@ -55,7 +73,9 @@ export async function createProject(fd: FormData): Promise<ActionResult> {
     id,
     owner_id: user.id,
     title: `${n1} & ${n2}`,
-    ...d,
+    ...rest,
+    // Kolom baru hanya dikirim bila bukan Umum, jadi pembuatan proyek biasa tetap jalan walau migrasi belum dijalankan
+    ...(d.wedding_style !== "umum" && { wedding_style: d.wedding_style }),
     rsvp_deadline: d.wedding_date ? addDaysISO(d.wedding_date, -3) : null,
   });
   if (error) {
@@ -69,6 +89,7 @@ export async function createProject(fd: FormData): Promise<ActionResult> {
       { project_id: id, type: "resepsi", name: "Resepsi", starts_at: localToISO(d.wedding_date, "11:00", d.timezone), ends_at: localToISO(d.wedding_date, "14:00", d.timezone), sort_order: 2 },
     ]);
   }
+  if (d.wedding_date) await addStyleEvents(supabase, id, d.wedding_style, d.wedding_date, d.timezone);
   const { error: seedErr } = await supabase.rpc("seed_project_defaults", { p_project_id: id });
   if (seedErr) return dbError(seedErr);
   await supabase.from("profiles").update({ last_active_project_id: id }).eq("id", user.id);
@@ -101,6 +122,21 @@ export async function updateCouple(projectId: string, fd: FormData): Promise<Act
   if (error?.message.includes("SLUG_TAKEN")) return fail("Alamat itu sudah dipakai. Coba yang lain.");
   if (error?.message.includes("SLUG_INVALID")) return fail("Alamat hanya boleh huruf kecil, angka, dan tanda hubung (3 sampai 60 karakter).");
   return error ? dbError(error) : { ok: true, message: "Data pasangan tersimpan.", data: { slug: changeSlug ? slug : project.slug } };
+}
+
+// Ganti gaya pernikahan: hanya MENAMBAH tugas, kategori budget, dan acara adat. Yang sudah ada tidak dihapus.
+export async function setWeddingStyle(projectId: string, style: string): Promise<ActionResult> {
+  const { supabase, project, canWrite } = await getProjectContext(projectId);
+  if (!canWrite) return fail("Kamu tidak punya izin mengubah ini.");
+  if (!(WEDDING_STYLE_IDS as readonly string[]).includes(style)) return fail("Gaya pernikahan tidak dikenal.");
+  const { error } = await supabase.from("wedding_projects").update({ wedding_style: style }).eq("id", projectId);
+  if (error) return dbError(error);
+  const { error: seedErr } = await supabase.rpc("seed_project_defaults", { p_project_id: projectId });
+  if (seedErr) return dbError(seedErr);
+  if (project.wedding_date) await addStyleEvents(supabase, projectId, style as WeddingStyleId, project.wedding_date, project.timezone);
+  revalidatePath("/app/[projectId]", "layout");
+  scheduleCalendarSync(projectId);
+  return { ok: true, message: "Gaya pernikahan diperbarui. Tugas dan acara adat sudah ditambahkan." };
 }
 
 export async function setRsvpTemplate(projectId: string, theme: string): Promise<ActionResult> {

@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { AnimationGate } from "@/components/landing/animation-gate";
 import { BackToTop } from "@/components/landing/back-to-top";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
@@ -174,7 +175,7 @@ export default async function LandingPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(structured)} />
 
       <a href="#konten" className="sr-only z-[120] rounded-full bg-plum-700 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">{t("Lewati ke konten")}</a>
-      <header className="sticky top-0 z-30 border-b border-plum-100/70 bg-plum-50/85 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-plum-100/70 bg-plum-50/95 md:bg-plum-50/85 md:backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
           <nav aria-label={t("Navigasi utama")} className="hidden items-center gap-1 md:flex">
@@ -404,6 +405,7 @@ export default async function LandingPage() {
           <p>© {new Date().getFullYear()} {SITE.name} · <Link href="/privasi" className="hover:text-plum-600">{t("Kebijakan privasi")}</Link></p>
         </div>
       </footer>
+      <AnimationGate />
       <BackToTop />
       <Suspense fallback={null}><PromoPopupLoader plans={plans} /></Suspense>
     </div>

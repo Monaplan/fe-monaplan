@@ -395,6 +395,32 @@ await expectOk("editor menambah butir perjalanan", () => as(H, "h@x.com", () => 
 await expectErr("viewer tidak bisa mengubah butir perjalanan", "", async () => { const r = await as(V, "v@x.com", () => db.query(`update trip_items set is_booked = true where project_id = $1 returning id`, [P])); if (r.rows.length) throw new Error("terubah"); throw new Error("tidak ada baris terubah"); });
 await expectErr("biaya perjalanan negatif ditolak", "violates check constraint", () => as(H, "h@x.com", () => db.query(`insert into trip_items (project_id, title, cost_idr) values ($1, 'Aneh', -5)`, [P])));
 
+console.log("\nGaya pernikahan (adat)");
+await expectOk("gaya bawaan umum, hanya template umum yang dipakai", async () => {
+  const r = await one(`select wedding_style st, (select count(*) from tasks where project_id=$1 and category='Adat')::int adat from wedding_projects where id=$1`, [P]);
+  if (r.st !== "umum" || r.adat !== 0) throw new Error(JSON.stringify(r));
+});
+await expectErr("gaya di luar daftar ditolak", "violates check constraint", () => as(A, "a@x.com", () => db.query(`update wedding_projects set wedding_style = 'mars' where id = $1`, [P])));
+await expectOk("ganti ke Jawa lalu seed menambah 6 tugas adat dan 2 kategori budget", async () => {
+  await as(A, "a@x.com", () => db.query(`update wedding_projects set wedding_style = 'jawa' where id = $1`, [P]));
+  await as(A, "a@x.com", () => db.query(`select seed_project_defaults($1)`, [P]));
+  const r = await one(`select (select count(*) from tasks where project_id=$1 and category='Adat')::int adat, (select count(*) from budget_categories where project_id=$1 and name in ('Prosesi adat','Sesaji'))::int bud`, [P]);
+  if (r.adat !== 6 || r.bud !== 2) throw new Error(JSON.stringify(r));
+});
+await expectOk("seed ulang tidak menggandakan tugas adat", async () => {
+  await as(A, "a@x.com", () => db.query(`select seed_project_defaults($1)`, [P]));
+  const r = await one(`select count(*)::int c from tasks where project_id=$1 and category='Adat'`, [P]);
+  if (r.c !== 6) throw new Error("c=" + r.c);
+});
+await expectOk("tugas adat Jawa punya tenggat mundur dari tanggal acara", async () => {
+  const r = await one(`select due_date::text d from tasks where project_id=$1 and title like 'Pasang tarub%'`, [P]);
+  if (r.d !== "2027-02-10") throw new Error(JSON.stringify(r));
+});
+await expectOk("lima adat punya template tugas", async () => {
+  const r = await one(`select count(distinct style)::int n from checklist_templates where style <> 'umum'`);
+  if (r.n !== 5) throw new Error("n=" + r.n);
+});
+
 console.log("\nStorage policy");
 await expectOk("A boleh unggah ke folder proyeknya", () => as(A, "a@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`${P}/documents/x.pdf`])));
 await expectOk("A boleh unggah ke folder bernama storage_prefix proyeknya", async () => {

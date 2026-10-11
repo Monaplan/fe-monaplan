@@ -116,6 +116,7 @@ export type Project = {
   id: string;
   created_at?: string;
   slug?: string | null;
+  wedding_style?: string;
   storage_prefix?: string | null;
   owner_id: string;
   title: string;

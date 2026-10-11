@@ -11,9 +11,11 @@ import { CurrencyInput } from "@/components/ui/inputs";
 import { cn } from "@/components/ui/cn";
 import { createProject } from "@/features/project/actions";
 import { projectPath } from "@/lib/paths";
+import { StylePicker } from "@/components/app/style-picker";
 import { useT } from "@/i18n/client";
 
-const STEPS = ["Nama pasangan", "Tanggal dan kota", "Budget dan tamu"];
+const STEPS = ["Nama pasangan", "Tanggal dan kota", "Budget dan tamu", "Gaya pernikahan"];
+const LAST = STEPS.length - 1;
 
 export function OnboardingForm() {
   const t = useT();
@@ -59,14 +61,18 @@ export function OnboardingForm() {
           <Field label={t("Total budget")} htmlFor="budget"><CurrencyInput id="budget" name="total_budget_idr" placeholder="150.000.000" /></Field>
           <Field label={t("Perkiraan jumlah tamu")} htmlFor="guests"><Input id="guests" type="number" min={0} name="guest_target" placeholder="300" /></Field>
         </div>
+        <div className={cn("flex flex-col gap-3", step !== 3 && "hidden")}>
+          <p className="text-[13px] leading-5 text-neutral-600">{t("Checklist umum selalu ada. Pilihan adat menambah tugas, kategori budget, dan acara khusus. Bisa diganti nanti di Pengaturan.")}</p>
+          <StylePicker name="wedding_style" defaultValue="umum" />
+        </div>
 
         <div className="flex items-center justify-between gap-2 pt-2">
           {step > 0 ? (
             <Button variant="ghost" icon={<ArrowLeft />} onClick={() => setStep(step - 1)}>{t("Kembali")}</Button>
           ) : <span />}
           <div className="flex gap-2">
-            {step > 0 && step < 2 && <Button variant="secondary" onClick={() => setStep(step + 1)}>{t("Lewati")}</Button>}
-            {step < 2 ? (
+            {step > 0 && step < LAST && <Button variant="secondary" onClick={() => setStep(step + 1)}>{t("Lewati")}</Button>}
+            {step < LAST ? (
               <Button
                 icon={<ArrowRight />}
                 onClick={(e) => {

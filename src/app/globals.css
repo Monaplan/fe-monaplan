@@ -252,8 +252,8 @@ body {
 
 /* Gerak melayang pelan untuk kartu hiasan hero (hanya transform) */
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-.animate-float { animation: float 5.5s ease-in-out infinite; }
-.animate-float-slow { animation: float 7.5s ease-in-out -2s infinite; }
+.animate-float { animation: float 5.5s ease-in-out infinite; will-change: transform; }
+.animate-float-slow { animation: float 7.5s ease-in-out -2s infinite; will-change: transform; }
 
 /* Tiket bonus: takik setengah lingkaran di garis sobekan (jarak dari kanan = lebar stub), tanpa gambar */
 .ticket {
@@ -280,19 +280,18 @@ body {
   .animate-ring { animation: ring-draw 1.1s var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1)) both; }
 }
 
-/* Tombol ajakan utama: kilau menyapu, cincin berdenyut lembut, panah bergeser. Hanya bila gerak tidak dikurangi. */
+/* Tombol ajakan utama: kilau menyapu dan panah bergeser. Hanya transform, supaya ringan (tanpa cincin box-shadow yang menggambar ulang tiap frame). Hanya bila gerak tidak dikurangi. */
 @keyframes btn-shine { 0%, 55% { transform: translateX(-140%) skewX(-20deg); } 100% { transform: translateX(380%) skewX(-20deg); } }
-@keyframes btn-pulse { 0% { box-shadow: 0 0 0 0 rgba(169, 85, 126, 0.5); } 70%, 100% { box-shadow: 0 0 0 14px rgba(169, 85, 126, 0); } }
 @keyframes btn-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: no-preference) {
-  .btn-glow { position: relative; overflow: hidden; animation: btn-pulse 2.4s ease-out infinite; }
+  .btn-glow { position: relative; overflow: hidden; }
   .btn-glow::after {
     content: ""; position: absolute; inset-block: 0; left: 0; width: 28%; pointer-events: none;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
     animation: btn-shine 3.8s ease-in-out infinite;
   }
   .btn-glow > svg:last-child { animation: btn-nudge 1.6s ease-in-out infinite; }
-  .btn-glow:hover, .btn-glow:focus-visible { animation-play-state: paused; }
+  .btn-glow:hover::after, .btn-glow:focus-visible::after, .btn-glow:hover > svg:last-child, .btn-glow:focus-visible > svg:last-child { animation-play-state: paused; }
 }
 
 /* Notifikasi muncul dari atas (pojok kanan atas) */
@@ -304,7 +303,7 @@ body {
 /* Empat salinan daftar; bergeser sepanjang satu salinan lalu mengulang tanpa jeda, juga di layar sangat lebar */
 @keyframes marquee { to { transform: translateX(-25%); } }
 @media (prefers-reduced-motion: no-preference) {
-  .marquee-track { animation: marquee 70s linear infinite; }
+  .marquee-track { animation: marquee 70s linear infinite; will-change: transform; }
   .marquee-track:hover { animation-play-state: paused; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -315,3 +314,6 @@ body {
 /* Bingkai pembayaran Midtrans tidak boleh melebihi layar HP, supaya halaman tidak bisa digeser ke samping */
 #snap-container iframe { width: 100% !important; max-width: 100% !important; }
 html, body { overflow-x: clip; }
+
+/* Animasi yang berjalan terus dijeda saat elemennya di luar layar (diatur oleh AnimationGate), supaya tidak membebani pengguliran */
+[data-paused], [data-paused]::before, [data-paused]::after, [data-paused] > svg { animation-play-state: paused !important; }

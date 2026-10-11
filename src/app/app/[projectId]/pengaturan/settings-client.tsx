@@ -22,10 +22,12 @@ import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
 import {
   archiveProject, deleteEvent, deleteProject, inviteCollaborator, removeMember, revokeInvitation, saveEvent, updateCouple, updateCover,
-  updateMemberRole, updateWeddingInfo,
+  setWeddingStyle, updateMemberRole, updateWeddingInfo,
 } from "@/features/project/actions";
 import { useI18n } from "@/i18n/client";
 import { RsvpThemePicker } from "./rsvp-theme-picker";
+import { StylePicker } from "@/components/app/style-picker";
+import type { WeddingStyleId } from "@/content/wedding-styles";
 import { useT } from "@/i18n/client";
 
 type Event = { id: string; type: string; name: string; starts_at: string | null; ends_at: string | null; venue_name: string | null; venue_address: string | null; maps_url: string | null; dress_code: string | null; notes: string | null; sort_order: number };
@@ -44,6 +46,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dateChanged, setDateChanged] = useState(false);
+  const [style, setStyle] = useState<WeddingStyleId>((project.wedding_style ?? "umum") as WeddingStyleId);
   const pid = project.id;
   const tz = project.timezone;
   const collabCount = members.filter((m) => m.role !== "owner").length + invitations.length;
@@ -63,6 +66,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
 
       {tab === "pasangan" && (
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="flex min-w-0 flex-col gap-4">
           <Card tour="pengaturan-main">
             <CardHeader title={t("Data Pasangan")} />
             <ActionForm action={(fd) => updateCouple(pid, fd)} onSuccess={(r) => {
@@ -91,6 +95,16 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
               {canWrite && <div className="flex justify-end"><SubmitButton>{t("Simpan")}</SubmitButton></div>}
             </ActionForm>
           </Card>
+          <Card>
+            <CardHeader title={t("Gaya pernikahan")} subtitle={t("Menambah tugas, kategori budget, dan acara sesuai adat. Yang sudah ada tidak dihapus.")} />
+            <StylePicker defaultValue={project.wedding_style ?? "umum"} onChange={setStyle} disabled={!canWrite} />
+            {canWrite && (
+              <div className="mt-4 flex justify-end">
+                <ActionButton variant="primary" size="md" action={() => setWeddingStyle(pid, style)} confirmText={t("Terapkan gaya pernikahan ini? Tugas, kategori budget, dan acara adat akan ditambahkan.")}>{t("Terapkan")}</ActionButton>
+              </div>
+            )}
+          </Card>
+          </div>
           <Card>
             <CardHeader title={t("Foto Sampul")} subtitle={t("Tampil di halaman RSVP tamu.")} />
             <div className="aspect-[4/5] overflow-hidden rounded-xl bg-plum-50">

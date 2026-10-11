@@ -192,7 +192,7 @@ export function SidebarShell({
 
       <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-300 ease-[var(--ease-out-soft)]", collapsed ? "md:pl-[92px]" : "md:pl-[92px] xl:pl-[280px]")}>
         {/* Top bar */}
-        <header className="no-print sticky top-0 z-20 border-b border-neutral-200/60 bg-canvas/80 pt-[env(safe-area-inset-top)] backdrop-blur-md md:border-0 md:bg-transparent md:pt-0 md:backdrop-blur-none">
+        <header className="no-print sticky top-0 z-20 border-b border-neutral-200/60 bg-canvas pt-[env(safe-area-inset-top)] md:border-0 md:bg-transparent md:pt-0 md:backdrop-blur-none">
           <div className="flex h-14 items-center gap-1 px-4 md:h-[72px] md:gap-2 md:px-6">
             {/* HP: hanya logo dan nama Monaplan; judul halaman sudah ada di isi halaman */}
             <Link href={contextHref} aria-label={t("Monaplan")} className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">
@@ -220,7 +220,7 @@ export function SidebarShell({
       </div>
 
       {/* Navigasi bawah HP: menempel di tepi layar seperti aplikasi mobile */}
-      <nav data-tour="mobile-nav" aria-label={t("Navigasi utama")} className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200/80 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav data-tour="mobile-nav" aria-label={t("Navigasi utama")} className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200/80 bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
         <div className="grid h-[60px]" style={{ gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))` }}>
           {tabs.map((item) => {
             const active = isActive(item);
