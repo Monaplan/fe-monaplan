@@ -2,6 +2,10 @@ import { Logo } from "@/components/app/logo";
 import { ButtonLink } from "@/components/ui/button";
 import { getI18n } from "@/i18n/server";
 
+import { NOINDEX } from "@/lib/seo";
+
+export const metadata = { title: "Halaman tidak ditemukan", robots: NOINDEX };
+
 export default async function NotFound() {
   const { t } = await getI18n();
   return (

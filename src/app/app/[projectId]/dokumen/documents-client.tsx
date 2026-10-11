@@ -71,7 +71,7 @@ export function DocumentsClient({ projectId, checklist, documents, vendors, usag
                   <li key={c.id} data-row-id={c.id} className="flex items-center gap-3 border-b border-neutral-200 py-2.5 last:border-0">
                     <input type="checkbox" className="size-[18px] accent-plum-600" checked={c.is_done} disabled={!canWrite}
                       onChange={(e) => toggleDocChecklist(projectId, c.id, e.target.checked)} aria-label={t(c.name)} />
-                    <span className={cn("flex-1 text-sm", c.is_done && "text-neutral-400 line-through")}>{t(c.name)}</span>
+                    <span className={cn("flex-1 text-sm", c.is_done && "text-neutral-500 line-through")}>{t(c.name)}</span>
                     {c.document_id && <a href={`/api/files/${c.document_id}`} target="_blank" rel="noreferrer" aria-label={t("Lihat berkas")} className="text-plum-600"><FileText className="size-4" /></a>}
                     {canWrite && (
                       <RowMenu items={[

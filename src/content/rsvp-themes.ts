@@ -70,7 +70,7 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
     name: "Klasik Emas",
     description: "Krem hangat, foto berbingkai lengkung, dan tulisan tangan berwarna emas.",
     ornament: "frame",
-    swatch: ["#FBF5E6", "#A8832F", "#3B2F1E"],
+    swatch: ["#FBF5E6", "#7A5C14", "#3B2F1E"],
     vars: {
       "--rv-outer": "#E8DCC0",
       "--rv-bg": "#FBF5E6",
@@ -80,7 +80,7 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
       "--rv-card-border": "#D8C28A",
       "--rv-ink": "#3A2E1C",
       "--rv-muted": "#76674A",
-      "--rv-accent": "#A8832F",
+      "--rv-accent": "#7A5C14",
       "--rv-accent-ink": "#FFFBF0",
       "--rv-soft": "#F3E8CC",
       "--rv-danger": "#A63A2B",

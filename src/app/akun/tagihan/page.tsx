@@ -32,17 +32,19 @@ export default async function BillingPage() {
       ) : (
         <ul className="divide-y divide-neutral-200">
           {orders.map((o: any) => (
-            <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="tabular text-sm font-medium">{o.order_number}</p>
-                <p className="text-xs text-neutral-500">{o.plans?.name} · {formatDateCompact(o.created_at, undefined, lang)}</p>
+            <li key={o.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 py-3.5 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+              <div className="min-w-0">
+                <p className="tabular text-sm font-medium whitespace-nowrap">{o.order_number}</p>
+                <p className="truncate text-xs text-neutral-500">{o.plans?.name} · {formatDateCompact(o.created_at, undefined, lang)}</p>
               </div>
-              <span className="tabular text-sm font-semibold">{formatIDR(o.amount_idr)}</span>
-              <StatusPill tone={STATUS[o.status]?.[1]}>{STATUS[o.status]?.[0] ?? o.status}</StatusPill>
-              {o.status === "paid" && <Link href={`/akun/tagihan/${o.order_number}`} className="text-[13px] font-medium text-plum-600 hover:underline">{t("Kuitansi")}</Link>}
-              {o.status === "pending" && o.provider_redirect_url && Date.parse(o.expires_at) > Date.now() && (
-                <a href={o.provider_redirect_url} className="text-[13px] font-medium text-plum-600 hover:underline">{t("Lanjutkan bayar")}</a>
-              )}
+              <StatusPill tone={STATUS[o.status]?.[1]} className="justify-self-end sm:order-3">{STATUS[o.status]?.[0] ?? o.status}</StatusPill>
+              <span className="tabular text-sm font-semibold sm:order-2 sm:text-right">{formatIDR(o.amount_idr)}</span>
+              <span className="justify-self-end sm:order-4 sm:min-w-[104px] sm:text-right">
+                {o.status === "paid" && <Link href={`/akun/tagihan/${o.order_number}`} className="text-[13px] font-medium whitespace-nowrap text-plum-600 hover:underline">{t("Kuitansi")}</Link>}
+                {o.status === "pending" && o.provider_redirect_url && Date.parse(o.expires_at) > Date.now() && (
+                  <a href={o.provider_redirect_url} className="text-[13px] font-medium whitespace-nowrap text-plum-600 hover:underline">{t("Lanjutkan bayar")}</a>
+                )}
+              </span>
             </li>
           ))}
         </ul>

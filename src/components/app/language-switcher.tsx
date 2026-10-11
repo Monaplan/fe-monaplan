@@ -23,7 +23,7 @@ export function LanguageSwitcher({ compact, className }: { compact?: boolean; cl
   if (compact) {
     const next = LANGS.find((l) => l !== lang) ?? lang;
     return (
-      <button onClick={() => pick(next)} lang={lang} aria-label={`${t("Language")}: ${LANG_LABEL[lang]}. ${LANG_LABEL[next]}`} title={LANG_LABEL[next]}
+      <button onClick={() => pick(next)} lang={lang} aria-label={`${lang.toUpperCase()}. ${t("Language")}: ${LANG_LABEL[lang]}. ${LANG_LABEL[next]}`} title={LANG_LABEL[next]}
         className={cn("group inline-flex h-10 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-surface pr-3.5 pl-3 text-[12.5px] font-semibold tracking-wide text-neutral-700 uppercase shadow-[0_1px_2px_rgba(62,26,45,0.05)] transition-[border-color,color,transform,box-shadow] duration-200 hover:border-plum-300 hover:text-plum-700 hover:shadow-card active:scale-95", pending && "opacity-60", className)}>
         <Globe className="size-4 text-neutral-400 transition-colors group-hover:text-plum-600" aria-hidden="true" />
         {lang}

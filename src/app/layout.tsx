@@ -23,12 +23,10 @@ export const metadata: Metadata = {
   publisher: SITE.name,
   category: "lifestyle",
   formatDetection: { telephone: false, email: false, address: false },
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: SITE.name,
     locale: SITE.locale,
-    url: "/",
     title: SITE.title,
     description: SITE.description,
   },

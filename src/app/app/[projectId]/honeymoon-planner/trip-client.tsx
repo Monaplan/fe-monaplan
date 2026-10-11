@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { DateField, TimeField } from "@/components/ui/date-field";
-import { BedDouble, Bus, CircleAlert, MapPin, MoreHorizontal, Pencil, Plane, Plus, Sparkles, Trash2, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { BedDouble, Bus, CircleAlert, MapPin, MoreHorizontal, Pencil, Plane, Plus, Ticket, Trash2, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, StatCard } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
@@ -27,7 +27,7 @@ type Item = { id: string; day_date: string | null; start_time: string | null; ki
 const KINDS: { key: string; label: string; icon: LucideIcon }[] = [
   { key: "akomodasi", label: "Akomodasi", icon: BedDouble },
   { key: "transport", label: "Transportasi", icon: Bus },
-  { key: "kegiatan", label: "Kegiatan", icon: Sparkles },
+  { key: "kegiatan", label: "Kegiatan", icon: Ticket },
   { key: "makan", label: "Makan", icon: UtensilsCrossed },
   { key: "lainnya", label: "Lainnya", icon: MoreHorizontal },
 ];

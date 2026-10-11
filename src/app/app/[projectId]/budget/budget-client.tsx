@@ -136,7 +136,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
                         ]} />
                       );
                       return (
-                        <div key={i.id} data-row-id={i.id} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1fr_140px_140px_140px_40px] md:items-center">
+                        <div key={i.id} data-row-id={i.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[minmax(0,1fr)_140px_140px_140px_40px] md:items-center">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium text-neutral-800">{i.name}</p>
                             {i.vendors && <p className="text-xs text-neutral-500">{i.vendors.name}</p>}
@@ -169,7 +169,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
             const late = p.status === "belum_bayar" && p.due_date && p.due_date < today;
             const soon = p.status === "belum_bayar" && p.due_date && !late && p.due_date <= addDays(today, 7);
             return (
-              <div key={p.id} data-row-id={p.id} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1.4fr_1fr_130px_140px_130px_40px] md:items-center">
+              <div key={p.id} data-row-id={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[1.4fr_1fr_130px_140px_130px_40px] md:items-center">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-neutral-800">{p.label ?? t(labelOf(PAYMENT_KIND, p.kind))}</p>
                   <p className="truncate text-xs text-neutral-500">{t(labelOf(PAYMENT_KIND, p.kind))}{p.budget_items ? ` · ${p.budget_items.name}` : ""}</p>

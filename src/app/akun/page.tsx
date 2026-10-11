@@ -1,4 +1,4 @@
-import { Hourglass, Infinity as InfinityIcon, KeyRound, Lock, Sparkles } from "lucide-react";
+import { Hourglass, Infinity as InfinityIcon, KeyRound, Lock } from "lucide-react";
 import { daysLeft, getMyAccess, getMyLicenses, requireUser } from "@/lib/access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -53,7 +53,7 @@ export default async function AccountPage() {
         </Card>
 
         <Card tour="akun-lisensi">
-          <CardHeader icon={access.state === "lifetime" ? <InfinityIcon /> : access.state === "timed" ? <Hourglass /> : access.state === "none" ? <Sparkles /> : <Lock />} title={t("Lisensi")} />
+          <CardHeader icon={access.state === "lifetime" ? <InfinityIcon /> : access.state === "timed" ? <Hourglass /> : access.state === "none" ? <KeyRound /> : <Lock />} title={t("Lisensi")} />
           {access.state === "lifetime" && <><p className="text-2xl font-bold">{t("Selamanya")}</p><p className="mt-1 text-[13px] text-neutral-600">{owned?.planName ?? current?.plans?.name}</p></>}
           {access.state === "timed" && (
             <>

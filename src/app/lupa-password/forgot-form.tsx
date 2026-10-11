@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Mail, MailCheck } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Field } from "@/components/ui/form";
+import { Turnstile } from "@/components/ui/turnstile";
 import { requestPasswordReset } from "@/features/auth/actions";
 import { IconInput } from "../login/auth-form";
 import { useT } from "@/i18n/client";
@@ -21,6 +22,7 @@ export function ForgotForm() {
   return (
     <ActionForm action={requestPasswordReset} onSuccess={(r) => r.ok && setSent(r.message ?? "Cek email kamu.")}>
       <Field label={t("Email")} htmlFor="fp-email"><IconInput icon={<Mail />} id="fp-email" name="email" type="email" required autoComplete="email" placeholder="nama@email.com" /></Field>
+      <Turnstile />
       <SubmitButton size="lg" className="w-full">{t("Kirim Tautan Reset")}</SubmitButton>
     </ActionForm>
   );

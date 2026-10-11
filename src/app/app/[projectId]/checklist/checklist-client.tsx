@@ -143,7 +143,7 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
                             aria-label={t("Tandai {title} selesai", { title: t(task.title) })}
                           />
                           <button className="min-w-0 flex-1 text-left" onClick={() => setEditing(task)}>
-                            <span className={cn("block text-sm font-medium transition-colors", task.status === "done" ? "text-neutral-400 line-through" : "text-neutral-800")}>{t(task.title)}</span>
+                            <span className={cn("block text-sm font-medium transition-colors", task.status === "done" ? "text-neutral-500 line-through" : "text-neutral-800")}>{t(task.title)}</span>
                             <span className="mt-1 flex flex-wrap items-center gap-1.5">
                               {task.due_date && (
                                 <StatusPill tone={task.status === "done" ? "neutral" : late ? "danger" : "neutral"} icon={false}>

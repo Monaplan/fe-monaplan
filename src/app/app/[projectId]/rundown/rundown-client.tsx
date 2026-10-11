@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TimeField } from "@/components/ui/date-field";
-import { ArrowDown, ArrowUp, CircleAlert, Download, MapPin, Pencil, Plus, Sparkles, Store, Trash2, UserRound } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarClock, CircleAlert, Download, MapPin, Pencil, Plus, Store, Trash2, UserRound } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
@@ -63,7 +63,7 @@ export function RundownClient({ projectId, tz, coupleName, events, active, items
 
       {items.length === 0 ? (
         <Card tour="rundown-main">
-          <EmptyState icon={<Sparkles />} title={t("Rundown masih kosong")} text={t("Mulai dari contoh, lalu ubah sesuai acaramu.")}
+          <EmptyState icon={<CalendarClock />} title={t("Rundown masih kosong")} text={t("Mulai dari contoh, lalu ubah sesuai acaramu.")}
             action={canWrite && (
               <div className="flex flex-wrap justify-center gap-2">
                 <ActionButton variant="primary" size="md" action={() => applyRundownTemplate(projectId, active.id, "akad")}>{t("Contoh Rundown Akad")}</ActionButton>

@@ -41,7 +41,7 @@ export function TrialClient({ enabled: initial, days, stats, migrated }: { enabl
           <CircleAlert className="mt-0.5 size-4 shrink-0" />{t("Tabel pengaturan belum ada di database. Jalankan migrasi 20261009000004_trial_promo_calendar.sql di Supabase SQL Editor, lalu muat ulang halaman ini.")}</p>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex flex-col gap-4">
           <Card tour="admin-trial-main">
             <CardHeader icon={<Hourglass />} title={t("Fitur trial")} subtitle={t("Saat aktif, akun baru langsung mencoba tanpa melewati halaman pembayaran.")}

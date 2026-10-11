@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CircleAlert, CircleCheck, CircleHelp, CircleX, Heart, Loader2, Minus, Plus } from "lucide-react";
 import { cn } from "@/components/ui/cn";
+import { Turnstile, turnstileEnabled } from "@/components/ui/turnstile";
 
 type Status = "hadir" | "tidak_hadir" | "ragu";
 const OPTIONS: { key: Status; label: string; icon: React.ReactNode }[] = [
@@ -23,20 +24,25 @@ export function RsvpForm({ slug, defaultName, paxMax, initial, preview }: { slug
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(!!initial);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   async function submit() {
     if (name.trim().length < 2) return setError("Tulis namamu dulu, ya.");
     if (!status) return setError("Pilih salah satu jawaban dulu, ya.");
+    if (turnstileEnabled && !preview && !captcha) return setError("Tunggu kotak verifikasi keamanan tercentang dulu, ya.");
     setError(null);
     if (preview) return setDone(true);
     setLoading(true);
     const res = await fetch("/api/rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, name: name.trim(), status, pax: status === "hadir" ? pax : 0, message }),
+      body: JSON.stringify({ slug, name: name.trim(), status, pax: status === "hadir" ? pax : 0, message, captcha }),
     });
     const j = await res.json().catch(() => ({}));
     setLoading(false);
+    // Token captcha hanya berlaku sekali, jadi widget dimuat ulang setelah setiap pengiriman
+    setCaptcha(null); setCaptchaKey((k) => k + 1);
     if (!res.ok) return setError(j.message ?? "Gagal menyimpan. Coba lagi, ya.");
     setDone(true);
   }
@@ -86,6 +92,7 @@ export function RsvpForm({ slug, defaultName, paxMax, initial, preview }: { slug
         <textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder="Selamat menempuh hidup baru!" rows={3}
           className="w-full resize-y rounded-[var(--rv-radius)] border border-[var(--rv-field-border)] bg-[var(--rv-field)] px-3.5 py-3 text-sm text-[var(--rv-ink)] outline-none placeholder:text-[var(--rv-muted)]/70 focus:border-[var(--rv-accent)] focus:ring-2 focus:ring-[var(--rv-accent)]/30" />
       </label>
+      {!preview && <Turnstile key={captchaKey} onToken={setCaptcha} />}
       {error && <p role="alert" className="flex items-center gap-2 text-[13px] text-[var(--rv-danger)]"><CircleAlert className="size-4" />{error}</p>}
       <button type="button" className={btnPrimary} disabled={loading} onClick={submit}>
         {loading && <Loader2 className="size-4 animate-spin" />}Kirim Konfirmasi

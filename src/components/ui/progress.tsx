@@ -3,12 +3,13 @@ import { cn } from "./cn";
 import { IconTile } from "./card";
 import { formatPercent } from "@/lib/format";
 
-export function ProgressBar({ value, tone, className }: { value: number; tone?: "default" | "danger" | "caution" | "white"; className?: string }) {
+// label: nama untuk pembaca layar. Tanpa label, bilah dianggap hiasan karena nilainya sudah tertulis di dekatnya.
+export function ProgressBar({ value, tone, className, label }: { value: number; tone?: "default" | "danger" | "caution" | "white"; className?: string; label?: string }) {
   const v = Math.max(0, Math.min(1, value));
   const t = tone ?? (value > 1 ? "danger" : "default");
   return (
     <div className={cn("h-2 w-full overflow-hidden rounded-full", t === "white" ? "bg-white/20" : "bg-plum-100", className)}
-      role="progressbar" aria-valuenow={Math.round(value * 100)} aria-valuemin={0} aria-valuemax={100}>
+      {...(label ? { role: "progressbar", "aria-label": label, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100 } : { "aria-hidden": true })}>
       <div className={cn("animate-grow h-full rounded-full transition-[width] duration-500",
         t === "danger" ? "bg-danger" : t === "caution" ? "bg-[#D08A6C]" : t === "white" ? "bg-[#FFFFFF]" : "bg-plum-600")}
         style={{ width: `${v * 100}%` }} />

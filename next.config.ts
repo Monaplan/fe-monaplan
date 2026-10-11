@@ -1,17 +1,16 @@
 import type { NextConfig } from "next";
 
-// Kebijakan konten. Dipasang sebagai Report-Only dulu: pelanggaran hanya dilaporkan di konsol peramban dan tidak memblokir,
-// sehingga Snap Midtrans, Supabase, dan Google tidak rusak. Setelah diperiksa bersih, ganti nama header menjadi
-// "Content-Security-Policy" untuk memberlakukannya. 'unsafe-inline' dibutuhkan skrip bawaan Next dan skrip tema.
+// Kebijakan konten, berlaku penuh (memblokir sumber di luar daftar). Bila menambah layanan pihak ketiga di sisi peramban,
+// daftarkan asalnya di sini. 'unsafe-inline' dibutuhkan skrip bawaan Next dan skrip tema.
 const filesOrigin = (() => { try { return process.env.FILES_BASE_URL ? new URL(process.env.FILES_BASE_URL).origin : ""; } catch { return ""; } })();
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"} https://*.midtrans.com https://pay.google.com`,
-  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"} https://*.midtrans.com https://pay.google.com https://challenges.cloudflare.com`,
+  "style-src 'self' 'unsafe-inline' https://*.midtrans.com",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.midtrans.com ${filesOrigin}`.trim(),
-  "frame-src https://*.midtrans.com https://pay.google.com",
+  "font-src 'self' data: https://*.midtrans.com",
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.midtrans.com https://challenges.cloudflare.com ${filesOrigin}`.trim(),
+  "frame-src https://*.midtrans.com https://pay.google.com https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",
@@ -45,7 +44,7 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self), interest-cohort=()" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Content-Security-Policy-Report-Only", value: csp },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];

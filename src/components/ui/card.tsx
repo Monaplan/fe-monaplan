@@ -22,7 +22,7 @@ export function CardHeader({ icon, title, action, subtitle }: { icon?: ReactNode
     <div className="mb-4 flex items-center gap-3">
       {icon && <IconTile>{icon}</IconTile>}
       <div className="min-w-0 flex-1">
-        <h3 className="text-[15px] leading-6 font-semibold text-neutral-900">{title}</h3>
+        <h2 className="text-[15px] leading-6 font-semibold text-neutral-900">{title}</h2>
         {subtitle && <p className="text-[13px] leading-5 text-neutral-500">{subtitle}</p>}
       </div>
       {action}
@@ -48,7 +48,7 @@ export function StatCard({ icon, title, value, footer, className, tour }: { icon
   return (
     <Card tour={tour} className={cn("relative overflow-hidden", className)}>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-[13px] font-medium text-neutral-600">{title}</h3>
+        <h2 className="text-[13px] font-medium text-neutral-600">{title}</h2>
         {icon && <IconTile className="size-8 rounded-[9px] [&_svg]:size-4">{icon}</IconTile>}
       </div>
       <div className="tabular text-[24px] leading-8 font-bold tracking-[-0.02em] text-neutral-900 md:text-[28px] md:leading-9">{value}</div>

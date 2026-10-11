@@ -1,4 +1,5 @@
 import { LogOut } from "lucide-react";
+import { SignOutForm } from "./signout-button";
 import { Logo } from "./logo";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme";
@@ -14,12 +15,12 @@ export async function FocusHeader() {
       <div className="flex items-center gap-2">
         <LanguageSwitcher compact className="hidden sm:inline-flex" />
         <ThemeToggle />
-        <form action="/auth/signout" method="post">
+        <SignOutForm>
           <button type="submit" className={buttonClass("outline", "md", "gap-2 px-4 hover:border-plum-300 hover:text-plum-700")}>
             <LogOut className="!size-4" aria-hidden="true" />
             <span>{t("Keluar")}</span>
           </button>
-        </form>
+        </SignOutForm>
       </div>
     </header>
   );

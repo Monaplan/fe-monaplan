@@ -12,6 +12,7 @@ export async function generateMetadata() {
     title: "Masuk atau Daftar",
     description: "Masuk atau buat akun Monaplan dengan email atau Google untuk mulai mengatur checklist, budget, vendor, dan tamu pernikahan kalian.",
     path: "/login",
+    noindex: true,
     tr: await getT(),
   });
 }

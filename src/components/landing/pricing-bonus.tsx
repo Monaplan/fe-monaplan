@@ -21,9 +21,9 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { pl
 
   const points = (p: PricedPlan) => [
     { icon: <LayoutGrid />, text: t("11 modul lengkap, dari checklist dan budget sampai rundown hari H") },
-    { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema, termasuk tema Bali beraksara Bali") },
+    { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema") },
     { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
-    { icon: <Users />, text: t("Ajak hingga {n} pasangan atau keluarga ikut mengerjakan, tanpa bayar tambahan", { n: p.max_collaborators }) },
+    { icon: <Users />, text: t("Undang pasangan dan keluarga ikut mengerjakan, hingga {n} orang tanpa biaya tambahan", { n: p.max_collaborators }) },
     { icon: <CircleCheck />, text: t("Notifikasi langsung saat tamu mengonfirmasi hadir") },
     { icon: <Printer />, text: t("Rundown hari H siap dicetak dalam PDF") },
     ...(p.max_projects > 1 ? [{ icon: <Briefcase />, text: t("{n} proyek pernikahan", { n: p.max_projects }) }] : []),

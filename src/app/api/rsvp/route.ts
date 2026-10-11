@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIp } from "@/lib/codes";
 import { rateLimited } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 const Body = z.object({
   slug: z.string().min(3).max(60),
@@ -10,6 +11,7 @@ const Body = z.object({
   status: z.enum(["hadir", "tidak_hadir", "ragu"]),
   pax: z.number().int().min(0).max(20),
   message: z.string().max(500).optional().default(""),
+  captcha: z.string().max(2048).optional(),
 });
 
 const MESSAGES: Record<string, string> = {
@@ -33,6 +35,10 @@ export async function POST(request: Request) {
   const d = parsed.data;
   if (rateLimited(`rsvp-slug:${d.slug}`, 60)) {
     return NextResponse.json({ error: "RATE_LIMITED", message: "Undangan ini sedang ramai. Coba lagi sebentar lagi." }, { status: 429 });
+  }
+
+  if (!(await verifyTurnstile(d.captcha, clientIp(request.headers)))) {
+    return NextResponse.json({ error: "CAPTCHA_FAILED", message: "Verifikasi keamanan belum selesai. Tunggu kotak verifikasi tercentang, lalu coba lagi." }, { status: 400 });
   }
 
   const admin = createAdminClient();

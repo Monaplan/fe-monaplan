@@ -62,7 +62,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
       ]} />
 
       {tab === "pasangan" && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <Card tour="pengaturan-main">
             <CardHeader title={t("Data Pasangan")} />
             <ActionForm action={(fd) => updateCouple(pid, fd)} onSuccess={(r) => {
@@ -179,7 +179,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
       )}
 
       {tab === "kolaborator" && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
           <Card>
             <CardHeader title={t("Anggota")} subtitle={t("{used}/{max} kolaborator", { used: collabCount, max: maxCollaborators })} />
             <ul className="divide-y divide-neutral-200">

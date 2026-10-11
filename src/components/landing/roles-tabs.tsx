@@ -37,11 +37,11 @@ export function RolesTabs() {
   const r = ROLES[i]!;
   return (
     <div className="mx-auto max-w-5xl">
-      <div role="tablist" aria-label={t("Peran di ruang kerja")} className="mx-auto mb-6 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-neutral-100 p-1">
+      <div role="tablist" aria-label={t("Peran di ruang kerja")} className="mx-auto mb-6 grid w-full max-w-full grid-cols-2 gap-1 rounded-3xl bg-neutral-100 p-1 sm:flex sm:w-fit sm:rounded-full">
         {ROLES.map((x, idx) => (
           <button key={x.key} role="tab" id={`rt-${x.key}`} aria-selected={idx === i} aria-controls="rt-panel" tabIndex={idx === i ? 0 : -1} onClick={() => setI(idx)}
             onKeyDown={(e) => { if (e.key === "ArrowRight") setI((i + 1) % ROLES.length); if (e.key === "ArrowLeft") setI((i + ROLES.length - 1) % ROLES.length); }}
-            className={cn("h-9 shrink-0 rounded-full px-4 text-[13px] font-medium whitespace-nowrap transition-colors", idx === i ? "bg-surface text-plum-700 shadow-sm" : "text-neutral-600 hover:text-neutral-900")}>
+            className={cn("h-11 rounded-full px-3 text-[13px] leading-4 font-medium transition-colors sm:h-9 sm:shrink-0 sm:px-4 sm:whitespace-nowrap", idx === i ? "bg-surface text-plum-700 shadow-sm" : "text-neutral-600 hover:text-neutral-900")}>
             {t(x.tab)}
           </button>
         ))}

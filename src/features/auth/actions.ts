@@ -7,6 +7,8 @@ import { safeNextPath } from "@/lib/paths";
 import { fail, type ActionResult, okm } from "@/lib/result";
 
 const Email = z.string().trim().toLowerCase().email("Format email belum benar.");
+// Token captcha (Cloudflare Turnstile) diteruskan ke Supabase Auth, yang memeriksanya bila CAPTCHA diaktifkan di dashboard
+const captcha = (fd: FormData) => String(fd.get("cf-turnstile-response") ?? "") || undefined;
 const Password = z.string().min(8, "Password minimal 8 karakter.").max(72);
 
 async function origin() {
@@ -24,6 +26,7 @@ function authMessage(msg: string) {
   if (/invalid login credentials/i.test(msg)) return "Email atau password salah.";
   if (/email not confirmed/i.test(msg)) return "Email belum dikonfirmasi. Cek kotak masuk (atau folder spam) untuk tautan konfirmasi.";
   if (/already registered|already been registered|user already exists/i.test(msg)) return "Email ini sudah terdaftar. Silakan masuk.";
+  if (/captcha/i.test(msg)) return "Verifikasi keamanan belum selesai. Tunggu kotak verifikasi tercentang, lalu coba lagi.";
   if (/rate limit|too many/i.test(msg)) return "Terlalu banyak percobaan. Coba lagi beberapa menit lagi.";
   if (/password/i.test(msg) && /weak|short|characters/i.test(msg)) return "Password terlalu lemah. Gunakan minimal 8 karakter dengan kombinasi huruf dan angka.";
   if (/signups not allowed|signup is disabled/i.test(msg)) return "Pendaftaran dengan email sedang dinonaktifkan.";
@@ -37,7 +40,7 @@ export async function signInWithPassword(fd: FormData): Promise<ActionResult> {
   if (!password) return fail("Password wajib diisi.");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email: email.data, password });
+  const { error } = await supabase.auth.signInWithPassword({ email: email.data, password, options: { captchaToken: captcha(fd) } });
   if (error) return fail(authMessage(error.message));
   return { ok: true, data: { redirect: safeNext(fd.get("next")) } };
 }
@@ -56,6 +59,7 @@ export async function signUpWithPassword(fd: FormData): Promise<ActionResult> {
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
+      captchaToken: captcha(fd),
       data: { full_name: parsed.data.full_name },
       emailRedirectTo: `${await origin()}/auth/callback?next=${encodeURIComponent(safeNext(fd.get("next")))}`,
     },
@@ -73,8 +77,9 @@ export async function requestPasswordReset(fd: FormData): Promise<ActionResult> 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email.data, {
     redirectTo: `${await origin()}/auth/callback?next=/reset-password`,
+    captchaToken: captcha(fd),
   });
-  if (error && /rate limit|too many/i.test(error.message)) return fail(authMessage(error.message));
+  if (error && /captcha|rate limit|too many/i.test(error.message)) return fail(authMessage(error.message));
   // Pesan sama untuk email terdaftar maupun tidak, agar tidak membocorkan daftar akun
   return { ok: true, message: "Bila email terdaftar, tautan untuk membuat password baru sudah dikirim." };
 }

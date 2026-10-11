@@ -229,7 +229,7 @@ export function PromoClient({ enabled: initial, promos, plans, migrated, sortCon
               <legend className="px-1 text-[13px] font-medium text-neutral-800">{t("Popup promo")}</legend>
               <label className="flex items-center gap-2 text-sm"><Checkbox name="popup_enabled" checked={popupOn} onChange={(e) => setPopupOn(e.target.checked)} />{t("Tampilkan sebagai popup dari bawah layar")}</label>
               {popupOn && (
-                <div className="mt-4 grid gap-4 md:grid-cols-[1fr_320px]">
+                <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[minmax(0,1fr)_320px]">
                   <div className="flex flex-col gap-3">
                     <Field label={t("Judul popup")} htmlFor="pp-title"><Input id="pp-title" name="popup_title" value={pTitle} onChange={(e) => setPTitle(e.target.value)} maxLength={80} placeholder={pName || t("Diskon spesial untukmu")} /></Field>
                     <Field label={t("Isi singkat")} htmlFor="pp-text"><Textarea id="pp-text" name="popup_text" value={pText} onChange={(e) => setPText(e.target.value)} maxLength={200} rows={3} placeholder={t("Pakai kode promo ini sebelum periodenya berakhir.")} /></Field>

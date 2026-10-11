@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Brush, ExternalLink, Flower2, ImagePlus, Landmark, Pencil, Plus, Shapes, Shirt, Sparkles, Star, Trash2, UtensilsCrossed, X, type LucideIcon } from "lucide-react";
+import { Brush, ExternalLink, Flower2, ImagePlus, Landmark, Pencil, Plus, PartyPopper, Shapes, Shirt, Star, Trash2, UtensilsCrossed, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
@@ -22,7 +22,7 @@ type Item = {
 };
 
 const CATEGORIES: { key: string; label: string; icon: LucideIcon }[] = [
-  { key: "dekorasi", label: "Dekorasi", icon: Sparkles },
+  { key: "dekorasi", label: "Dekorasi", icon: PartyPopper },
   { key: "busana", label: "Busana", icon: Shirt },
   { key: "bunga", label: "Bunga", icon: Flower2 },
   { key: "venue", label: "Venue", icon: Landmark },
@@ -92,7 +92,7 @@ export function InspirationClient({ projectId, items, canWrite }: { projectId: s
 
       {items.length === 0 ? (
         <Card tour="inspirasi-main">
-          <EmptyState icon={<Sparkles />} title={t("Belum ada ide")} text={t("Mulai dari satu kategori. Foto, warna, dan tautan sumber bisa ditambahkan belakangan.")}
+          <EmptyState icon={<ImagePlus />} title={t("Belum ada ide")} text={t("Mulai dari satu kategori. Foto, warna, dan tautan sumber bisa ditambahkan belakangan.")}
             action={canWrite && (
               <div className="flex flex-wrap justify-center gap-2">
                 {CATEGORIES.slice(0, 4).map((c) => <Button key={c.key} variant="outline" size="sm" icon={<c.icon />} onClick={() => setForm({ item: null, category: c.key })}>{t(c.label)}</Button>)}

@@ -1,3 +1,4 @@
+import { SignOutForm } from "@/components/app/signout-button";
 import { Logo } from "@/components/app/logo";
 import { requireUser } from "@/lib/access";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -41,7 +42,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
             <p className="mt-2 text-[13px] text-neutral-600">sebagai <b>{t(ROLE_LABEL[inv.role])}</b></p>
             {mismatch ? (
               <div className="mt-5 rounded-md bg-danger-bg p-3 text-left text-[13px] text-danger">{t("Undangan ini untuk")}{" "}<b>{inv.email}</b>{t(", sedangkan kamu masuk sebagai")}{" "}<b>{user.email}</b>. Keluar lalu masuk dengan email yang diundang, atau minta pemilik mengundang ulang.
-                <form action="/auth/signout" method="post" className="mt-3"><button className="font-semibold underline">{t("Keluar dan ganti akun")}</button></form>
+                <SignOutForm className="mt-3"><button className="font-semibold underline">{t("Keluar dan ganti akun")}</button></SignOutForm>
               </div>
             ) : (
               <JoinButton token={token} />

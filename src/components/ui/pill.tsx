@@ -19,9 +19,9 @@ const ICON: Record<Tone, ReactNode> = {
 
 export function StatusPill({ tone = "neutral", children, icon, className }: { tone?: Tone; children: ReactNode; icon?: ReactNode | false; className?: string }) {
   return (
-    <span className={cn("inline-flex h-[22px] items-center gap-1 rounded-full px-2 text-xs leading-4 font-medium whitespace-nowrap [&_svg]:size-3", TONE[tone], className)}>
+    <span className={cn("inline-flex h-[22px] max-w-full items-center gap-1 rounded-full px-2 text-xs leading-4 font-medium whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0", TONE[tone], className)}>
       {icon === false ? null : (icon ?? ICON[tone])}
-      {children}
+      <span className="min-w-0 truncate">{children}</span>
     </span>
   );
 }

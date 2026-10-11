@@ -40,9 +40,9 @@ export function HelpCenter({ base }: { base: string | null }) {
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
       <ProductTour id="bantuan" steps={TOURS.bantuan!} />
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
         <Card tour="help-faq">
           <CardHeader icon={<LifeBuoy />} title={t("Pertanyaan umum")} />
           <div className="relative mb-3">
@@ -91,7 +91,7 @@ export function HelpCenter({ base }: { base: string | null }) {
         </Card>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
         <Card tour="help-contact">
           <CardHeader icon={<WhatsAppIcon />} title={t("Hubungi kami")} subtitle={t("Chat langsung dengan admin Monaplan.")} />
           {wa ? (

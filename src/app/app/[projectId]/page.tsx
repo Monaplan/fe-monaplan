@@ -126,7 +126,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
           {canWrite && <div className="mt-4"><QuickAdd projectId={projectId} tz={tz} items={items ?? []} vendors={vendors ?? []} mode="countdown" /></div>}
 
           <div className="mt-6 mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-neutral-800">{t("Progress per Fase")}</h3>
+            <h2 className="text-sm font-semibold text-neutral-800">{t("Progress per Fase")}</h2>
             <Link href={`/app/${ref}/checklist`} className="inline-flex h-10 items-center rounded-full bg-neutral-100 px-3.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200 md:h-8">{t("Semua")}</Link>
           </div>
           {shownPhases.length ? (
@@ -221,7 +221,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
                       <li key={f.source + f.source_id} className="flex items-start gap-2 text-[13px] leading-5">
                         <span className="mt-0.5 shrink-0 text-plum-600 [&_svg]:size-3.5">{SRC[f.source]}</span>
                         <span className="min-w-0 flex-1">
-                          <span className={cn("line-clamp-2 text-neutral-800", (f.status === "done" || f.status === "sudah_bayar") && "text-neutral-400 line-through")} title={f.title}>{f.title}</span>
+                          <span className={cn("line-clamp-2 text-neutral-800", (f.status === "done" || f.status === "sudah_bayar") && "text-neutral-500 line-through")} title={f.title}>{f.title}</span>
                           {!f.all_day && <span className="tabular block text-xs text-neutral-500">{formatTime(f.starts_at, tz, undefined, lang)}</span>}
                         </span>
                       </li>

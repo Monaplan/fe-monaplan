@@ -8,7 +8,7 @@ export const SITE = {
   title: "Monaplan: Satu tempat untuk semua rencana nikahmu",
   shortTitle: "Monaplan: Satu tempat untuk semua rencana nikahmu",
   description:
-    "Monaplan, satu tempat untuk semua rencana nikahmu. Aplikasi wedding planner all-in-one: checklist persiapan nikah, budgeting, kelola vendor, daftar tamu dan RSVP via WhatsApp, rundown hari H, mahar dan seserahan, hingga dokumen KUA dalam satu dashboard.",
+    "Aplikasi wedding planner untuk persiapan nikah: checklist, budget, vendor, tamu dan RSVP WhatsApp, rundown hari H, sampai dokumen KUA. Coba gratis.",
   keywords: [
     "wedding planner", "aplikasi wedding planner", "checklist persiapan pernikahan", "budget pernikahan",
     "daftar tamu pernikahan", "RSVP online", "undangan WhatsApp", "rundown pernikahan", "mahar dan seserahan",
@@ -36,8 +36,9 @@ export function pageMetadata({ title, description, path, noindex, tr }: { title?
     title: title ? x(title) : { absolute: x(SITE.title) },
     description: d,
     alternates: { canonical: path },
-    openGraph: { title: t, description: d, url: path, type: "website", siteName: SITE.name, locale: SITE.locale },
-    twitter: { card: "summary_large_image", title: t, description: d },
+    // Gambar dicantumkan eksplisit: openGraph di halaman menimpa seluruh openGraph induk, termasuk gambar bawaannya
+    openGraph: { title: t, description: d, url: path, type: "website", siteName: SITE.name, locale: SITE.locale, images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: SITE.name }] },
+    twitter: { card: "summary_large_image", title: t, description: d, images: ["/opengraph-image"] },
     ...(noindex ? { robots: NOINDEX } : {}),
   };
 }

@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, MailCheck, Sparkles, UserRound } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, MailCheck, Gift, UserRound } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Field, Input } from "@/components/ui/form";
 import { Segmented } from "@/components/ui/tabs";
 import { cn } from "@/components/ui/cn";
 import { signInWithPassword, signUpWithPassword } from "@/features/auth/actions";
+import { Turnstile } from "@/components/ui/turnstile";
 import { GoogleButton } from "./google-button";
 import { AuthHeading } from "@/components/app/auth-heading";
 import { useT } from "@/i18n/client";
@@ -85,6 +86,7 @@ export function AuthForm({ mode: initial, next, notice, trialDays, ownGoogle }: 
           <Field label={<span className="flex items-center justify-between">{t("Password")}<Link href="/lupa-password" className="text-[12.5px] font-medium text-plum-600 hover:underline">{t("Lupa password?")}</Link></span>} htmlFor="li-pass">
             <PasswordInput id="li-pass" name="password" autoComplete="current-password" />
           </Field>
+          <Turnstile />
           <SubmitButton size="lg" className="mt-1 w-full">{t("Masuk")}</SubmitButton>
         </ActionForm>
       ) : (
@@ -92,12 +94,13 @@ export function AuthForm({ mode: initial, next, notice, trialDays, ownGoogle }: 
           <input type="hidden" name="next" value={next ?? ""} />
           {trialDays ? (
             <p className="flex items-center gap-2 rounded-xl bg-plum-50 px-3.5 py-2.5 text-[13px] leading-5 text-plum-800 ring-1 ring-plum-100">
-              <Sparkles className="size-4 shrink-0 text-plum-600" />{t("Coba gratis")}{" "}{trialDays}{" "}{t("hari. Tanpa kartu kredit, tanpa pilih paket.")}</p>
+              <Gift className="size-4 shrink-0 text-plum-600" />{t("Coba gratis")}{" "}{trialDays}{" "}{t("hari. Tanpa kartu kredit, tanpa pilih paket.")}</p>
           ) : null}
           <Field label={t("Nama lengkap")} htmlFor="su-name"><IconInput icon={<UserRound />} id="su-name" name="full_name" required autoComplete="name" placeholder={t("Raka Pratama")} /></Field>
           <Field label={t("Email")} htmlFor="su-email"><IconInput icon={<Mail />} id="su-email" name="email" type="email" required autoComplete="email" placeholder="nama@email.com" /></Field>
           <Field label={t("Password")} htmlFor="su-pass" help={t("Minimal 8 karakter.")}><PasswordInput id="su-pass" name="password" autoComplete="new-password" /></Field>
           <Field label={t("Ulangi password")} htmlFor="su-pass2"><PasswordInput id="su-pass2" name="password_confirm" autoComplete="new-password" /></Field>
+          <Turnstile />
           <SubmitButton size="lg" className="mt-1 w-full">{t("Buat Akun")}</SubmitButton>
         </ActionForm>
       )}

@@ -114,7 +114,7 @@
    sementara plum-600 sebagai latar tombol tetap cukup gelap untuk teks putih.
    Aturan ini sengaja di luar @layer agar mengalahkan utilitas Tailwind. */
 .dark .text-plum-600, .dark .text-plum-500 { color: #E390B9; }
-.dark .hover:text-plum-700:hover, .dark .hover:text-plum-600:hover { color: #F1BED7; }
+.dark .hover\:text-plum-700:hover, .dark .hover\:text-plum-600:hover { color: #F1BED7; }
 
 /* Matikan transisi sesaat saat berganti tema agar tidak ada animasi warna yang aneh */
 .theme-switching, .theme-switching * { transition: none !important; }
@@ -159,7 +159,19 @@ body {
     linear-gradient(160deg, #3E1A2D 0%, #26101C 100%);
 }
 
-.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--color-neutral-200) transparent; }
+/* Scrollbar: tipis, thumb membulat berwarna lembut, makin jelas saat disorot. Firefox memakai properti standar, peramban WebKit memakai pseudo-elemen. */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--color-neutral-300) transparent; }
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: var(--color-neutral-300); border: 2.5px solid transparent; border-radius: 999px; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-plum-300); }
+::-webkit-scrollbar-thumb:active { background-color: var(--color-plum-400); }
+::-webkit-scrollbar-corner { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { border-width: 1px; }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--color-neutral-300) transparent; }
 
 .dark .access-gradient { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
 
@@ -286,3 +298,20 @@ body {
 /* Notifikasi muncul dari atas (pojok kanan atas) */
 @keyframes toast-in { from { transform: translateY(-12px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
 .animate-toast-in { animation: toast-in 220ms var(--ease-out-soft); }
+
+/* Daftar fitur berjalan di bawah hero */
+.marquee-mask { -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+/* Empat salinan daftar; bergeser sepanjang satu salinan lalu mengulang tanpa jeda, juga di layar sangat lebar */
+@keyframes marquee { to { transform: translateX(-25%); } }
+@media (prefers-reduced-motion: no-preference) {
+  .marquee-track { animation: marquee 70s linear infinite; }
+  .marquee-track:hover { animation-play-state: paused; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { width: auto; flex-wrap: wrap; justify-content: center; row-gap: 0.75rem; padding-inline: 1rem; }
+  .marquee-track li[aria-hidden="true"] { display: none; }
+}
+
+/* Bingkai pembayaran Midtrans tidak boleh melebihi layar HP, supaya halaman tidak bisa digeser ke samping */
+#snap-container iframe { width: 100% !important; max-width: 100% !important; }
+html, body { overflow-x: clip; }

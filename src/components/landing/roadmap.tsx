@@ -19,6 +19,8 @@ const PHASES = [
 ] as const;
 
 const DAY = 86_400_000;
+// Tanggal contoh bawaan di peta jalan
+const DEFAULT_DATE = "2034-02-06";
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export function Roadmap({ counts }: { counts: RoadmapPhase[] }) {
@@ -28,11 +30,11 @@ export function Roadmap({ counts }: { counts: RoadmapPhase[] }) {
   const [date, setDate] = useState("");
   const [today, setToday] = useState("");
 
-  // Tanggal contoh diisi setelah tampil di peramban agar hasil server dan klien sama
+  // Tanggal contoh diisi setelah tampil di peramban agar hasil server dan klien sama (hari ini dipakai untuk batas pilihan)
   useEffect(() => {
     const now = new Date();
     setToday(iso(now));
-    setDate(iso(new Date(now.getTime() + 150 * DAY)));
+    setDate(DEFAULT_DATE);
   }, []);
 
   const days = useMemo(() => {
@@ -64,7 +66,7 @@ export function Roadmap({ counts }: { counts: RoadmapPhase[] }) {
       {/* Pemilih tanggal sederhana: satu baris, klik untuk mengubah */}
       <div className="relative mx-auto mb-10 flex max-w-md flex-col items-center gap-2">
         <span className="text-[12px] font-semibold tracking-[0.14em] text-plum-600 uppercase">{t("Tanggal pernikahanmu")}</span>
-        <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="dialog" aria-expanded={open} aria-label={t("Ubah tanggal")}
+        <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="dialog" aria-expanded={open} aria-label={parts ? `${parts.weekday}, ${parts.day} ${parts.monthLong} ${parts.year}. ${t("Ubah tanggal")}` : t("Ubah tanggal")}
           className="inline-flex h-12 items-center gap-3 rounded-full border border-neutral-200 bg-surface px-5 text-[15px] font-medium text-neutral-900 shadow-card transition-colors hover:border-plum-300">
           <CalendarDays className="size-5 text-plum-600" aria-hidden="true" />
           <span key={date} className="animate-pop-in">{parts ? `${parts.weekday}, ${parts.day} ${parts.monthLong} ${parts.year}` : " "}</span>

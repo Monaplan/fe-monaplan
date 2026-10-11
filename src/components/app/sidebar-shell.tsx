@@ -1,5 +1,6 @@
 "use client";
 
+import { SignOutForm } from "./signout-button";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -99,7 +100,7 @@ export function SidebarShell({
     <div className="flex h-full flex-col">
       {/* Brand dan konteks */}
       <div className="flex items-center gap-2 px-3 pt-5 pb-5">
-        <Link href={contextHref} className={cn("flex min-w-0 items-center gap-2.5 transition-[padding] duration-300 ease-[var(--ease-out-soft)]", rail && "mx-auto")} aria-label={t("Monaplan")}>
+        <Link href={contextHref} className={cn("flex min-w-0 items-center gap-2.5 transition-[padding] duration-300 ease-[var(--ease-out-soft)]", rail && "mx-auto")} aria-label={rail ? t("Monaplan") : undefined}>
           <LogoMark className="size-9 drop-shadow-sm" />
           <span className={cn("min-w-0 overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-[var(--ease-out-soft)]", rail ? "max-w-0 opacity-0" : "max-w-[190px] opacity-100")} aria-hidden={rail}>
             <span className="block font-display text-[21px] leading-6 font-semibold text-neutral-900">{t("Monaplan")}</span>
@@ -172,6 +173,7 @@ export function SidebarShell({
 
   return (
     <div className="app-canvas min-h-dvh">
+      <a href="#konten" className="sr-only z-[120] rounded-full bg-plum-700 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">{t("Lewati ke konten")}</a>
       {/* Sidebar desktop */}
       <aside className={cn(
         "no-print fixed inset-y-3 left-3 z-30 hidden rounded-2xl border border-neutral-200/80 bg-surface/95 shadow-card backdrop-blur transition-[width] duration-300 ease-[var(--ease-out-soft)] md:block",
@@ -212,7 +214,7 @@ export function SidebarShell({
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pb-8">
+        <main id="konten" tabIndex={-1} className="flex-1 px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-8">
           <div className="mx-auto max-w-[1400px]">{children}</div>
         </main>
       </div>
@@ -337,9 +339,9 @@ function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle
 Halaman: ${pathname}`)!} target="_blank" rel="noopener noreferrer" onClick={onClose}
                 className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] text-neutral-700 hover:bg-neutral-100"><WhatsAppIcon className="size-4 text-[#1FA855]" />{t("Chat WhatsApp admin")}</a>
             )}
-            <form action="/auth/signout" method="post">
+            <SignOutForm>
               <button className="flex h-11 w-full items-center gap-2.5 rounded-lg px-3 text-[14px] font-medium text-danger hover:bg-danger-bg"><LogOut className="size-4" />{t("Keluar")}</button>
-            </form>
+            </SignOutForm>
           </div>
         </div>
       </div>
@@ -374,7 +376,7 @@ function UserMenu({ user, rail }: { user: ShellUser; rail: boolean }) {
   useEscape(open, () => setOpen(false));
   return (
     <div className="relative w-full">
-      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-label={t("Menu akun")}
+      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" aria-label={rail ? t("Menu akun") : undefined}
         className={cn("flex w-full items-center gap-2.5 rounded-xl p-1.5 text-left hover:bg-neutral-100", rail && "justify-center")}>
         <Avatar user={user} />
         {!rail && (
@@ -407,10 +409,10 @@ function UserMenu({ user, rail }: { user: ShellUser; rail: boolean }) {
               <p className="mt-2.5 mb-1.5 px-1 text-[11px] font-medium text-neutral-500">{t("Bahasa")}</p>
               <LanguageSwitcher />
             </div>
-            <form action="/auth/signout" method="post" className="border-t border-neutral-100 pt-1">
+            <SignOutForm className="border-t border-neutral-100 pt-1">
               <button className="flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium text-danger hover:bg-danger-bg">
                 <LogOut className="size-4" />{t("Keluar")}</button>
-            </form>
+            </SignOutForm>
           </div>
         </>
       )}

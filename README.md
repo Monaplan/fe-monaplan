@@ -30,6 +30,7 @@ cp .env.example .env
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API |
 | `SUPABASE_SECRET_KEY` | Secret / service role key (hanya server) |
 | `MIDTRANS_SERVER_KEY`, `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` | Dashboard Midtrans Sandbox → Settings → Access Keys |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Opsional. Captcha Cloudflare Turnstile di login, daftar, lupa password, dan RSVP. Aktifkan juga di Supabase (Authentication → Attack Protection) |
 | `RESEND_API_KEY`, `EMAIL_FROM` | Opsional. Tanpa ini, email dilewati |
 | `NEXT_PUBLIC_APP_URL` | Domain produksi (`https://...`). Dipakai untuk URL kanonis, sitemap, dan gambar Open Graph |
 | `GOOGLE_SITE_VERIFICATION` | Opsional, kode verifikasi Google Search Console |

@@ -43,7 +43,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <PageHeader tour="admin-order" title={t("Order")} />
       <form className="mb-4 flex flex-wrap gap-2">
         <Input name="q" defaultValue={q} placeholder={t("Nomor order atau email")} className="max-w-xs" />
-        <Select name="status" defaultValue={status ?? ""} className="w-auto">
+        <Select name="status" defaultValue={status ?? ""} aria-label={t("Status")} className="w-auto">
           <option value="">{t("Semua status")}</option>
           {["pending", "paid", "failed", "expired", "cancelled", "refunded"].map((s) => <option key={s}>{s}</option>)}
         </Select>

@@ -7,6 +7,7 @@ import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, Gift,
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { BONUSES, BONUS_TOTAL } from "@/content/bonus";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/dialogs";
 import { AccessCodeInput } from "@/components/ui/inputs";
 import { Input } from "@/components/ui/form";
 import { StatusPill } from "@/components/ui/pill";
@@ -34,6 +35,7 @@ declare global {
 
 export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCode, promoStatus, clientKey, isProduction }: { plans: Plan[]; pricing: Record<string, Pricing>; isUpgrade: boolean; showCode: boolean; promoCode: string; promoStatus: PromoStatus; clientKey: string; isProduction: boolean }) {
   const { t, lang } = useI18n();
+  const confirm = useConfirm();
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
@@ -80,6 +82,9 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
     if (!autoPlan) document.getElementById("snap-embed")?.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       window.snap.embed(embed.token, { embedId: "snap-container", onSuccess: done, onPending: done, onError: done });
+      // Bingkai milik Midtrans tidak diberi judul; diberi nama agar terbaca pembaca layar
+      let tries = 0;
+      const nameFrame = setInterval(() => { const f = document.getElementById("snap-midtrans"); if (f) { f.setAttribute("title", t("Pembayaran Midtrans")); clearInterval(nameFrame); } else if (++tries > 40) clearInterval(nameFrame); }, 250);
     } catch (e) {
       // Galat dari Snap tidak boleh menjatuhkan halaman: tampilkan pesan dan beri jalan keluar
       embedded.current = false;
@@ -137,9 +142,9 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
           const base = price.original - price.credit;
           const points = [
             { icon: <LayoutGrid />, text: t("11 modul lengkap, dari checklist dan budget sampai rundown hari H") },
-            { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema, termasuk tema Bali beraksara Bali") },
+            { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema") },
             { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
-            { icon: <Users />, text: t("Ajak hingga {n} pasangan atau keluarga ikut mengerjakan, tanpa bayar tambahan", { n: p.max_collaborators }) },
+            { icon: <Users />, text: t("Undang pasangan dan keluarga ikut mengerjakan, hingga {n} orang tanpa biaya tambahan", { n: p.max_collaborators }) },
             { icon: <CircleCheck />, text: t("Notifikasi langsung saat tamu mengonfirmasi hadir") },
             { icon: <Printer />, text: t("Rundown hari H siap dicetak dalam PDF") },
             ...(p.max_projects && p.max_projects > 1 ? [{ icon: <Briefcase />, text: t("{n} proyek pernikahan", { n: p.max_projects }) }] : []),
@@ -214,11 +219,11 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
                     ))}
                   </ul>
                 </div>
-                <div className="flex flex-col bg-[#FFFFFF] p-7 sm:p-9">
+                <div className="flex min-w-0 flex-col overflow-x-clip bg-[#FFFFFF] p-5 sm:p-9">
                   <p className="text-[11px] font-semibold tracking-[0.18em] text-[#8C3A63] uppercase">{t("Pilih metode pembayaran")}</p>
                   {autoPlan ? (
                     <>
-                      <div key={embed?.token ?? "kosong"} id="snap-container" className={embed ? "mt-4 min-h-[420px] w-full" : "hidden"} />
+                      <div key={embed?.token ?? "kosong"} id="snap-container" className={embed ? "mt-4 min-h-[420px] w-full max-w-full overflow-x-hidden" : "hidden"} />
                       {!embed && !payError && (
                         <div role="status" className="mt-4 flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl bg-[#F6F2F4] text-[13px] text-[#6B6368]">
                           <span className="size-6 animate-spin rounded-full border-2 border-[#EDD1DF] border-t-[#8C3A63]" aria-hidden="true" />{t("Menyiapkan metode pembayaran")}
@@ -262,9 +267,9 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
         <section id="snap-embed" aria-label={t("Pilih metode pembayaran")} className="animate-sheet-in mx-auto mt-6 max-w-4xl scroll-mt-6 rounded-3xl border border-neutral-200/80 bg-[#FFFFFF] p-4 shadow-card sm:p-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-[#1F1A1C]">{t("Pilih metode pembayaran")}</h2>
-            <Button variant="ghost" size="sm" className="!text-[#2B2528] hover:!bg-[#F6F2F4]" onClick={() => window.location.reload()}>{t("Batalkan")}</Button>
+            <Button variant="ghost" size="sm" className="!text-[#2B2528] hover:!bg-[#F6F2F4]" onClick={async () => { if (await confirm({ title: t("Batalkan pembayaran ini?"), body: t("Kamu bisa memilih paket atau metode pembayaran lain setelahnya."), confirmLabel: t("Ya, batalkan"), cancelLabel: t("Lanjut bayar"), tone: "danger" })) window.location.reload(); }}>{t("Batalkan")}</Button>
           </div>
-          <div id="snap-container" className="min-h-[420px] w-full" />
+          <div id="snap-container" className="min-h-[420px] w-full max-w-full overflow-x-hidden" />
           <p className="mt-3 flex items-center gap-2 text-[12px] text-[#6B6368]"><ShieldCheck className="size-3.5 text-[#8C3A63]" aria-hidden="true" />{t("Pembayaran diproses langsung oleh Midtrans. Monaplan tidak menyimpan data kartu atau rekeningmu.")}</p>
         </section>
       ) : !autoPlan ? (

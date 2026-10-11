@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Hourglass, Infinity as InfinityIcon, Lock, Sparkles } from "lucide-react";
+import { Hourglass, Infinity as InfinityIcon, KeyRound, Lock } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress";
 import { formatDateCompact } from "@/lib/format";
@@ -21,7 +21,7 @@ export async function AccessStatusCard({ access, isOwner, base, canInvite, compa
   const trial = !!access.isTrial;
   const soon = access.state === "timed" && days !== null && days <= (trial ? 1 : 14);
 
-  let icon = <Sparkles />, title = t("Aktifkan Akses"), body: React.ReactNode = t("Pilih paket atau masukkan kode akses.");
+  let icon = <KeyRound />, title = t("Aktifkan Akses"), body: React.ReactNode = t("Pilih paket atau masukkan kode akses.");
   let primary: { href: string; label: string } | null = { href: "/aktivasi", label: t("Aktifkan") };
 
   if (access.state === "lifetime") {

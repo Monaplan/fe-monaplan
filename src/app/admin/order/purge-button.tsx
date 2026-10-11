@@ -7,5 +7,5 @@ import { useI18n } from "@/i18n/client";
 
 export function PurgeButton() {
   const { t } = useI18n();
-  return <ActionButton variant="outline" icon={<Trash2 />} action={() => purgeUnusedOrders()}>{t("Bersihkan data tak terpakai")}</ActionButton>;
+  return <ActionButton variant="outline" icon={<Trash2 />} action={() => purgeUnusedOrders()} confirmText={t("Bersihkan order tak terpakai dan data lama? Ini tidak bisa dibatalkan.")}>{t("Bersihkan data tak terpakai")}</ActionButton>;
 }

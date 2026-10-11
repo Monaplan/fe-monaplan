@@ -57,7 +57,7 @@ export function EmailPreview({ previews, from, configured }: { previews: Preview
               onClick={() => start(async () => { const r = await sendTestEmail(kind, lang); toast(r.ok ? (r.message ?? "Terkirim.") : r.error, r.ok ? "positive" : "danger"); })}>{t("Kirim contoh ke emailku")}</Button>
           </div>
 
-          <dl className="mb-3 grid gap-1 rounded-xl bg-neutral-50 px-4 py-3 text-[13px]">
+          <dl className="mb-3 grid grid-cols-[minmax(0,1fr)] gap-1 rounded-xl bg-neutral-50 px-4 py-3 text-[13px]">
             <div className="flex gap-3"><dt className="w-14 shrink-0 text-neutral-500">{t("Dari")}</dt><dd className="min-w-0 truncate">{from}</dd></div>
             <div className="flex gap-3"><dt className="w-14 shrink-0 text-neutral-500">{t("Subjek")}</dt><dd className="min-w-0 font-medium">{p.subject}</dd></div>
           </dl>

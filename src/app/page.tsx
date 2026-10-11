@@ -1,8 +1,9 @@
 import { Suspense, type ReactNode } from "react";
+import { BackToTop } from "@/components/landing/back-to-top";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
 import {
-  ArrowRight, BookOpen, CalendarDays, Check, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, ShieldCheck, SlidersHorizontal, Sparkles, Store, Wallet
+  ArrowRight, BookOpen, CalendarDays, Check, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, Palette, Plane, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Logo } from "@/components/app/logo";
@@ -62,6 +63,23 @@ const FAQ = [
 const eyebrow = "mx-auto flex w-fit items-center gap-3 text-[11px] font-semibold tracking-[0.18em] text-plum-600 uppercase before:h-px before:w-6 before:bg-plum-300 after:h-px after:w-6 after:bg-plum-300";
 const h2 = "[font-variant-numeric:lining-nums] mx-auto mt-3 max-w-3xl text-center font-display text-[34px] leading-[1.1] font-medium text-neutral-900 md:text-[46px]";
 const em = "italic text-plum-600";
+
+// Fitur yang berjalan di bawah hero (ikon dan kunci teks; teks diterjemahkan saat dirender)
+const MARQUEE: [React.ReactNode, string][] = [
+  [<ListChecks key="1" />, "Checklist per fase"],
+  [<Wallet key="2" />, "Budget dan jadwal pelunasan"],
+  [<Store key="3" />, "Kelola vendor"],
+  [<Mail key="4" />, "Tamu dan RSVP"],
+  [<WhatsAppIcon key="5" />, "Undangan lewat WhatsApp"],
+  [<Clock key="6" />, "Rundown hari H"],
+  [<Gift key="7" />, "Mahar dan seserahan"],
+  [<FileText key="8" />, "Dokumen KUA dan catatan sipil"],
+  [<CalendarDays key="9" />, "Reminder dan Google Calendar"],
+  [<Palette key="10" />, "Rona Impian"],
+  [<Plane key="11" />, "Honeymoon Planner"],
+  [<Users key="12" />, "Dikerjakan berdua"],
+  [<ShieldCheck key="13" />, "Data privat per pernikahan"],
+];
 
 function SectionHead({ id, label, children, sub }: { id: string; label: string; children: ReactNode; sub?: string }) {
   return (
@@ -155,6 +173,7 @@ export default async function LandingPage() {
     <div className="min-h-dvh overflow-x-clip bg-plum-50">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(structured)} />
 
+      <a href="#konten" className="sr-only z-[120] rounded-full bg-plum-700 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">{t("Lewati ke konten")}</a>
       <header className="sticky top-0 z-30 border-b border-plum-100/70 bg-plum-50/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
@@ -178,46 +197,40 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      <main>
+      <main id="konten">
         {/* Hero */}
         <section aria-labelledby="hero-title" className="relative">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[640px] [background:radial-gradient(60%_60%_at_85%_20%,var(--color-plum-100),transparent),radial-gradient(40%_50%_at_0%_30%,var(--color-plum-100),transparent)] opacity-80" />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 md:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pb-24">
+          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pb-24">
             <div className="animate-sheet-in">
-              <p className="inline-flex items-center gap-2 rounded-full border border-plum-200/80 bg-surface px-3.5 py-1.5 text-[12.5px] font-medium text-plum-700 shadow-card">
-                <Sparkles className="size-3.5" aria-hidden="true" />
-                {trialDays && !loggedIn ? t("Coba gratis {days} hari, tanpa kartu kredit", { days: trialDays }) : t("Wedding planner untuk calon pengantin Indonesia")}
-              </p>
-              <h1 id="hero-title" className="[font-variant-numeric:lining-nums] mt-5 font-display text-[44px] leading-[1.04] font-medium text-neutral-900 md:text-[64px]">
-                {t("Persiapan nikah yang")} <em className={`${em} [box-shadow:inset_0_-0.3em_0_var(--color-plum-100)]`}>{t("tidak lagi berserakan")}</em> {t("di chat dan spreadsheet.")}
+              <h1 id="hero-title">
+                <span className="block font-display text-[22px] leading-7 font-medium text-neutral-600 md:text-[26px]">{t("Tenang menuju pelaminan,")}</span>
+                <span className="mt-3 block max-w-[16ch] font-display text-[46px] leading-[1.05] font-medium tracking-[-0.015em] text-balance text-neutral-900 [font-variant-numeric:lining-nums] md:text-[62px]">
+                  {t("Persiapannya biar")} <em className={em}>{t("Monaplan yang rapikan.")}</em>
+                </span>
               </h1>
-              <p className="mt-5 max-w-lg text-[16px] leading-7 text-neutral-600">{t("Checklist, budget, vendor, tamu dan RSVP, rundown, sampai dokumen KUA. Dikerjakan berdua, terlihat sama di dua ponsel.")}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href={startHref} size="lg">{loggedIn ? t("Mulai Merencanakan") : (trialLabel ?? t("Mulai Merencanakan"))}<ArrowRight className="ml-0.5" /></ButtonLink>
-                <ButtonLink href="#fitur" size="lg" variant="outline">{t("Lihat isi aplikasinya")}</ButtonLink>
-              </div>
-              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-neutral-600">
+              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-neutral-600">
                 {[t("Sekali bayar, tanpa langganan"), t("Bisa dibuka dari ponsel"), t("Undang pasangan dan keluarga"), t("Bonus senilai {v1}", { v1: formatIDR(BONUS_TOTAL) })].map((x) => (
                   <li key={x} className="flex items-center gap-1.5"><Check className="size-4 text-plum-600" aria-hidden="true" />{x}</li>
                 ))}
               </ul>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <ButtonLink href={startHref} size="lg">{loggedIn ? t("Mulai Merencanakan") : (trialLabel ?? t("Mulai Merencanakan"))}<ArrowRight className="ml-0.5" /></ButtonLink>
+                <ButtonLink href="#fitur" size="lg" variant="ghost">{t("Lihat isi aplikasinya")}</ButtonLink>
+              </div>
             </div>
             <HeroMockup />
           </div>
         </section>
 
-        {/* Ciri khas lokal: fakta, bukan klaim angka */}
-        <section aria-label={t("Dibuat untuk pernikahan di Indonesia")} className="border-y border-plum-100/80 bg-surface/60">
-          <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-3 px-4 py-5 text-[13px] text-neutral-700 sm:px-6 md:grid-cols-4">
-            {[
-              [<Wallet key="a" />, t("Rupiah, zona WIB, WITA, dan WIT")],
-              [<WhatsAppIcon key="b" />, t("RSVP lewat WhatsApp")],
-              [<FileText key="c" />, t("Dokumen KUA dan catatan sipil")],
-              [<ShieldCheck key="d" />, t("Data privat per pernikahan")],
-            ].map(([icon, label], i) => (
-              <li key={i} className="flex items-center gap-2.5 md:justify-center"><span className="text-plum-600 [&_svg]:size-4" aria-hidden="true">{icon}</span>{label}</li>
-            ))}
-          </ul>
+        {/* Daftar fitur berjalan; berhenti saat disorot dan menjadi daftar biasa bila gerak dikurangi */}
+        <section aria-label={t("Fitur Monaplan")} className="overflow-hidden border-y border-plum-100/80 bg-surface/60 py-4">
+          <div className="marquee-mask">
+            <ul className="marquee-track flex w-max items-center text-[13.5px] text-neutral-700">
+              {[...MARQUEE, ...MARQUEE, ...MARQUEE, ...MARQUEE].map(([icon, label], i) => (
+                <li key={i} aria-hidden={i >= MARQUEE.length} className="flex shrink-0 items-center gap-2.5 pr-9"><span className="text-plum-600 [&_svg]:size-4" aria-hidden="true">{icon}</span>{t(label as string)}</li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         {/* Sebelum dan sesudah */}
@@ -391,6 +404,7 @@ export default async function LandingPage() {
           <p>© {new Date().getFullYear()} {SITE.name} · <Link href="/privasi" className="hover:text-plum-600">{t("Kebijakan privasi")}</Link></p>
         </div>
       </footer>
+      <BackToTop />
       <Suspense fallback={null}><PromoPopupLoader plans={plans} /></Suspense>
     </div>
   );

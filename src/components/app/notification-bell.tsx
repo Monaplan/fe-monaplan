@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, BellRing, CalendarDays, CheckCheck, CreditCard, Mail, Sparkles, Wallet } from "lucide-react";
+import { Bell, BellRing, CalendarDays, CheckCheck, CreditCard, Mail, Wallet } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { useToast } from "@/components/ui/toast";
 import { fetchNotifications, markNotificationRead, markNotificationsRead } from "@/features/notifications/actions";
@@ -18,7 +18,7 @@ function iconFor(type?: string) {
   if (type?.startsWith("payment")) return <Wallet />;
   if (type?.startsWith("license")) return <CreditCard />;
   if (type === "agenda" || type === "task_due") return <CalendarDays />;
-  return <Sparkles />;
+  return <Bell />;
 }
 
 function ago(iso: string, lang: "id" | "en", t: (s: string, v?: Record<string, string | number>) => string) {
