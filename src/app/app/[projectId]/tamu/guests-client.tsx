@@ -106,7 +106,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
   return (
     <>
       <ProductTour id="tamu" steps={TOURS.tamu} />
-      <PageHeader
+      <PageHeader tour="tamu"
         title={t("Tamu & RSVP")}
         description={rsvpDeadline ? t("Kirim undangan lewat WhatsApp dan pantau konfirmasi kehadiran. Batas RSVP {date}.", { date: formatDateCompact(rsvpDeadline, undefined, lang) }) : t("Kirim undangan lewat WhatsApp dan pantau konfirmasi kehadiran.")}
         actions={
@@ -134,7 +134,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Segmented items={[{ key: "tamu", label: t("Daftar Tamu") }, { key: "ucapan", label: t("Ucapan ({length})", { length: guests.filter((g) => g.rsvp_message).length }) }]} value={tab} onChange={setTab} />
+        <Segmented tour="tamu-tabs" items={[{ key: "tamu", label: t("Daftar Tamu") }, { key: "ucapan", label: t("Ucapan ({length})", { length: guests.filter((g) => g.rsvp_message).length }) }]} value={tab} onChange={setTab} />
         {canWrite && tab === "tamu" && (
           <div data-tour="tamu-actions" className="ml-auto flex flex-wrap gap-2">
             <Button variant="outline" size="sm" icon={<FileUp />} onClick={() => setImportOpen(true)}>{t("Impor")}</Button>

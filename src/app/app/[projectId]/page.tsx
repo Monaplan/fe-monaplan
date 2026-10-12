@@ -111,7 +111,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
           </h1>
           <p className="mt-1 text-[13px] text-neutral-500">{t("Pantau semua persiapan menuju hari bahagia kalian.")}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div data-tour="quickadd" className="flex items-center gap-2">
           <span className="inline-flex h-10 items-center gap-2 rounded-full border border-neutral-200 bg-surface px-4 text-[13px] font-medium text-neutral-700">
             <CalendarDays className="size-4" />{formatDateShort(today, undefined, lang)}
           </span>
@@ -151,7 +151,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
         <StatCard className="lg:col-span-3" icon={<Users />} title={t("Tamu Hadir")} value={<><CountUp value={attendingPax} /> <span className="text-base font-medium text-neutral-500">{t("orang")}</span></>}
           footer={<><StatusPill tone="positive" icon={newPax ? <ArrowUp /> : <ArrowDown className="opacity-0" />}>+{newPax}</StatusPill>{t("minggu ini · {n} undangan", { n: attending.length })}</>} />
 
-        <Card className="lg:col-span-7">
+        <Card tour="spending" className="lg:col-span-7">
           <CardHeader title={t("Ringkasan Pengeluaran")} subtitle={t("Tahun {year}", { year })} />
           <SpendingChart data={chart} />
         </Card>
@@ -206,7 +206,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
           )}
         </Card>
 
-        <Card className="lg:col-span-12">
+        <Card tour="agenda14" className="lg:col-span-12">
           <CardHeader icon={<CalendarDays />} title={t("Agenda 14 Hari")} action={<ButtonLink href={`/app/${ref}/kalender`} variant="outline" size="sm">{t("Kalender")}</ButtonLink>} />
           {agendaDays.length === 0 ? <p className="text-[13px] text-neutral-500">{t("Tidak ada agenda dalam 14 hari ke depan.")}</p> : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

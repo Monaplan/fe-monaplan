@@ -57,7 +57,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
   return (
     <>
       <ProductTour id="budget" steps={TOURS.budget} />
-      <PageHeader
+      <PageHeader tour="budget"
         title={t("Budgeting")}
         description={t("Alokasi, realisasi, dan jadwal pembayaran vendor.")}
         actions={
@@ -78,7 +78,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
       </div>
 
       {catStats.some((c) => c.estimated || c.actual) && (
-        <Card className="mb-4">
+        <Card tour="budget-chart" className="mb-4">
           <CardHeader title={t("Estimasi dan Realisasi per Kategori")} />
           <CategoryChart data={catStats.filter((c) => c.estimated || c.actual).map((c) => ({ name: t(c.name), estimated: c.estimated, actual: c.actual }))} />
         </Card>
@@ -95,7 +95,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
             const over = c.allocated_idr > 0 && c.actual > c.allocated_idr;
             const isOpen = open[c.id];
             return (
-              <Card key={c.id} className="p-0 sm:p-0">
+              <Card key={c.id} tour={c.id === catStats[0]?.id ? "budget-category" : undefined} className="p-0 sm:p-0">
                 <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
                   <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => setOpen({ ...open, [c.id]: !isOpen })} aria-expanded={!!isOpen}>
                     <ChevronDown className={cn("size-[18px] shrink-0 text-neutral-500 transition-transform", !isOpen && "-rotate-90")} />

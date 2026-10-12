@@ -89,7 +89,7 @@ export function DocumentsClient({ projectId, checklist, documents, vendors, usag
         })}
       </div>
 
-      <Card>
+      <Card tour="dokumen-arsip">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <h2 className="mr-auto text-lg font-semibold">{t("Arsip Berkas")}</h2>
           <Select value={cat} onChange={(e) => setCat(e.target.value)} className="h-9 w-auto rounded-full" aria-label={t("Filter kategori")}>

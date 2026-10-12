@@ -101,13 +101,13 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
   return (
     <>
       {optimistic.length > 0 && <ProductTour id="checklist" steps={TOURS.checklist} />}
-      <PageHeader
+      <PageHeader tour="checklist"
         title={t("To Do Checklist")}
         description={t("Tugas per fase menuju hari H.")}
         actions={canWrite && <Button data-tour="checklist-add" icon={<Plus />} variant="dark" onClick={() => setEditing("new")}>{t("Tambah Tugas")}</Button>}
       />
 
-      <Card className="mb-4">
+      <Card tour="checklist-progress" className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-sm font-semibold text-neutral-800">{t("Progress keseluruhan")}</span>
           <span className="tabular text-[13px] text-neutral-600">{done}/{optimistic.length} · <b className="text-neutral-900">{formatPercent(optimistic.length ? done / optimistic.length : 0)}</b></span>
@@ -171,7 +171,7 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
             }
             return (
               <Card key={p.key} tour={p.key === filtered[0]?.phase_key ? "checklist-phase" : undefined} className="overflow-hidden p-0 sm:p-0">
-                <div className="flex items-center gap-3.5 px-4 py-4 sm:px-5">
+                <div data-tour={p.key === filtered[0]?.phase_key ? "checklist-phase-head" : undefined} className="flex items-center gap-3.5 px-4 py-4 sm:px-5">
                   <PhaseRing value={pct} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-neutral-900">{t(p.label)}</p>
@@ -190,7 +190,7 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
                 {!isCollapsed && groups.map((g) => (
                   <div key={g.key}>
                     <p className="flex min-h-[38px] items-center border-y border-neutral-100 bg-neutral-50 px-4 text-[12px] leading-none font-bold tracking-[0.08em] text-neutral-500 uppercase sm:px-5">{g.label}</p>
-                    <ul>
+                    <ul data-tour={p.key === filtered[0]?.phase_key && g === groups[0] ? "checklist-rows" : undefined}>
                       {g.items.map((task) => {
                         const late = isLate(task);
                         const isDone = task.status === "done";

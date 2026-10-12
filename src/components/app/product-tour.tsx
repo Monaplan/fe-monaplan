@@ -23,8 +23,8 @@ function findTarget(target: string): HTMLElement | null {
 
 // Tur panduan: menyorot elemen ber-atribut data-tour, menggelapkan sisanya, dan menampilkan kartu penjelasan.
 // Otomatis tampil sekali per halaman; bisa diputar ulang lewat tombol bantuan di top bar (event "mp:tour-start").
-// Tur panduan hanya untuk dashboard pengguna (/app/<slug>); halaman lain tidak menampilkan tur apa pun.
-const TOUR_PATH = /^\/app\/[^/]+\/?$/;
+// Tur panduan aktif di semua halaman ruang kerja pengguna (/app/<slug>/...). Akun, aktivasi, dan admin tidak menampilkan tur.
+const TOUR_PATH = /^\/app\/[^/]+(\/.*)?$/;
 
 export function ProductTour(props: { id: string; steps: TourStep[]; autoStart?: boolean }) {
   const pathname = usePathname();

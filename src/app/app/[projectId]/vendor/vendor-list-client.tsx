@@ -53,7 +53,7 @@ export function VendorListClient({ projectId, vendors, packages, categories, can
   return (
     <>
       <ProductTour id="vendor" steps={TOURS.vendor} />
-      <PageHeader
+      <PageHeader tour="vendor"
         title={t("Kelola Vendor")}
         description={t("Dari prospek sampai deal.")}
         actions={canWrite && <Button data-tour="vendor-add" variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Tambah Vendor")}</Button>}
@@ -78,7 +78,7 @@ export function VendorListClient({ projectId, vendors, packages, categories, can
           </div>
 
           {view === "tabel" ? (
-            <Card className="p-0 sm:p-0">
+            <Card tour="vendor-main" className="p-0 sm:p-0">
               <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr_120px_40px] gap-3 rounded-t-lg bg-neutral-50 px-5 py-2.5 text-xs font-medium text-neutral-500 md:grid">
                 <span>{t("Vendor")}</span><span>{t("Kategori")}</span><span>{t("Kontak")}</span><span className="text-right">{t("Harga / Deal")}</span><span>{t("Status")}</span><span />
               </div>

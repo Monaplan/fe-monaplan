@@ -44,7 +44,7 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
       <ProductTour id="mahar" steps={TOURS["mahar"]!} />
       <PageHeader tour="mahar" title={t("Mahar & Seserahan")} description={t("Rencana, harga, dan status pembelian.")}
         actions={canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Tambah Item")}</Button>} />
-      <Segmented className="mb-4" items={[{ key: "mahar", label: t("Mahar") }, { key: "seserahan", label: t("Seserahan") }]} value={tab} onChange={setTab} />
+      <Segmented tour="mahar-tabs" className="mb-4" items={[{ key: "mahar", label: t("Mahar") }, { key: "seserahan", label: t("Seserahan") }]} value={tab} onChange={setTab} />
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <StatCard title={t("Total Estimasi")} value={formatIDR(est)} footer={<>{t("{length} item", { length: list.length })}</>} />

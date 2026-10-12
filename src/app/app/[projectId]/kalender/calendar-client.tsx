@@ -101,7 +101,7 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
       <PageHeader tour="kalender" title={t("Reminder & Calendar")} description={t("Tugas, pembayaran, acara, dan agenda.")}
         actions={
           <>
-            <GoogleCalendarButton projectId={projectId} tz={tz} status={google} flash={googleFlash} />
+            <span data-tour="kalender-google" className="inline-flex"><GoogleCalendarButton projectId={projectId} tz={tz} status={google} flash={googleFlash} /></span>
             {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => guard(() => setForm({ date: cursor }))}>{t("Tambah Agenda")}</Button>}
           </>
         } />
@@ -123,7 +123,7 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
           <Button variant="outline" size="icon-sm" aria-label={t("Berikutnya")} onClick={() => shift(1)}><ChevronRight /></Button>
           <Button variant="outline" size="sm" onClick={() => setCursor(today)}>{t("Hari ini")}</Button>
           <h2 className="ml-1 text-lg font-semibold capitalize">{view === "bulan" ? monthLabel : view === "minggu" ? t("Minggu {date}", { date: formatDateLong(weekDays[0]!, undefined, lang).split(", ").slice(1).join(", ") }) : t("Mulai {date}", { date: formatDateLong(cursor, undefined, lang) })}</h2>
-          <Segmented className="ml-auto" items={[{ key: "bulan", label: t("Bulan") }, { key: "minggu", label: t("Minggu") }, { key: "daftar", label: t("Agenda") }]} value={view} onChange={setView} />
+          <Segmented tour="kalender-view" className="ml-auto" items={[{ key: "bulan", label: t("Bulan") }, { key: "minggu", label: t("Minggu") }, { key: "daftar", label: t("Agenda") }]} value={view} onChange={setView} />
         </div>
 
         <div className="mb-3 flex flex-wrap gap-3 text-xs text-neutral-600">

@@ -55,7 +55,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
     <>
       <ProductTour id="pengaturan" steps={TOURS["pengaturan"]!} />
       <PageHeader tour="pengaturan" title={t("Pengaturan Pernikahan")} description={t("Pasangan, acara, budget, dan kolaborator.")} />
-      <Segmented className="mb-4" value={tab} onChange={setTab} items={[
+      <Segmented tour="pengaturan-tabs" className="mb-4" value={tab} onChange={setTab} items={[
         { key: "pasangan", label: t("Pasangan") },
         { key: "acara", label: t("Acara") },
         { key: "budget", label: t("Budget dan Tamu") },
@@ -95,7 +95,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
               {canWrite && <div className="flex justify-end"><SubmitButton>{t("Simpan")}</SubmitButton></div>}
             </ActionForm>
           </Card>
-          <Card>
+          <Card tour="pengaturan-gaya">
             <CardHeader title={t("Gaya pernikahan")} subtitle={t("Menambah tugas, kategori budget, dan acara sesuai adat. Yang sudah ada tidak dihapus.")} />
             <StylePicker defaultValue={project.wedding_style ?? "umum"} onChange={setStyle} disabled={!canWrite} />
             {canWrite && (
@@ -105,7 +105,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
             )}
           </Card>
           </div>
-          <Card className="self-start lg:sticky lg:top-24">
+          <Card tour="pengaturan-cover" className="self-start lg:sticky lg:top-24">
             <CardHeader title={t("Foto Sampul")} subtitle={t("Tampil di halaman RSVP tamu.")} />
             <div className="aspect-[4/5] overflow-hidden rounded-xl bg-plum-50">
               {coverUrl ? (

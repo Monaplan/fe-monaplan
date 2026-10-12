@@ -2,15 +2,16 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
-export function Segmented<T extends string>({ items, value, onChange, className, fullWidth }: {
+export function Segmented<T extends string>({ items, value, onChange, className, fullWidth, tour }: {
   items: { key: T; label: ReactNode }[];
   value: T;
   onChange: (key: T) => void;
   className?: string;
   fullWidth?: boolean;
+  tour?: string;
 }) {
   return (
-    <div role="tablist" className={cn(fullWidth ? "flex w-full" : "inline-flex max-w-full overflow-x-auto", "rounded-full bg-neutral-100 p-1", className)}>
+    <div role="tablist" data-tour={tour} className={cn(fullWidth ? "flex w-full" : "inline-flex max-w-full overflow-x-auto", "rounded-full bg-neutral-100 p-1", className)}>
       {items.map((it) => (
         <button
           key={it.key}
