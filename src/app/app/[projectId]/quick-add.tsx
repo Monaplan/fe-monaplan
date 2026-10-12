@@ -12,6 +12,7 @@ import { PHASES } from "@/lib/constants";
 import { saveTask } from "@/features/checklist/actions";
 import { PaymentFormModal } from "@/features/budget/payment-form";
 import { AgendaFormModal } from "@/features/agenda/agenda-form";
+import { useGoogleGate } from "@/components/app/google-gate";
 import { useProjectBase } from "@/components/app/project-base";
 import { useT } from "@/i18n/client";
 
@@ -23,6 +24,9 @@ export function QuickAdd({ projectId, tz, items, vendors, mode }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState<"task" | "payment" | "agenda" | null>(null);
   const [menu, setMenu] = useState(false);
+  // Tugas, pembayaran, dan agenda bertanggal: Google Calendar harus tersambung dulu
+  const { guard } = useGoogleGate(projectId);
+  const openForm = (k: "task" | "payment" | "agenda") => guard(() => setOpen(k));
 
   return (
     <>
@@ -34,10 +38,10 @@ export function QuickAdd({ projectId, tz, items, vendors, mode }: Props) {
               <div className="fixed inset-0 z-40" onClick={() => setMenu(false)} />
               <div className="absolute right-0 z-50 mt-2 w-48 rounded-xl border border-neutral-200 bg-surface p-1 shadow-pop">
                 {[
-                  { label: t("Tugas"), icon: <ListChecks />, on: () => setOpen("task") },
-                  { label: t("Pembayaran"), icon: <Wallet />, on: () => setOpen("payment") },
+                  { label: t("Tugas"), icon: <ListChecks />, on: () => openForm("task") },
+                  { label: t("Pembayaran"), icon: <Wallet />, on: () => openForm("payment") },
                   { label: t("Tamu"), icon: <UserPlus />, on: () => router.push(`${base}/tamu`) },
-                  { label: t("Agenda"), icon: <CalendarDays />, on: () => setOpen("agenda") },
+                  { label: t("Agenda"), icon: <CalendarDays />, on: () => openForm("agenda") },
                 ].map((i) => (
                   <button key={i.label} onClick={() => { setMenu(false); i.on(); }} className="flex h-9 w-full items-center gap-2 rounded-md px-3 text-sm hover:bg-neutral-100 [&_svg]:size-4 [&_svg]:text-neutral-500">
                     {i.icon}{i.label}
@@ -49,8 +53,8 @@ export function QuickAdd({ projectId, tz, items, vendors, mode }: Props) {
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <Button icon={<Plus />} onClick={() => setOpen("task")}>{t("Tambah Tugas")}</Button>
-          <Button variant="secondary" icon={<Wallet />} onClick={() => setOpen("payment")}>{t("Catat Pembayaran")}</Button>
+          <Button icon={<Plus />} onClick={() => openForm("task")}>{t("Tambah Tugas")}</Button>
+          <Button variant="secondary" icon={<Wallet />} onClick={() => openForm("payment")}>{t("Catat Pembayaran")}</Button>
         </div>
       )}
 

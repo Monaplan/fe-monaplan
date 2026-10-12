@@ -7,6 +7,7 @@ import { decryptToken } from "@/lib/google/crypto";
 import { googleConfigured, revokeToken } from "@/lib/google/oauth";
 import { syncProject } from "@/lib/google/sync";
 import { dbError, fail, okm, type ActionResult } from "@/lib/result";
+import { googleLinked } from "@/lib/google/required";
 
 // Semua aksi memeriksa keanggotaan proyek lewat getProjectContext, lalu bekerja dengan secret key
 // karena tabel Google sengaja tanpa policy RLS (token tidak boleh sampai ke browser).
@@ -71,4 +72,10 @@ export async function disconnectGoogle(projectId: string): Promise<ActionResult>
   if (error) return dbError(error);
   revalidatePath("/app/[projectId]/kalender", "page");
   return { ok: true, message: "Google Calendar diputuskan." };
+}
+
+// Sebelum mengisi tugas, pembayaran, atau agenda: true bila Google Calendar belum tersambung
+export async function googleConnectRequired(projectId: string): Promise<boolean> {
+  const { session } = await getProjectContext(projectId);
+  return !(await googleLinked(session.user.id));
 }

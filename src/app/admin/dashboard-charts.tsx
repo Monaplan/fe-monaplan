@@ -29,7 +29,7 @@ export function RevenueChart({ data }: { data: { label: string; value: number; c
           </defs>
           <CartesianGrid vertical={false} stroke="var(--color-neutral-200)" strokeDasharray="4 4" />
           <XAxis dataKey="label" tick={axis} axisLine={false} tickLine={false} />
-          <YAxis tick={axis} axisLine={false} tickLine={false} width={52} tickFormatter={(v) => formatIDRShort(v).replace("Rp ", "")} />
+          <YAxis tick={axis} axisLine={false} tickLine={false} width={52} tickFormatter={(v) => formatIDRShort(v).replace(/^Rp\s/, "")} />
           <Tooltip content={<Tip money />} cursor={{ fill: "var(--color-plum-50)" }} />
           <Bar dataKey="value" radius={[8, 8, 8, 8]} maxBarSize={34} animationDuration={600}>
             {data.map((d) => <Cell key={d.label} fill={d.current ? "url(#admBarOn)" : "url(#admBar)"} />)}

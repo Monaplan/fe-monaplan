@@ -2,7 +2,7 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { DateField } from "@/components/ui/date-field";
-import { ArrowDown, ArrowUp, ChevronDown, ListChecks, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, ListChecks, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/card";
@@ -13,8 +13,8 @@ import { RowMenu } from "@/components/ui/menu";
 import { StatusPill } from "@/components/ui/pill";
 import { ProgressBar } from "@/components/ui/progress";
 import { cn } from "@/components/ui/cn";
-import { PHASES, TASK_CATEGORIES, TASK_PRIORITY, TASK_STATUS } from "@/lib/constants";
-import { formatDateCompact, formatPercent, initials, relativeDay, todayISO } from "@/lib/format";
+import { PHASES, TASK_CATEGORIES, TASK_PRIORITY, TASK_STATUS, labelOf } from "@/lib/constants";
+import { diffDays, formatPercent, initials, todayISO } from "@/lib/format";
 import { applyRecommendedChecklist, deleteTask, moveTask, saveTask, setTaskStatus } from "@/features/checklist/actions";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
@@ -25,6 +25,42 @@ type Task = {
   priority: string; due_date: string | null; assignee_id: string | null; vendor_id: string | null; sort_order: number;
 };
 type Member = { id: string; name: string; avatar: string | null };
+
+// Cincin progres kecil di kepala fase
+function PhaseRing({ value }: { value: number }) {
+  const r = 18, c = 2 * Math.PI * r;
+  return (
+    <span className="relative inline-flex size-11 shrink-0 items-center justify-center" aria-hidden="true">
+      <svg viewBox="0 0 44 44" className="absolute inset-0 size-11 -rotate-90">
+        <circle cx="22" cy="22" r={r} fill="none" strokeWidth="4" className="stroke-plum-100" />
+        <circle cx="22" cy="22" r={r} fill="none" strokeWidth="4" strokeLinecap="round" className="stroke-plum-600 transition-[stroke-dashoffset] duration-500" strokeDasharray={c} strokeDashoffset={c * (1 - value)} />
+      </svg>
+      <span className={cn("tabular font-bold tracking-tight text-plum-700", value >= 1 ? "text-[9.5px]" : "text-[11px]")}>{Math.round(value * 100)}%</span>
+    </span>
+  );
+}
+
+const loc = (lang: string) => (lang === "en" ? "en-GB" : "id-ID");
+const asDate = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`);
+const monthLabel = (iso: string, lang: string) => new Intl.DateTimeFormat(loc(lang), { month: "long", year: "numeric", timeZone: "UTC" }).format(asDate(iso));
+const monthShort = (iso: string, lang: string) => new Intl.DateTimeFormat(loc(lang), { month: "short", timeZone: "UTC" }).format(asDate(iso)).replace(".", "");
+function monthRange(from: string, to: string, lang: string) {
+  const a = monthLabel(from, lang), b = monthLabel(to, lang);
+  if (a === b) return a;
+  const first = from.slice(0, 4) === to.slice(0, 4) ? new Intl.DateTimeFormat(loc(lang), { month: "long", timeZone: "UTC" }).format(asDate(from)) : a;
+  return lang === "en" ? `${first} to ${b}` : `${first} sampai ${b}`;
+}
+// Sisa waktu ringkas: hari untuk yang dekat, bulan atau tahun untuk yang jauh
+function relativeSpan(days: number, lang: string) {
+  const en = lang === "en";
+  if (days < 0) return en ? `${-days} days late` : `Terlambat ${-days} hari`;
+  if (days === 0) return en ? "Today" : "Hari ini";
+  if (days === 1) return en ? "Tomorrow" : "Besok";
+  if (days <= 45) return en ? `In ${days} days` : `${days} hari lagi`;
+  if (days < 365) { const m = Math.round(days / 30); return en ? `In ${m} months` : `${m} bulan lagi`; }
+  const y = Math.round(days / 365);
+  return en ? `In ${y} year${y > 1 ? "s" : ""}` : `${y} tahun lagi`;
+}
 
 export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWrite, hasWeddingDate }: {
   projectId: string; tz: string; tasks: Task[]; vendors: { id: string; name: string }[]; members: Member[]; canWrite: boolean; hasWeddingDate: boolean;
@@ -115,65 +151,106 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
           )}
           {PHASES.map((p) => {
             const all = optimistic.filter((t) => t.phase_key === p.key);
-            const list = filtered.filter((t) => t.phase_key === p.key);
+            // Diurutkan menurut tanggal; tugas tanpa tanggal di akhir, berurutan manual
+            const list = filtered.filter((t) => t.phase_key === p.key).sort((a, b) =>
+              a.due_date && b.due_date ? a.due_date.localeCompare(b.due_date) || a.sort_order - b.sort_order : a.due_date ? -1 : b.due_date ? 1 : a.sort_order - b.sort_order);
             if (!list.length) return null;
             const pd = all.filter((t) => t.status === "done").length;
+            const pct = all.length ? pd / all.length : 0;
             const isCollapsed = collapsed[p.key];
+            const dated = all.map((t) => t.due_date).filter(Boolean).sort() as string[];
+            const range = dated.length ? monthRange(dated[0]!, dated[dated.length - 1]!, lang) : null;
+            const undated = list.filter((t) => !t.due_date);
+            // Kelompok per bulan
+            const groups: { key: string; label: string; items: Task[] }[] = [];
+            for (const task of list) {
+              const key = task.due_date ? task.due_date.slice(0, 7) : "none";
+              let g = groups.find((x) => x.key === key);
+              if (!g) groups.push((g = { key, label: task.due_date ? monthLabel(task.due_date, lang) : t("Tanpa tanggal"), items: [] }));
+              g.items.push(task);
+            }
             return (
-              <Card key={p.key} tour={p.key === filtered[0]?.phase_key ? "checklist-phase" : undefined} className="p-0 sm:p-0">
-                <button className="flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5" onClick={() => setCollapsed({ ...collapsed, [p.key]: !isCollapsed })} aria-expanded={!isCollapsed}>
-                  <ChevronDown className={cn("size-[18px] text-neutral-500 transition-transform", isCollapsed && "-rotate-90")} />
-                  <span className="flex-1 font-semibold text-neutral-800">{t(p.label)}</span>
-                  <span className="tabular text-[13px] text-neutral-500">{pd}/{all.length}</span>
-                  <div className="hidden w-28 shrink-0 sm:block"><ProgressBar value={all.length ? pd / all.length : 0} /></div>
-                </button>
-                {!isCollapsed && (
-                  <ul className="border-t border-neutral-200">
-                    {list.map((task, idx) => {
-                      const late = isLate(task);
-                      const m = task.assignee_id ? memberById[task.assignee_id] : null;
-                      return (
-                        <li key={task.id} data-row-id={task.id} className="flex items-center gap-3 border-b border-neutral-200 px-4 py-3 last:border-b-0 hover:bg-plum-50 sm:px-5">
-                          <input
-                            type="checkbox"
-                            className="animate-check size-[18px] shrink-0 cursor-pointer accent-plum-600 disabled:cursor-default"
-                            checked={task.status === "done"}
-                            disabled={!canWrite}
-                            onChange={() => toggle(task)}
-                            aria-label={t("Tandai {title} selesai", { title: t(task.title) })}
-                          />
-                          <button className="min-w-0 flex-1 text-left" onClick={() => setEditing(task)}>
-                            <span className={cn("block text-sm font-medium transition-colors", task.status === "done" ? "text-neutral-500 line-through" : "text-neutral-800")}>{t(task.title)}</span>
-                            <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                              {task.due_date && (
-                                <StatusPill tone={task.status === "done" ? "neutral" : late ? "danger" : "neutral"} icon={false}>
-                                  {formatDateCompact(task.due_date, undefined, lang)}{task.status !== "done" && ` · ${relativeDay(task.due_date, tz, lang)}`}
-                                </StatusPill>
-                              )}
-                              {task.status === "in_progress" && <StatusPill tone="caution">{t("Dikerjakan")}</StatusPill>}
-                              {task.priority === "high" && task.status !== "done" && <StatusPill tone="positive" icon={false}>{t("Prioritas tinggi")}</StatusPill>}
-                              {task.category && <span className="text-xs text-neutral-500">{t(task.category)}</span>}
-                            </span>
-                          </button>
-                          {m && (
-                            <span title={m.name} className="hidden size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-plum-100 text-[10px] font-semibold text-plum-700 sm:inline-flex">
-                              {m.avatar ? <img src={m.avatar} alt={m.name} referrerPolicy="no-referrer" className="size-6 object-cover" /> : initials(m.name)}
-                            </span>
-                          )}
-                          {canWrite && (
-                            <RowMenu items={[
-                              { label: t("Ubah"), icon: <Pencil />, onClick: () => setEditing(task) },
-                              { label: t("Tandai dikerjakan"), hidden: task.status !== "todo", action: () => setTaskStatus(projectId, task.id, "in_progress") },
-                              { label: t("Naikkan"), icon: <ArrowUp />, hidden: idx === 0, action: () => moveTask(projectId, task.id, "up") },
-                              { label: t("Turunkan"), icon: <ArrowDown />, hidden: idx === list.length - 1, action: () => moveTask(projectId, task.id, "down") },
-                              { label: t("Hapus"), icon: <Trash2 />, danger: true, confirm: t("Hapus tugas ini?"), action: () => deleteTask(projectId, task.id) },
-                            ]} />
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+              <Card key={p.key} tour={p.key === filtered[0]?.phase_key ? "checklist-phase" : undefined} className="overflow-hidden p-0 sm:p-0">
+                <div className="flex items-center gap-3.5 px-4 py-4 sm:px-5">
+                  <PhaseRing value={pct} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-neutral-900">{t(p.label)}</p>
+                    {range && <p className="mt-0.5 text-[13px] text-neutral-600">{range}</p>}
+                  </div>
+                  <span className="hidden text-[13px] whitespace-nowrap text-neutral-600 sm:inline">
+                    <b className="font-semibold text-neutral-900">{pd}</b>{" "}{t("dari {total} selesai", { total: all.length })}
+                  </span>
+                  <span className="tabular text-[13px] font-semibold text-neutral-700 sm:hidden">{pd}/{all.length}</span>
+                  <button type="button" onClick={() => setCollapsed({ ...collapsed, [p.key]: !isCollapsed })} aria-expanded={!isCollapsed}
+                    aria-label={isCollapsed ? t("Buka fase {name}", { name: t(p.label) }) : t("Tutup fase {name}", { name: t(p.label) })}
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-700 transition-colors hover:border-plum-200 hover:bg-plum-50 hover:text-plum-700">
+                    <ChevronDown className={cn("size-[18px] transition-transform duration-200", isCollapsed && "-rotate-90")} />
+                  </button>
+                </div>
+                {!isCollapsed && groups.map((g) => (
+                  <div key={g.key}>
+                    <p className="flex min-h-[38px] items-center border-y border-neutral-100 bg-neutral-50 px-4 text-[12px] leading-none font-bold tracking-[0.08em] text-neutral-500 uppercase sm:px-5">{g.label}</p>
+                    <ul>
+                      {g.items.map((task) => {
+                        const late = isLate(task);
+                        const isDone = task.status === "done";
+                        const days = task.due_date ? diffDays(today, task.due_date) : null;
+                        const tone = isDone || days === null ? "neutral" : late ? "danger" : days <= 7 ? "caution" : "neutral";
+                        const toneText = tone === "danger" ? "text-danger" : tone === "caution" ? "text-caution" : "text-neutral-700";
+                        const when = isDone ? t("Selesai") : days === null ? "" : relativeSpan(days, lang);
+                        const m = task.assignee_id ? memberById[task.assignee_id] : null;
+                        const uIdx = undated.indexOf(task);
+                        return (
+                          <li key={task.id} data-row-id={task.id} className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-plum-50/70 sm:gap-4 sm:px-5">
+                            <button type="button" role="checkbox" aria-checked={isDone} disabled={!canWrite} onClick={() => toggle(task)}
+                              aria-label={t("Tandai {title} selesai", { title: t(task.title) })}
+                              className={cn("inline-flex size-[22px] shrink-0 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-default",
+                                isDone ? "border-plum-600 bg-plum-600 text-white" : "border-neutral-300 hover:border-plum-400")}>
+                              {isDone && <Check className="size-3.5" strokeWidth={3.2} aria-hidden="true" />}
+                            </button>
+                            {task.due_date ? (
+                              <span className={cn("flex w-11 shrink-0 flex-col items-center rounded-xl border py-1 sm:w-[50px]",
+                                tone === "danger" ? "border-danger/20 bg-danger-bg text-danger" : tone === "caution" ? "border-caution/20 bg-caution-bg text-caution" : "border-neutral-200 bg-neutral-50 text-neutral-900")}>
+                                <span className="tabular text-[17px] leading-5 font-bold">{Number(task.due_date.slice(8, 10))}</span>
+                                <span className={cn("text-[10.5px] font-semibold tracking-wide uppercase", tone === "neutral" && "text-neutral-600")}>{monthShort(task.due_date, lang)}</span>
+                              </span>
+                            ) : <span className="w-11 shrink-0 sm:w-[50px]" aria-hidden="true" />}
+                            <button className="min-w-0 flex-1 text-left" onClick={() => setEditing(task)}>
+                              <span className={cn("block text-[15px] leading-[21px] font-semibold transition-colors", isDone ? "text-neutral-500 line-through decoration-neutral-300" : "text-neutral-900")}>{t(task.title)}</span>
+                              <span className="mt-1 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12.5px] text-neutral-600">
+                                {when && <span className={cn("font-semibold sm:hidden", toneText)}>{when}</span>}
+                                {task.status === "in_progress" && <StatusPill tone="caution">{t("Dikerjakan")}</StatusPill>}
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className={cn("size-[7px] rounded-full", task.priority === "high" ? "bg-danger" : task.priority === "medium" ? "bg-plum-400" : "bg-neutral-300")} aria-hidden="true" />
+                                  {t("Prioritas {level}", { level: t(labelOf(TASK_PRIORITY, task.priority)).toLowerCase() })}
+                                </span>
+                                {task.category && (task.category === "Adat"
+                                  ? <span className="rounded-full bg-plum-100 px-2 py-0.5 text-[11.5px] font-semibold text-plum-700">{t("Adat")}</span>
+                                  : <span>{t(task.category)}</span>)}
+                              </span>
+                            </button>
+                            {m && (
+                              <span title={m.name} className="hidden size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-plum-100 text-[10px] font-semibold text-plum-700 sm:inline-flex">
+                                {m.avatar ? <img src={m.avatar} alt={m.name} referrerPolicy="no-referrer" className="size-7 object-cover" /> : initials(m.name)}
+                              </span>
+                            )}
+                            {when && <span className={cn("hidden shrink-0 text-[13px] font-semibold whitespace-nowrap sm:block", toneText)}>{when}</span>}
+                            {canWrite && (
+                              <RowMenu items={[
+                                { label: t("Ubah"), icon: <Pencil />, onClick: () => setEditing(task) },
+                                { label: t("Tandai dikerjakan"), hidden: task.status !== "todo", action: () => setTaskStatus(projectId, task.id, "in_progress") },
+                                // Urutan manual hanya untuk tugas tanpa tanggal; yang bertanggal mengikuti tanggalnya
+                                { label: t("Naikkan"), icon: <ArrowUp />, hidden: uIdx <= 0, action: () => moveTask(projectId, task.id, "up") },
+                                { label: t("Turunkan"), icon: <ArrowDown />, hidden: uIdx < 0 || uIdx === undated.length - 1, action: () => moveTask(projectId, task.id, "down") },
+                                { label: t("Hapus"), icon: <Trash2 />, danger: true, confirm: t("Hapus tugas ini?"), action: () => deleteTask(projectId, task.id) },
+                              ]} />
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
               </Card>
             );
           })}

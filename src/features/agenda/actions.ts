@@ -5,6 +5,7 @@ import { scheduleCalendarSync } from "@/lib/google/schedule";
 import { getProjectContext } from "@/lib/access";
 import { dbError, fail, type ActionResult } from "@/lib/result";
 import { localToISO } from "@/lib/format";
+import { googleLinked } from "@/lib/google/required";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
@@ -32,6 +33,8 @@ export async function saveAgenda(projectId: string, fd: FormData): Promise<Actio
     remind_offsets_minutes: offsets,
   };
   const id = str(fd.get("id"));
+  // Agenda baru mewajibkan Google Calendar tersambung; mengubah agenda lama tetap boleh
+  if (!id && !(await googleLinked(session.user.id))) return fail("Sambungkan Google Calendar dulu agar pengingat agenda muncul di HP.");
   const { error } = id
     ? await supabase.from("agenda_items").update(row).eq("id", id).eq("project_id", projectId)
     : await supabase.from("agenda_items").insert({ ...row, created_by: session.user.id });

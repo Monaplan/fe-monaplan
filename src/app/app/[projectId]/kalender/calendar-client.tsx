@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Heart, ListChecks, Pencil, Plus, Trash2, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BellRing, CalendarDays, ChevronLeft, ChevronRight, Heart, Link2, ListChecks, Pencil, Plus, Trash2, Wallet } from "lucide-react";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { RowMenu } from "@/components/ui/menu";
 import { Segmented } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { cn } from "@/components/ui/cn";
 import { addDaysISO, formatDateLong, formatTime, isoDateInTz, todayISO } from "@/lib/format";
 import { deleteAgenda } from "@/features/agenda/actions";
 import { AgendaFormModal, type Agenda } from "@/features/agenda/agenda-form";
+import { useGoogleGate } from "@/components/app/google-gate";
 import { GoogleCalendarButton, type GoogleUiStatus } from "./google-calendar";
 import { useProjectBase } from "@/components/app/project-base";
 import { ProductTour } from "@/components/app/product-tour";
@@ -29,8 +30,9 @@ const SOURCE = {
 // Senin sampai Minggu; nama hari diambil dari Intl sesuai bahasa. 2024-01-01 adalah hari Senin.
 const weekdayNames = (lang: "id" | "en") => Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(lang === "en" ? "en-US" : "id-ID", { weekday: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2024, 0, 1 + i))));
 
-export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, googleFlash }: { projectId: string; tz: string; feed: FeedItem[]; agenda: Agenda[]; canWrite: boolean; google: GoogleUiStatus; googleFlash?: string }) {
+export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, googleFlash, highlightConnect }: { projectId: string; tz: string; feed: FeedItem[]; agenda: Agenda[]; canWrite: boolean; google: GoogleUiStatus; googleFlash?: string; highlightConnect?: boolean }) {
   const { t, lang } = useI18n();
+  const { guard } = useGoogleGate(projectId, true);
   const base = useProjectBase();
   const weekdays = weekdayNames(lang);
   const today = todayISO(tz);
@@ -100,9 +102,20 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
         actions={
           <>
             <GoogleCalendarButton projectId={projectId} tz={tz} status={google} flash={googleFlash} />
-            {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm({ date: cursor })}>{t("Tambah Agenda")}</Button>}
+            {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => guard(() => setForm({ date: cursor }))}>{t("Tambah Agenda")}</Button>}
           </>
         } />
+
+      {google.configured && !google.linked && (
+        <div role="status" className={cn("mb-4 flex flex-col gap-4 rounded-2xl border bg-surface p-5 sm:flex-row sm:items-center", highlightConnect ? "animate-sheet-in border-plum-400 ring-4 ring-plum-100" : "border-caution/30 bg-caution-bg")}>
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-700"><BellRing className="size-5" aria-hidden="true" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-semibold text-neutral-900">{t("Google Calendar belum tersambung")}</p>
+            <p className="mt-0.5 text-[13px] leading-5 text-neutral-700">{t("Sambungkan dulu supaya pengingat tugas, pembayaran, dan agenda muncul di HP-mu. Setelah itu kamu bisa menambahkannya.")}</p>
+          </div>
+          <ButtonLink href={`/api/google/connect?project=${projectId}`} prefetch={false} icon={<Link2 />} className="shrink-0">{t("Sambungkan Google Calendar")}</ButtonLink>
+        </div>
+      )}
 
       <Card tour="kalender-main">
         <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -125,7 +138,7 @@ export function CalendarClient({ projectId, tz, feed, agenda, canWrite, google, 
                 const items = byDay.get(d) ?? [];
                 const inMonth = Number(d.slice(5, 7)) === mo;
                 return (
-                  <div key={d} onDoubleClick={() => canWrite && setForm({ date: d })} className={cn("min-h-24 border-t border-l border-neutral-200 p-1.5 [&:nth-child(7n+1)]:border-l-0", !inMonth && "bg-neutral-50/60")}>
+                  <div key={d} onDoubleClick={() => canWrite && guard(() => setForm({ date: d }))} className={cn("min-h-24 border-t border-l border-neutral-200 p-1.5 [&:nth-child(7n+1)]:border-l-0", !inMonth && "bg-neutral-50/60")}>
                     <span className={cn("tabular mb-1 inline-flex size-6 items-center justify-center rounded-full text-xs", d === today ? "bg-plum-600 font-semibold text-white" : inMonth ? "text-neutral-800" : "text-neutral-500")}>{Number(d.slice(8))}</span>
                     <div className="flex flex-col gap-0.5">
                       {items.slice(0, 3).map((f) => chip(f, true))}

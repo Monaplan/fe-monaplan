@@ -49,7 +49,7 @@ export function SpendingChart({ data }: { data: { month: string; actual: number;
             </defs>
             <CartesianGrid vertical={false} stroke="var(--color-neutral-200)" strokeDasharray="4 4" />
             <XAxis dataKey="month" tick={axis} axisLine={false} tickLine={false} />
-            <YAxis tick={axis} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => formatIDRShort(v).replace("Rp ", "")} />
+            <YAxis tick={axis} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => formatIDRShort(v).replace(/^Rp\s/, "")} />
             <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--color-plum-50)" }} />
             <Bar dataKey={mode} name={mode === "actual" ? "Realisasi" : "Jadwal"} radius={[8, 8, 8, 8]} maxBarSize={36}>
               {data.map((d) => <Cell key={d.month} fill={d.current ? "url(#barActive)" : "url(#barDefault)"} />)}
@@ -69,7 +69,7 @@ export function CategoryChart({ data }: { data: { name: string; estimated: numbe
         <BarChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke="var(--color-neutral-200)" strokeDasharray="4 4" />
           <XAxis dataKey="name" tick={{ ...axis, fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-25} textAnchor="end" height={60} />
-          <YAxis tick={axis} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => formatIDRShort(v).replace("Rp ", "")} />
+          <YAxis tick={axis} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => formatIDRShort(v).replace(/^Rp\s/, "")} />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--color-plum-50)" }} />
           <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} formatter={(v) => <span style={{ color: "var(--color-neutral-600)" }}>{v}</span>} />
           <Bar dataKey="estimated" name="Estimasi" fill="var(--color-plum-200)" radius={[6, 6, 0, 0]} maxBarSize={24} />

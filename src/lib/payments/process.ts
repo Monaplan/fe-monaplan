@@ -60,9 +60,12 @@ async function sendReceipt(admin: SupabaseClient, order: any, method: string | n
     link_path: "/akun/tagihan",
     dedupe_key: `payment_succeeded:${order.id}:in_app`,
   });
-  const discount = Number(order.discount_idr ?? 0) > 0 ? `${order.promo_name ?? "Promo"} (-${formatIDR(order.discount_idr)})` : null;
+  const hasDiscount = Number(order.discount_idr ?? 0) > 0;
+  const discount = hasDiscount ? `${order.promo_name ?? "Promo"} (-${formatIDR(order.discount_idr)})` : null;
   await sendTemplated(profile.email, lang, {
     kind: "receipt", name: profile.full_name ?? profile.email.split("@")[0], orderNumber: order.order_number, plan: plan?.name ?? "-",
-    amount: formatIDR(order.amount_idr), method: method ?? "-", validity: masa, discount, url: `${appUrl()}/akun/tagihan`,
+    amount: formatIDR(order.amount_idr), method: method ?? "-", validity: masa, discount,
+    original: hasDiscount && order.original_amount_idr ? formatIDR(order.original_amount_idr) : null,
+    paidAt: formatDateLong(new Date(), "Asia/Jakarta", lang), url: `${appUrl()}/akun/tagihan`,
   });
 }

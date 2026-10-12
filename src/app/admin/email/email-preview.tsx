@@ -7,7 +7,7 @@ import { Card, CardHeader, PageHeader } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/components/ui/cn";
-import { EMAIL_KINDS, EMAIL_LABEL, type EmailKind, type Lang } from "@/lib/email/templates";
+import { EMAIL_KINDS, EMAIL_LABEL, type SentEmailKind as EmailKind, type Lang } from "@/lib/email/templates";
 import { sendTestEmail } from "@/features/admin/email-actions";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
@@ -18,7 +18,7 @@ export type PreviewMap = Record<EmailKind, Record<Lang, { subject: string; html:
 export function EmailPreview({ previews, from, configured }: { previews: PreviewMap; from: string; configured: boolean }) {
   const t = useT();
   const toast = useToast();
-  const [kind, setKind] = useState<EmailKind>("agenda_reminder");
+  const [kind, setKind] = useState<EmailKind>("daily_digest");
   const ui = useLang();
   const [lang, setLang] = useState<Lang>(ui);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");

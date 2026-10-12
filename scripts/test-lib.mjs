@@ -162,14 +162,17 @@ const { renderEmail, sampleData, EMAIL_KINDS } = await load("src/lib/email/templ
 const every = (fn) => EMAIL_KINDS.every(fn);
 const R = (l, d) => renderEmail(l, d, { appUrl: "https://x.test" });
 check("semua jenis email punya subjek, html, dan teks di dua bahasa", every((k) => ["id", "en"].every((l) => { const r = R(l, sampleData(k)); return r.subject && r.html.includes("<html") && r.text.length > 20; })));
-check("bahasa Inggris berbeda dari Indonesia (kecuali email internal tim)", every((k) => k === "support_ticket" || R("id", sampleData(k)).subject !== R("en", sampleData(k)).subject));
+check("bahasa Inggris berbeda dari Indonesia", every((k) => R("id", sampleData(k)).html !== R("en", sampleData(k)).html));
 check("tombol mengarah ke url yang diberikan", every((k) => R("id", { ...sampleData(k), url: "https://monaplan.test/app/raka-nadia/budget" }).html.includes('href="https://monaplan.test/app/raka-nadia/budget"')));
-const evil = R("id", { ...sampleData("task_due"), title: '<script>alert(1)</script>"x"', name: "<b>Hacker</b>" });
+const evil = R("id", { ...sampleData("daily_digest"), name: "<b>Hacker</b>", tasks: [{ title: '<script>alert(1)</script>"x"', meta: "-", due: "Hari ini", tone: "danger" }] });
 check("teks pengguna di-escape (tanpa XSS)", !evil.html.includes("<script>alert") && !evil.html.includes("<b>Hacker") && evil.html.includes("&lt;script&gt;"));
-check("sapaan memakai nama depan", R("id", sampleData("task_due")).text.startsWith("Halo Raka,") && R("en", sampleData("task_due")).text.startsWith("Hi Raka,"));
-check("pengingat agenda menyebut waktu relatif", R("id", { ...sampleData("agenda_reminder"), offsetMinutes: 60 }).body.includes("1 jam lagi") && R("en", { ...sampleData("agenda_reminder"), offsetMinutes: 0 }).body.includes("Starting now"));
-check("kuitansi memuat rincian promo bila ada", R("id", sampleData("receipt")).text.includes("Promo Akhir Tahun") && !R("id", { ...sampleData("receipt"), discount: null }).text.includes("Promo:"));
-check("email transaksional tanpa catatan berhenti langganan", !R("id", sampleData("receipt")).html.includes("Matikan lewat") && R("id", sampleData("task_due")).html.includes("Matikan lewat"));
+check("sapaan memakai nama depan", R("id", sampleData("receipt")).text.startsWith("Halo Raka,") && R("en", sampleData("receipt")).text.startsWith("Hi Raka,"));
+const digest = R("id", sampleData("daily_digest")).html;
+check("ringkasan harian memuat agenda, tugas, dan pembayaran sekaligus", digest.includes("Fitting busana akad") && digest.includes("Booking fotografer") && digest.includes("Katering Sari Rasa"));
+check("bagian kosong di ringkasan tidak ditampilkan", !R("id", { ...sampleData("daily_digest"), payments: [], paymentTotal: null }).html.includes("Pembayaran vendor"));
+check("trial berakhir menampilkan promo aktif hanya bila ada", R("id", sampleData("trial_ended")).html.includes("Promo aktif") && !R("id", { ...sampleData("trial_ended"), promo: null }).html.includes("Promo aktif"));
+check("kuitansi memuat potongan bila ada", R("id", sampleData("receipt")).text.includes("GUNCANG 10.10") && !R("id", { ...sampleData("receipt"), discount: null }).text.includes("Potongan:"));
+check("pengingat agenda (dalam aplikasi) menyebut waktu relatif", R("id", { kind: "agenda_reminder", name: "Raka", title: "Fitting", startsAt: "Sabtu", offsetMinutes: 60, url: "https://x.test" }).body.includes("1 jam lagi"));
 
 console.log("\nWorker berkas (domain sendiri)");
 process.env.FILES_SIGNING_SECRET = "rahasia-uji-berkas";

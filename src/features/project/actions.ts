@@ -9,7 +9,7 @@ import { getMyAccess, getProjectContext, isActive, requireUser } from "@/lib/acc
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, type ActionResult } from "@/lib/result";
-import { addDaysISO, diffDays, localToISO, parseIDR } from "@/lib/format";
+import { addDaysISO, diffDays, formatDateLong, localToISO, parseIDR } from "@/lib/format";
 import { appUrl, EVENT_TYPES } from "@/lib/constants";
 import { sendTemplated } from "@/lib/email";
 import { RSVP_THEME_IDS } from "@/content/rsvp-themes";
@@ -255,6 +255,7 @@ export async function inviteCollaborator(projectId: string, fd: FormData): Promi
   await sendTemplated(email.data, "id", {
     kind: "invitation", name: email.data.split("@")[0]!, inviter: session.profile?.full_name ?? "Pemilik ruang kerja",
     project: project.title, role: role === "editor" ? "editor" : "viewer", expiresDays: 7, url: link,
+    weddingDate: project.wedding_date ? formatDateLong(project.wedding_date, project.timezone) : null,
   });
   revalidatePath("/app/[projectId]/pengaturan", "page");
   return { ok: true, message: "Undangan dibuat. Link juga bisa kamu salin dan kirim sendiri.", data: { link } };

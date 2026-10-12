@@ -2,7 +2,7 @@
 
 import { appUrl } from "@/lib/constants";
 import { sendTemplated } from "@/lib/email";
-import { EMAIL_KINDS, sampleData, type EmailKind, type Lang } from "@/lib/email/templates";
+import { EMAIL_KINDS, sampleData, type SentEmailKind as EmailKind, type Lang } from "@/lib/email/templates";
 import { fail, okm, type ActionResult } from "@/lib/result";
 import { adminContext } from "./context";
 

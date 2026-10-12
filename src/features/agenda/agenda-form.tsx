@@ -16,7 +16,6 @@ const REMINDERS = [
   { v: 10080, label: "1 minggu sebelum" },
   { v: 1440, label: "1 hari sebelum" },
   { v: 60, label: "1 jam sebelum" },
-  { v: 0, label: "Saat dimulai" },
 ];
 
 export function AgendaFormModal({ projectId, tz, agenda, defaultDate, onClose }: { projectId: string; tz: string; agenda?: Agenda | null; defaultDate?: string; onClose: () => void }) {

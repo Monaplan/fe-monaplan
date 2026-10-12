@@ -105,7 +105,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
             )}
           </Card>
           </div>
-          <Card>
+          <Card className="self-start lg:sticky lg:top-24">
             <CardHeader title={t("Foto Sampul")} subtitle={t("Tampil di halaman RSVP tamu.")} />
             <div className="aspect-[4/5] overflow-hidden rounded-xl bg-plum-50">
               {coverUrl ? (

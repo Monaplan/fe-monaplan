@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/access";
 import { appUrl } from "@/lib/constants";
-import { EMAIL_KINDS, renderEmail, sampleData, type EmailKind, type Lang } from "@/lib/email/templates";
+import { EMAIL_KINDS, renderEmail, sampleData, type SentEmailKind as EmailKind, type Lang } from "@/lib/email/templates";
 import { EmailPreview, type PreviewMap } from "./email-preview";
 import { getT } from "@/i18n/server";
 
@@ -13,7 +13,7 @@ export default async function EmailPage() {
   await requireAdmin();
   const base = appUrl();
   const previews = {} as PreviewMap;
-  for (const kind of EMAIL_KINDS as EmailKind[]) {
+  for (const kind of EMAIL_KINDS) {
     previews[kind] = {} as PreviewMap[EmailKind];
     for (const lang of ["id", "en"] as Lang[]) {
       const r = renderEmail(lang, sampleData(kind, `${base}/app/raka-nadia`), { appUrl: base });
