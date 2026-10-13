@@ -10,7 +10,7 @@
   Halaman pembuka PWA (start_url di manifest). Statis dan disimpan service worker, jadi tampil seketika
   walau server sedang lambat. Menampilkan splash yang sama dengan components/app/splash.tsx lalu pindah ke /mulai;
   peramban menahan tampilan ini sampai halaman tujuan siap, sehingga tidak ada layar hitam.
-  Penanda sesi mp-splash bernilai "buka:<waktu>" agar splash halaman tujuan melanjutkan tampilan ini, bukan mengulang (lib/splash-script.ts).
+  Penanda sesi mp-splash bernilai "buka:<waktu>:<posisi logo>" agar splash halaman tujuan melanjutkan tampilan ini, bukan mengulang (lib/splash-script.ts).
 -->
 <style>
   html, body { margin: 0; height: 100%; background: #FBF5F8; }
@@ -37,9 +37,12 @@
     try {
       var t = localStorage.getItem("mp-theme") || "light";
       if (t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark");
-      sessionStorage.setItem("mp-splash", "buka:" + Date.now());
       // Pusat layar penuh dalam koordinat halaman (area halaman dimulai di bawah status bar), sama dengan gambar pembuka iPhone
-      var y=innerHeight-screen.height/2;if(y>120&&y<innerHeight-120)document.documentElement.style.setProperty("--mp-splash-y",y+"px");
+      var y = innerHeight - screen.height / 2;
+      if (!(y > 120 && y < innerHeight - 120)) y = innerHeight / 2;
+      document.documentElement.style.setProperty("--mp-splash-y", y + "px");
+      // Waktu mulai dan posisi logo dibawa ke splash aplikasi agar bar dan logo melanjutkan dari tempat yang sama
+      sessionStorage.setItem("mp-splash", "buka:" + Date.now() + ":" + Math.round(y));
     } catch (e) {}
   })();
 </script>
