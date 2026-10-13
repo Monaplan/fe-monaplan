@@ -1,4 +1,4 @@
-import { Database, FileText, HardDrive } from "lucide-react";
+import { Cloud, Database, ExternalLink, FileText, HardDrive, Triangle } from "lucide-react";
 import { requireAdmin } from "@/lib/access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
@@ -19,6 +19,13 @@ const MB = 1048576;
 // Batas paket layanan; ubah lewat env bila paket Supabase atau R2 berbeda
 const DB_LIMIT_MB = Number(process.env.SYSTEM_DB_LIMIT_MB) || 500;
 const STORAGE_LIMIT_MB = Number(process.env.SYSTEM_STORAGE_LIMIT_MB) || 10240;
+// Batas paket gratis sebagai acuan; angka yang tidak bisa dibaca dari aplikasi (bandwidth, operasi R2) dicek di dasbor masing-masing
+const MAU_LIMIT = Number(process.env.SYSTEM_MAU_LIMIT) || 50000;
+const HOST = { supabase: "Supabase", vercel: "Vercel", r2: "Cloudflare R2" };
+const SB_EGRESS_GB = 5;
+const VERCEL_BANDWIDTH_GB = 100;
+const R2_WRITE_OPS = "1 juta";
+const R2_READ_OPS = "10 juta";
 const FOLDERS = ["documents", "gifts", "cover", "inspiration"] as const;
 const FOLDER_LABEL: Record<string, string> = { documents: "Dokumen", gifts: "Hadiah", cover: "Sampul", inspiration: "Rona Impian" };
 
@@ -65,11 +72,13 @@ export default async function SystemPage() {
     return (f ? f(q) : q).then((r: any) => r.count ?? 0) as Promise<number>;
   };
 
-  const [dbRes, storage, documents, tasks, review, notifications] = await Promise.all([
+  const [dbRes, storage, documents, tasks, review, notifications, deposits, receipts, devices, checkedIn, users, projects] = await Promise.all([
     admin.rpc("admin_system_stats"),
     storageStats(admin),
     count("documents"), count("tasks"),
     count("orders", (q) => q.eq("needs_review", true)), count("notifications"),
+    count("savings_deposits"), count("gift_receipts"), count("push_subscriptions"), count("guests", (q) => q.not("checked_in_at", "is", null)),
+    count("profiles"), count("wedding_projects"),
   ]);
 
   const db = dbRes.error ? null : (dbRes.data as { db_bytes: number; connections: number; tables: { name: string; bytes: number; rows: number }[] });
@@ -84,11 +93,28 @@ export default async function SystemPage() {
     ["Cloudflare R2", storageDriver() === "r2"],
     ["Google Calendar", !!process.env.GOOGLE_CLIENT_ID],
     [t("Pengingat terjadwal (cron)"), !!process.env.CRON_SECRET, t("Email dan notifikasi pengingat")],
+    [t("Notifikasi HP (push)"), !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && !!process.env.VAPID_PRIVATE_KEY, !process.env.VAPID_PRIVATE_KEY ? t("Kunci VAPID belum diisi") : undefined],
     [t("WhatsApp bantuan"), !!process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP],
   ];
   const content: [string, number][] = [
-    [t("Dokumen terunggah"), documents], [t("Tugas"), tasks], [t("Notifikasi tersimpan"), notifications], [t("Order perlu ditinjau"), review],
+    [t("Dokumen terunggah"), documents], [t("Tugas"), tasks], [t("Notifikasi tersimpan"), notifications], [t("Setoran tabungan"), deposits], [t("Catatan amplop dan kado"), receipts],
+    [t("Perangkat notifikasi HP"), devices], [t("Tamu sudah check-in"), checkedIn], [t("Order perlu ditinjau"), review],
   ];
+
+  // Perkiraan daya tampung: rata-rata per proyek baru berarti bila datanya cukup banyak (bawaan skema membuat angka awal terlalu besar)
+  const enough = projects >= 10;
+  const dbPerProject = db && enough ? db.db_bytes / projects : 0;
+  const r2PerProject = st && enough ? st.bytes / projects : 0;
+  const dbRoom = dbPerProject > 0 ? Math.max(0, Math.floor((DB_LIMIT_MB * MB * 0.8 - (db?.db_bytes ?? 0)) / dbPerProject)) : null;
+  const r2Room = r2PerProject > 0 ? Math.max(0, Math.floor((STORAGE_LIMIT_MB * MB * 0.8 - (st?.bytes ?? 0)) / r2PerProject)) : null;
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
+  const onVercel = !!process.env.VERCEL;
+  const row = (label: string, value: React.ReactNode) => (
+    <div key={label} className="flex items-center justify-between gap-3 border-t border-neutral-100 py-2 text-[13px] first:border-0"><span className="text-neutral-600">{label}</span><span className="tabular text-right font-medium">{value}</span></div>
+  );
+  const link = (href: string, label: string) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-plum-600 hover:underline">{label}<ExternalLink className="size-3.5" aria-hidden="true" /></a>
+  );
 
   return (
     <>
@@ -151,6 +177,41 @@ export default async function SystemPage() {
               <StatusPill tone={ok ? "positive" : "neutral"}>{ok ? t("Terhubung") : t("Belum diatur")}</StatusPill>
             </div>
           ))}
+        </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader icon={<Database />} title={HOST.supabase} subtitle={t("Database dan akun pengguna")} />
+          {row(t("Akun terdaftar"), `${users.toLocaleString("id-ID")} / ${MAU_LIMIT.toLocaleString("id-ID")} MAU`)}
+          {row(t("Proyek pernikahan"), projects.toLocaleString("id-ID"))}
+          {row(t("Koneksi aktif"), db ? db.connections : "-")}
+          {row(t("Batas transfer keluar"), `${SB_EGRESS_GB} GB / ${t("bulan")}`)}
+          {row(t("Perkiraan muat (sampai 80%)"), dbRoom === null ? t("Butuh 10 proyek") : `${dbRoom.toLocaleString("id-ID")} ${t("proyek lagi")}`)}
+          <p className="mt-2 text-[12px] leading-5 text-neutral-500">{t("Paket gratis: proyek dijeda setelah 1 minggu tanpa aktivitas dan tanpa backup harian. Ekspor data berkala.")}</p>
+          {link("https://supabase.com/dashboard", t("Buka dasbor Supabase"))}
+        </Card>
+
+        <Card>
+          <CardHeader icon={<Triangle />} title={HOST.vercel} subtitle={t("Hosting aplikasi")} />
+          {row(t("Lingkungan"), onVercel ? (process.env.VERCEL_ENV ?? "-") : t("Lokal"))}
+          {row(t("Wilayah"), process.env.VERCEL_REGION ?? "-")}
+          {row(t("Versi Node"), process.version)}
+          {row(t("Versi terpasang"), sha ?? "-")}
+          {row(t("Batas bandwidth"), `${VERCEL_BANDWIDTH_GB} GB / ${t("bulan")}`)}
+          <p className="mt-2 text-[12px] leading-5 text-neutral-500">{t("Paket Hobby hanya untuk pemakaian non-komersial. Pantau bandwidth dan jumlah pemanggilan fungsi di dasbor.")}</p>
+          {link("https://vercel.com/dashboard", t("Buka dasbor Vercel"))}
+        </Card>
+
+        <Card>
+          <CardHeader icon={<Cloud />} title={HOST.r2} subtitle={t("Penyimpanan berkas")} />
+          {row(t("Terpakai"), st ? `${size(st.bytes)} / ${size(STORAGE_LIMIT_MB * MB)}` : "-")}
+          {row(t("Jumlah berkas"), st ? st.count.toLocaleString("id-ID") : "-")}
+          {row(t("Rata-rata per berkas"), st && st.count ? size(st.bytes / st.count) : "-")}
+          {row(t("Batas operasi tulis, baca"), `${R2_WRITE_OPS}, ${R2_READ_OPS} / ${t("bulan")}`)}
+          {row(t("Perkiraan muat (sampai 80%)"), r2Room === null ? t("Butuh 10 proyek") : `${r2Room.toLocaleString("id-ID")} ${t("proyek lagi")}`)}
+          <p className="mt-2 text-[12px] leading-5 text-neutral-500">{t("Transfer keluar R2 gratis. Jumlah operasi bulan ini hanya terlihat di dasbor Cloudflare.")}</p>
+          {link("https://dash.cloudflare.com", t("Buka dasbor Cloudflare"))}
         </Card>
       </div>
 
