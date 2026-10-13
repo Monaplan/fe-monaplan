@@ -16,7 +16,7 @@
   html, body { margin: 0; height: 100%; background: #FBF5F8; }
   html.dark, html.dark body { background: #130E11; }
   /* Pusat logo tepat di tengah layar, sama dengan splash aplikasi (globals.css .mp-splash-center) dan gambar pembuka iPhone */
-  .c { position: fixed; left: 0; right: 0; top: calc(50% - 44px); display: flex; flex-direction: column; align-items: center; }
+  .c { position: fixed; left: 0; right: 0; top: calc(var(--mp-splash-y, 50%) - 44px); display: flex; flex-direction: column; align-items: center; }
   .logo { width: 88px; height: 88px; overflow: visible; filter: drop-shadow(0 12px 24px rgba(74, 29, 54, 0.22)); }
   /* Tempat nama: tingginya sama (30px x 1.2) agar bar sejajar; namanya muncul di splash aplikasi dengan huruf aslinya */
   .name { margin: 18px 0 0; height: 36px; }
@@ -38,6 +38,8 @@
       var t = localStorage.getItem("mp-theme") || "light";
       if (t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark");
       sessionStorage.setItem("mp-splash", "buka:" + Date.now());
+      // Pusat layar penuh dalam koordinat halaman (area halaman dimulai di bawah status bar), sama dengan gambar pembuka iPhone
+      var y=innerHeight-screen.height/2;if(y>120&&y<innerHeight-120)document.documentElement.style.setProperty("--mp-splash-y",y+"px");
     } catch (e) {}
   })();
 </script>

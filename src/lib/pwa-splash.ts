@@ -1,10 +1,10 @@
 // Ukuran layar iPhone untuk gambar layar pembuka (apple-touch-startup-image). Potret saja.
-// [lebar CSS, tinggi CSS, rasio piksel, tinggi status bar]. Dengan statusBarStyle "default" area halaman dimulai di bawah status bar,
-// jadi pusat splash HTML berada setengah tinggi status bar di bawah tengah layar; gambar pembuka mengikutinya.
-export type IphoneScreen = [number, number, number, number];
+// [lebar CSS, tinggi CSS, rasio piksel]. Logo di gambar pembuka tepat di tengah layar penuh; splash HTML menyesuaikan diri
+// ke titik yang sama lewat --mp-splash-y (lib/splash-script.ts, public/buka.html), jadi tidak bergantung pada tinggi status bar.
+export type IphoneScreen = [number, number, number];
 export const IPHONE_SCREENS: IphoneScreen[] = [
-  [440, 956, 3, 62], [430, 932, 3, 59], [428, 926, 3, 47], [420, 912, 3, 62], [414, 896, 3, 44], [414, 896, 2, 48], [414, 736, 3, 20],
-  [402, 874, 3, 62], [393, 852, 3, 59], [390, 844, 3, 47], [375, 812, 3, 44], [375, 667, 2, 20], [320, 568, 2, 20],
+  [440, 956, 3], [430, 932, 3], [428, 926, 3], [420, 912, 3], [414, 896, 3], [414, 896, 2], [414, 736, 3],
+  [402, 874, 3], [393, 852, 3], [390, 844, 3], [375, 812, 3], [375, 667, 2], [320, 568, 2],
 ];
 
 export const screenId = ([w, h, r]: IphoneScreen) => `${w}x${h}@${r}`;

@@ -333,8 +333,8 @@ html.mp-splash #mp-splash {
 }
 html.dark.mp-splash #mp-splash { background: #130E11; }
 html.mp-splash-done #mp-splash { opacity: 0; visibility: hidden; }
-/* Pusat logo tepat di tengah layar, sama dengan public/buka.html dan gambar pembuka iPhone (app/pwa-splash) */
-.mp-splash-center { position: absolute; left: 0; right: 0; top: calc(50% - 44px); display: flex; flex-direction: column; align-items: center; }
+/* Pusat logo: di PWA tepat di tengah layar penuh (--mp-splash-y dari lib/splash-script.ts), sama dengan public/buka.html dan gambar pembuka iPhone */
+.mp-splash-center { position: absolute; left: 0; right: 0; top: calc(var(--mp-splash-y, 50%) - 44px); display: flex; flex-direction: column; align-items: center; }
 .mp-splash-logo { width: 88px; height: 88px; overflow: visible; filter: drop-shadow(0 12px 24px rgba(74, 29, 54, 0.22)); }
 .mp-splash-name { margin: 18px 0 0; line-height: 1.2; font-family: var(--font-display), Georgia, serif; font-size: 30px; font-weight: 500; letter-spacing: 0.01em; color: #3E1A2D; }
 html.dark .mp-splash-name { color: #F6E8EF; }

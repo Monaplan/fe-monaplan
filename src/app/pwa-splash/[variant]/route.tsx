@@ -16,12 +16,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ variant
   const variant = (await params).variant;
   const m = /^(\d+)x(\d+)@(\d)$/.exec(variant);
   if (!m || !VARIANTS.includes(variant)) return new Response("Not found", { status: 404 });
-  const screen = IPHONE_SCREENS.find((x) => screenId(x) === variant)!;
-  const [, , r, bar] = screen;
+  const r = Number(m[3]);
   const width = Number(m[1]) * r, height = Number(m[2]) * r;
   const logo = 88 * r;
-  // Sama dengan .mp-splash-center: pusat logo di tengah area halaman (di bawah status bar), bukan tengah layar penuh
-  const top = Math.round(height / 2 + (bar * r) / 2 - logo / 2);
+  // Pusat logo tepat di tengah layar penuh; splash HTML menyesuaikan ke titik ini (--mp-splash-y)
+  const top = Math.round(height / 2 - logo / 2);
   // Logo dengan bayangan yang sama, lalu jalur bar loading kosong (logo 88 + jarak 18 + nama 36 + jarak 22) agar halaman pembuka tinggal mengisi
   return new ImageResponse(
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", background: "#FBF5F8" }}>
