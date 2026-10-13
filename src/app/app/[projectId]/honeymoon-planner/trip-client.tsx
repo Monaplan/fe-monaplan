@@ -96,7 +96,7 @@ export function TripClient({ projectId, canWrite, weddingDate, plan, items }: { 
           </div>
         )} />
 
-      <Card tour="perjalanan-main" className="mb-4 overflow-hidden p-0 sm:p-0">
+      <Card tour="perjalanan-main" className="mb-4 p-0 sm:p-0">
         <div className="brand-canvas relative px-5 py-6 text-white sm:px-7">
           <Plane aria-hidden="true" className="absolute top-5 right-6 size-16 -rotate-12 text-white/10" />
           <p className="text-[11px] font-semibold tracking-[0.16em] text-white/60 uppercase">{t("Tujuan")}</p>

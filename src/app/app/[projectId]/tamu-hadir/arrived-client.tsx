@@ -66,7 +66,7 @@ export function ArrivedClient({ projectId, tz, canWrite, guests, expectedGuests,
             action={<Link href={`${base}/hari-h`} className="inline-flex h-10 items-center rounded-full bg-plum-900 px-5 text-[14px] font-semibold text-white hover:bg-plum-800">{t("Buka Mode Hari H")}</Link>} />
         </Card>
       ) : (
-        <Card tour="tamuhadir-list" className="overflow-hidden p-0 sm:p-0">
+        <Card tour="tamuhadir-list" className="p-0 sm:p-0">
           <div className="grid grid-cols-2 gap-2 border-b border-neutral-100 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
             <div className="relative col-span-2 lg:col-span-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />

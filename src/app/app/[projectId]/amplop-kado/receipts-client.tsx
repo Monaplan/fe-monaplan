@@ -92,7 +92,7 @@ export function ReceiptsClient({ projectId, coupleName, tz, canWrite, receipts, 
             action={canWrite && <Button icon={<Plus />} onClick={() => setForm("new")}>{t("Catat Pertama")}</Button>} />
         </Card>
       ) : (
-        <Card tour="amplop-main" className="overflow-hidden p-0 sm:p-0">
+        <Card tour="amplop-main" className="p-0 sm:p-0">
           <div className="grid grid-cols-2 gap-2 border-b border-neutral-100 p-4 lg:grid-cols-4">
             <div className="relative col-span-2 lg:col-span-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />

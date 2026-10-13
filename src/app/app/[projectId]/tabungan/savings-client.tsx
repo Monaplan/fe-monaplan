@@ -112,7 +112,7 @@ export function SavingsClient({ projectId, tz, weddingDate, today, canWrite, dep
             <CardHeader title={t("Setoran per Bulan")} />
             <DepositChart data={chart} />
           </Card>
-          <Card tour="tabungan-list" className="overflow-hidden p-0 sm:p-0">
+          <Card tour="tabungan-list" className="p-0 sm:p-0">
             <p className="px-4 pt-4 pb-2 text-sm font-semibold text-neutral-800 sm:px-5">{t("Riwayat Setoran")}</p>
             <ul>
               {deposits.map((d) => (
