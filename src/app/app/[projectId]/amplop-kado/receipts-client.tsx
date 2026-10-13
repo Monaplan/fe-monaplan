@@ -74,9 +74,9 @@ export function ReceiptsClient({ projectId, coupleName, tz, canWrite, receipts, 
       <ProductTour id="amplop" steps={TOURS["amplop"]!} />
       <PageHeader tour="amplop" title={t("Amplop & Kado")} description={t("Catat tanda kasih dari tamu, lalu kirim ucapan terima kasih.")}
         actions={<>
-          {receipts.length > 0 && <ButtonLink href={`/api/export/${projectId}/amplop`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor")}</ButtonLink>}
+          {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")} className="md:order-last">{t("Catat")}</Button>}
           <Button variant="outline" icon={<MessageSquareText />} onClick={() => setEditThanks(true)}>{t("Teks ucapan")}</Button>
-          {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Catat")}</Button>}
+          {receipts.length > 0 && <ButtonLink href={`/api/export/${projectId}/amplop`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor")}</ButtonLink>}
         </>} />
 
       <div data-tour="amplop-stats" className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -174,7 +174,7 @@ function ReceiptForm({ projectId, tz, item, guests, onClose }: { projectId: stri
         onSuccess={() => {
           if (!again.current) return onClose();
           again.current = false;
-          setName(""); setRound((n) => n + 1);
+          setName(""); setSide("bersama"); setRound((n) => n + 1);
           setTimeout(() => nameRef.current?.focus(), 50);
         }}>
         {item && <input type="hidden" name="id" value={item.id} />}

@@ -14,6 +14,7 @@ import { ChaosOrder } from "@/components/landing/chaos-order";
 import { Roadmap, type RoadmapPhase } from "@/components/landing/roadmap";
 import { RolesTabs } from "@/components/landing/roles-tabs";
 import { PricingBonus, type PricedPlan } from "@/components/landing/pricing-bonus";
+import { InstallGuide } from "@/components/app/install-guide";
 import { BONUS_TOTAL } from "@/content/bonus";
 import { getSession } from "@/lib/access";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -36,7 +37,7 @@ export async function generateMetadata() {
 const FEATURES = [
   { icon: <LayoutGrid />, title: "Dashboard", text: "Hitung mundur, budget terpakai, tamu hadir, dan agenda 14 hari ke depan." },
   { icon: <SlidersHorizontal />, title: "Pengaturan Pernikahan", text: "Data pasangan, acara, budget, target tamu, dan kolaborator." },
-  { icon: <BookOpen />, title: "Panduan Penggunaan", text: "Delapan langkah yang tercentang otomatis saat kamu mengisinya." },
+  { icon: <BookOpen />, title: "Panduan Penggunaan", text: "Sembilan langkah yang tercentang otomatis saat kamu mengisinya, termasuk cara memasang Monaplan di HP." },
   { icon: <ListChecks />, title: "To Do Checklist", text: "Checklist per fase, due date dihitung mundur dari hari H, dan progres tiap orang saat tugas dibagi berdua." },
   { icon: <Wallet />, title: "Budgeting", text: "Alokasi per kategori, jadwal DP dan pelunasan, pembagian biaya pihak pria dan wanita, serta target tabungan per bulan." },
   { icon: <Store />, title: "Kelola Vendor", text: "Dari prospek sampai deal, bandingkan paket, dan chat WhatsApp langsung." },
@@ -189,7 +190,7 @@ export default async function LandingPage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
           <nav aria-label={t("Navigasi utama")} className="hidden items-center gap-1 md:flex">
-            {[["#fitur", t("Fitur")], ...(plans.length ? [["#harga", t("Harga")]] : []), ["#faq", t("FAQ")]].map(([href, label]) => (
+            {[["#fitur", t("Fitur")], ["#pasang", t("Pasang di HP")], ...(plans.length ? [["#harga", t("Harga")]] : []), ["#faq", t("FAQ")]].map(([href, label]) => (
               <a key={href} href={href} className="rounded-full px-3.5 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-surface hover:text-plum-700">{label}</a>
             ))}
           </nav>
@@ -387,6 +388,33 @@ export default async function LandingPage() {
               </li>
             ))}
           </ul>
+        </section>
+
+        {/* Pasang di HP */}
+        <section id="pasang" aria-labelledby="pasang-title" className="scroll-mt-20 border-y border-plum-100/80 bg-surface/50">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:py-24 lg:gap-14">
+            <div className="reveal">
+              <p className={`${eyebrow} md:mx-0 md:before:hidden`}>{t("Pasang di HP")}</p>
+              <h2 id="pasang-title" className="[font-variant-numeric:lining-nums] mt-3 text-center font-display text-[34px] leading-[1.1] font-medium text-neutral-900 md:text-left md:text-[44px]">
+                {t("Seperti aplikasi,")} <em className={em}>{t("tanpa unduh dari toko.")}</em>
+              </h2>
+              <p className="mt-4 text-center text-[15px] leading-7 text-neutral-600 md:text-left">{t("Monaplan bisa dipasang di layar utama HP Android maupun iPhone, langsung dari browser. Gratis, ringan, dan tidak memakan memori seperti aplikasi biasa.")}</p>
+              <ul className="mx-auto mt-6 max-w-md space-y-3 md:mx-0">
+                {[
+                  [<BellRing key="a" />, t("Pengingat DP, pelunasan, dan tugas muncul sebagai notifikasi di HP")],
+                  [<Mail key="b" />, t("Kabar langsung saat tamu mengonfirmasi hadir")],
+                  [<ScanLine key="c" />, t("Siap dipakai untuk check-in tamu di hari H")],
+                ].map(([icon, text], i) => (
+                  <li key={i} className="flex items-start gap-3 text-[14.5px] leading-6 text-neutral-700">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-plum-100 text-plum-700 [&_svg]:size-4" aria-hidden="true">{icon}</span>{text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="reveal">
+              <InstallGuide qrPath="/" />
+            </div>
+          </div>
         </section>
 
         {/* Peran */}

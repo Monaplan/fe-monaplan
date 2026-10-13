@@ -204,7 +204,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
                   <span className="inline-flex items-center gap-1 text-xs text-plum-700"><CircleCheck className="size-3.5" />{t("Terkirim")}</span>
                 ) : canWrite && g.phone_e164 ? (
                   <Button data-tour="tamu-send" size="sm" variant="secondary" icon={<WhatsAppIcon />} onClick={() => sendWA(g)}>{t("Kirim WA")}</Button>
-                ) : <span className="text-xs text-neutral-400">{t("Belum")}</span>}
+                ) : <span className="text-xs text-neutral-500">{t("Belum")}</span>}
               </span>
               <div className="hidden md:block">{rowMenu(g)}</div>
             </div>

@@ -9,6 +9,7 @@ import { cn } from "@/components/ui/cn";
 import { formatPercent } from "@/lib/format";
 import { setGuideStep } from "@/features/project/guide-actions";
 import { ProductTour } from "@/components/app/product-tour";
+import { InstallGuide } from "@/components/app/install-guide";
 import { TOURS } from "@/content/tours";
 import { getI18n } from "@/i18n/server";
 import { getT } from "@/i18n/server";
@@ -27,7 +28,7 @@ export default async function GuidePage({ params }: { params: Promise<{ projectI
   return (
     <>
       <ProductTour id="panduan" steps={TOURS["panduan"]!} />
-      <PageHeader tour="panduan" title={t("Panduan Penggunaan")} description={t("Delapan langkah. Selesai otomatis saat syaratnya terpenuhi.")} />
+      <PageHeader tour="panduan" title={t("Panduan Penggunaan")} description={t("Sembilan langkah. Selesai otomatis saat syaratnya terpenuhi.")} />
       <Card tour="panduan-main" className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-sm font-semibold">{t("Progres panduan")}</span>
@@ -49,8 +50,9 @@ export default async function GuidePage({ params }: { params: Promise<{ projectI
                 <h3 className={cn("text-base font-semibold", s.done ? "text-plum-700" : "text-neutral-800")}>{t(s.title)}</h3>
                 <p className="mt-1 max-w-2xl text-[13px] leading-5 text-neutral-600">{t(s.body)}</p>
                 <p className="mt-1 text-xs text-neutral-500">{t("Selesai bila: {rule}", { rule: t(s.rule) })}</p>
+                {s.key === "pasang_hp" && !s.done && <InstallGuide compact className="mt-4 max-w-3xl" />}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <ButtonLink href={`/app/${ref}/${s.path}`} size="sm" variant={s.done ? "secondary" : "primary"} icon={<ArrowRight />}>{t(s.cta)}</ButtonLink>
+                  <ButtonLink href={s.path.startsWith("/") ? s.path : `/app/${ref}/${s.path}`} size="sm" variant={s.done ? "secondary" : "primary"} icon={<ArrowRight />}>{t(s.cta)}</ButtonLink>
                   {canWrite && !s.done && <ActionButton size="sm" variant="ghost" action={setGuideStep.bind(null, projectId, s.key, true)}>{t("Tandai selesai")}</ActionButton>}
                   {canWrite && s.manual && <ActionButton size="sm" variant="ghost" action={setGuideStep.bind(null, projectId, s.key, false)}>{t("Batalkan tanda")}</ActionButton>}
                 </div>

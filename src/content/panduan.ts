@@ -1,6 +1,14 @@
 // Konten Panduan Penggunaan (PND-01, PND-02). Disimpan di repo agar mudah diubah tanpa migrasi.
 export const GUIDE_STEPS = [
   {
+    key: "pasang_hp",
+    title: "Pasang Monaplan di HP",
+    body: "Pasang Monaplan ke layar utama HP agar bisa dibuka seperti aplikasi, lalu nyalakan notifikasi. Lakukan sejak awal supaya pengingat tugas, pembayaran, dan RSVP yang muncul dari langkah berikutnya langsung sampai ke HP. Bisa di Android maupun iPhone, tanpa Play Store atau App Store.",
+    path: "/akun",
+    cta: "Nyalakan Notifikasi",
+    rule: "Notifikasi HP aktif di minimal 1 perangkat",
+  },
+  {
     key: "atur_pernikahan",
     title: "Atur pernikahan",
     body: "Isi tanggal pernikahan, kota, dan daftar acara seperti akad dan resepsi. Tanggal ini dipakai untuk menghitung due date checklist dan hitung mundur.",

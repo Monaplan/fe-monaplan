@@ -7,6 +7,8 @@ import { DialogProvider } from "@/components/ui/dialogs";
 import { ThemeSync } from "@/components/app/theme";
 import { SwRegister } from "@/components/app/sw-register";
 import { THEME_SCRIPT } from "@/lib/theme-script";
+import { SPLASH_END, SPLASH_HEAD } from "@/lib/splash-script";
+import { Splash } from "@/components/app/splash";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
 import { EN } from "@/i18n/en";
@@ -24,6 +26,8 @@ export const metadata: Metadata = {
   publisher: SITE.name,
   category: "lifestyle",
   formatDetection: { telephone: false, email: false, address: false },
+  // Dibuka dari layar utama iPhone: tampil penuh seperti aplikasi, splash Monaplan menggantikan layar putih
+  appleWebApp: { capable: true, title: SITE.name, statusBarStyle: "default" },
   openGraph: {
     type: "website",
     siteName: SITE.name,
@@ -52,8 +56,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={lang} className={`${jakarta.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_HEAD }} />
       </head>
       <body>
+        <Splash />
         <I18nProvider lang={lang} dict={lang === "en" ? EN : undefined}>
           <ToastProvider>
             <DialogProvider>{children}</DialogProvider>
@@ -64,6 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Statistik pengunjung dan kecepatan halaman milik Vercel; hanya aktif di situs yang di-deploy ke Vercel */}
         <Analytics />
         <SpeedInsights />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_END }} />
       </body>
     </html>
   );

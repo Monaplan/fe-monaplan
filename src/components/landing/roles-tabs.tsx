@@ -19,7 +19,7 @@ const ROLES = [
     perms: [true, true, true, false],
   },
   {
-    key: "viewer", tab: "Keluarga dan panitia", badge: "Viewer", title: "Keluarga cukup melihat",
+    key: "viewer", tab: "Keluarga", badge: "Viewer", title: "Keluarga cukup melihat",
     points: ["Melihat rundown, jadwal, dan progres persiapan", "Tidak bisa mengubah data, jadi tidak ada yang tergeser tanpa sengaja", "Panitia hari H cukup memakai tautan panitia untuk check-in tamu, tanpa akun", "Tidak perlu membayar untuk ikut melihat"],
     perms: [true, false, false, false],
   },
@@ -37,11 +37,11 @@ export function RolesTabs() {
   const r = ROLES[i]!;
   return (
     <div className="mx-auto max-w-5xl">
-      <div role="tablist" aria-label={t("Peran di ruang kerja")} className="mx-auto mb-6 grid w-full max-w-full grid-cols-2 gap-1 rounded-3xl bg-neutral-100 p-1 sm:flex sm:w-fit sm:rounded-full">
+      <div role="tablist" aria-label={t("Peran di ruang kerja")} className="mx-auto mb-6 flex w-full max-w-md gap-1 rounded-full bg-neutral-100 p-1 sm:w-fit sm:max-w-full">
         {ROLES.map((x, idx) => (
           <button key={x.key} role="tab" id={`rt-${x.key}`} aria-selected={idx === i} aria-controls="rt-panel" tabIndex={idx === i ? 0 : -1} onClick={() => setI(idx)}
             onKeyDown={(e) => { if (e.key === "ArrowRight") setI((i + 1) % ROLES.length); if (e.key === "ArrowLeft") setI((i + ROLES.length - 1) % ROLES.length); }}
-            className={cn("h-11 rounded-full px-2.5 text-[12.5px] leading-4 font-medium whitespace-nowrap transition-colors sm:h-9 sm:shrink-0 sm:px-4 sm:whitespace-nowrap", idx === i ? "bg-surface text-plum-700 shadow-sm" : "text-neutral-600 hover:text-neutral-900")}>
+            className={cn("h-10 min-w-0 flex-auto rounded-full px-2 text-[13px] leading-4 font-medium whitespace-nowrap transition-colors sm:h-9 sm:flex-none sm:px-5", idx === i ? "bg-surface text-plum-700 shadow-sm" : "text-neutral-600 hover:text-neutral-900")}>
             {t(x.tab)}
           </button>
         ))}

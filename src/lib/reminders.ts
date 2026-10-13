@@ -55,6 +55,9 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
     admin.from("project_members").select("project_id, user_id, role"),
     admin.from("profiles").select("*"),
   ]);
+  // Pengguna yang sudah menyalakan notifikasi HP tidak perlu ajakan memasang di email (galat diabaikan bila tabel belum ada)
+  const { data: pushRows } = await admin.from("push_subscriptions").select("user_id");
+  const hasPush = new Set((pushRows ?? []).map((r: { user_id: string }) => r.user_id));
   const prof = new Map<string, Profile>((profiles ?? []).map((p: Profile) => [p.id, p]));
   const writers = (pid: string) => (members ?? []).filter((m) => m.project_id === pid && m.role !== "viewer").map((m) => m.user_id as string);
   const link = (p: { id: string; slug?: string | null }, sub?: string) => projectPath(p, sub);
@@ -154,7 +157,7 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
               return {
                 kind: "daily_digest", name, couple: p.title, dateLabel: formatDateLong(today, tz, lang),
                 daysToGo: p.wedding_date ? diffDays(today, p.wedding_date) : null,
-                agenda, tasks, payments, paymentTotal: payments.length ? formatIDR(total) : null, url: url(link(p)),
+                agenda, tasks, payments, paymentTotal: payments.length ? formatIDR(total) : null, url: url(link(p)), pushTip: !hasPush.has(uid),
               };
             },
           });

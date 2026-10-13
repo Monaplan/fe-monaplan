@@ -17,6 +17,7 @@ import {
 } from "@/lib/format";
 import { savingsPlan } from "@/lib/budget";
 import { QuickAdd } from "./quick-add";
+import { InstallHint } from "@/components/app/push-card";
 import { CountdownHero } from "./countdown-hero";
 import { CountUp } from "@/components/ui/count-up";
 import { ProductTour } from "@/components/app/product-tour";
@@ -36,7 +37,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
     const today = todayISO(tz);
     const in14 = addDaysISO(today, 14);
     const head = { count: "exact" as const, head: true };
-    const [tasks, items, payments, guests, docs, events, feed, vendors, allocated, templates, rundown, manual] = await Promise.all([
+    const [tasks, items, payments, guests, docs, events, feed, vendors, allocated, templates, rundown, manual, push] = await Promise.all([
       supabase.from("tasks").select("phase_key, status").eq("project_id", pid),
       supabase.from("budget_items").select("id, name, actual_idr, estimated_idr").eq("project_id", pid),
       supabase.from("expense_payments").select("id, label, kind, amount_idr, due_date, status, paid_at, budget_item_id, vendors(name)").eq("project_id", pid),
@@ -49,15 +50,16 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
       supabase.from("message_templates").select("created_at, updated_at").eq("project_id", pid),
       supabase.from("rundown_items").select("*", head).eq("project_id", pid),
       supabase.from("guide_progress").select("step_key").eq("project_id", pid),
+      supabase.from("push_subscriptions").select("*", head),
     ]);
-    return { today, in14, tasks: tasks.data, items: items.data, payments: payments.data, guests: guests.data, docs: docs.data, events: events.data, feed: feed.data, vendors: vendors.data, allocated: allocated.count ?? 0, templates: templates.data ?? [], rundown: rundown.count ?? 0, manual: (manual.data ?? []).map((m) => m.step_key as string) };
+    return { today, in14, tasks: tasks.data, items: items.data, payments: payments.data, guests: guests.data, docs: docs.data, events: events.data, feed: feed.data, vendors: vendors.data, allocated: allocated.count ?? 0, templates: templates.data ?? [], rundown: rundown.count ?? 0, manual: (manual.data ?? []).map((m) => m.step_key as string), push: push.count ?? 0 };
   });
   const { today, in14, tasks, items, payments, guests, docs, events, feed, vendors } = d;
   const tz = project.timezone;
   const guide = guideFrom(project, {
     events: (events ?? []).length, allocated: d.allocated, tasksDone: (tasks ?? []).filter((x) => x.status === "done").length, vendors: (vendors ?? []).length,
     guests: (guests ?? []).length, templates: d.templates, sent: (guests ?? []).filter((g) => g.invitation_sent_at).length, rundown: d.rundown,
-    docAll: (docs ?? []).length, docDone: (docs ?? []).filter((x) => x.is_done).length, manual: d.manual,
+    docAll: (docs ?? []).length, docDone: (docs ?? []).filter((x) => x.is_done).length, manual: d.manual, pushDevices: d.push,
   });
 
   // Hitung mundur
@@ -110,6 +112,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
   return (
     <>
       <ProductTour id="dashboard" steps={TOURS.dashboard} />
+      {/* Ajakan memasang di HP: hanya tampil di HP/tablet yang belum memasang, bisa ditutup */}
+      {d.push === 0 && <InstallHint desktop className="mb-4" />}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-[22px] leading-[30px] font-semibold text-neutral-900 md:text-[28px] md:leading-9">{t("Halo,")}{" "}<span className="font-display text-[26px] font-medium text-plum-600 italic md:text-[28px]">{project.title}</span>

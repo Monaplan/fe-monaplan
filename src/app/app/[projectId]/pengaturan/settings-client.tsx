@@ -205,7 +205,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
                     <img src={m.profiles.avatar_url} alt="" referrerPolicy="no-referrer" className="size-9 rounded-full object-cover" />
                   ) : <span className="inline-flex size-9 items-center justify-center rounded-full bg-plum-100 text-xs font-semibold text-plum-700">{initials(m.profiles?.full_name ?? m.profiles?.email)}</span>}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{m.profiles?.full_name ?? m.profiles?.email}{m.user_id === currentUserId && t("(kamu)")}</p>
+                    <p className="truncate text-sm font-medium">{m.profiles?.full_name ?? m.profiles?.email}{m.user_id === currentUserId && <span className="font-normal text-neutral-500"> {t("(kamu)")}</span>}</p>
                     <p className="truncate text-xs text-neutral-500">{m.profiles?.email}</p>
                   </div>
                   <StatusPill tone={m.role === "owner" ? "positive" : "neutral"} icon={false}>{t(ROLE_LABEL[m.role])}</StatusPill>

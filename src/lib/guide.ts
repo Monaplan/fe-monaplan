@@ -5,7 +5,7 @@ import type { Project } from "./access";
 
 export type GuideInput = {
   events: number; allocated: number; tasksDone: number; vendors: number; guests: number;
-  templates: { created_at: string; updated_at: string }[]; sent: number; rundown: number; docAll: number; docDone: number; manual: string[];
+  templates: { created_at: string; updated_at: string }[]; sent: number; rundown: number; docAll: number; docDone: number; manual: string[]; pushDevices?: number;
 };
 
 // Hanya perhitungan: halaman yang sudah memegang datanya (dashboard) tidak perlu mengulang belasan query hitungan
@@ -19,6 +19,7 @@ export function guideFrom(project: Project, d: GuideInput) {
     template_whatsapp: d.templates.some((t) => Date.parse(t.updated_at) - Date.parse(t.created_at) > 1000) || d.sent > 0,
     susun_rundown: d.rundown > 0,
     lengkapi_dokumen: d.docAll > 0 && d.docAll === d.docDone,
+    pasang_hp: (d.pushDevices ?? 0) > 0,
   };
   const manualKeys = new Set(d.manual);
   const steps = GUIDE_STEPS.map((s) => ({ ...s, done: auto[s.key] || manualKeys.has(s.key), manual: manualKeys.has(s.key) && !auto[s.key] }));
@@ -28,7 +29,7 @@ export function guideFrom(project: Project, d: GuideInput) {
 export async function getGuideStatus(supabase: SupabaseClient, project: Project) {
   const pid = project.id;
   const head = { count: "exact" as const, head: true };
-  const [events, allocated, tasksDone, vendors, guests, tpl, sent, rundown, docAll, docDone, manual] = await Promise.all([
+  const [events, allocated, tasksDone, vendors, guests, tpl, sent, rundown, docAll, docDone, manual, push] = await Promise.all([
     supabase.from("wedding_events").select("*", head).eq("project_id", pid),
     supabase.from("budget_categories").select("*", head).eq("project_id", pid).gt("allocated_idr", 0),
     supabase.from("tasks").select("*", head).eq("project_id", pid).eq("status", "done"),
@@ -40,10 +41,12 @@ export async function getGuideStatus(supabase: SupabaseClient, project: Project)
     supabase.from("document_checklist_items").select("*", head).eq("project_id", pid),
     supabase.from("document_checklist_items").select("*", head).eq("project_id", pid).eq("is_done", true),
     supabase.from("guide_progress").select("step_key").eq("project_id", pid),
+    // Langganan push milik pengguna yang sedang masuk (RLS); galat diabaikan bila tabel belum ada
+    supabase.from("push_subscriptions").select("*", head),
   ]);
   return guideFrom(project, {
     events: events.count ?? 0, allocated: allocated.count ?? 0, tasksDone: tasksDone.count ?? 0, vendors: vendors.count ?? 0, guests: guests.count ?? 0,
     templates: tpl.data ?? [], sent: sent.count ?? 0, rundown: rundown.count ?? 0, docAll: docAll.count ?? 0, docDone: docDone.count ?? 0,
-    manual: (manual.data ?? []).map((m) => m.step_key as string),
+    manual: (manual.data ?? []).map((m) => m.step_key as string), pushDevices: push.count ?? 0,
   });
 }

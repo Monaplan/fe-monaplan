@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { removePushSubscription, savePushSubscription, sendTestPush } from "@/features/account/push-actions";
 import { useT } from "@/i18n/client";
+import { QrImage } from "./qr-image";
 
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
@@ -21,21 +22,24 @@ function keyToBytes(base64: string) {
 }
 
 // Kartu "Pasang Monaplan di HP" (DESIGN.md 20.8). Tidak tampil bila sudah terpasang atau pernah ditutup di perangkat ini.
-export function InstallHint({ className }: { className?: string }) {
+// desktop: di komputer tampilkan QR agar halaman ini bisa dibuka di HP lalu dipasang dari sana
+export function InstallHint({ className, desktop }: { className?: string; desktop?: boolean }) {
   const t = useT();
-  const [show, setShow] = useState<"android" | "ios" | null>(null);
+  const [show, setShow] = useState<"android" | "ios" | "desktop" | null>(null);
+  const [url, setUrl] = useState("");
   useEffect(() => {
     let dismissed = false;
     try { dismissed = localStorage.getItem("mp-install-hint") === "0"; } catch {}
     // Hanya untuk HP dan tablet: di komputer kartu ini tidak relevan
     const mobile = window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(max-width: 1024px)").matches;
-    if (dismissed || isStandalone() || !mobile) return;
+    if (dismissed || isStandalone()) return;
+    if (!mobile) { if (desktop) { setUrl(`${window.location.origin}/mulai`); setShow("desktop"); } return; }
     if (isIos()) { setShow("ios"); return; }
     const update = () => setShow(window.__mpInstall ? "android" : null);
     update();
     window.addEventListener("mp-installable", update);
     return () => window.removeEventListener("mp-installable", update);
-  }, []);
+  }, [desktop]);
   if (!show) return null;
   const hide = () => { setShow(null); try { localStorage.setItem("mp-install-hint", "0"); } catch {} };
   return (
@@ -43,7 +47,12 @@ export function InstallHint({ className }: { className?: string }) {
       <Smartphone className="mt-0.5 size-5 shrink-0 text-plum-600" />
       <div className="min-w-0 text-[13px] text-neutral-700">
         <p className="font-semibold text-neutral-900">{t("Pasang Monaplan di HP")}</p>
-        {show === "android" ? (
+        {show === "desktop" ? (
+          <div className="mt-1 flex items-center gap-4">
+            <p className="max-w-md">{t("Pindai QR ini dengan kamera HP untuk membuka Monaplan, lalu pasang ke layar utama. Pengingat tugas, pembayaran, dan RSVP akan muncul sebagai notifikasi di HP.")}</p>
+            {url && <QrImage value={url} label={t("QR untuk membuka Monaplan di HP")} className="size-24 shrink-0 border border-plum-100" />}
+          </div>
+        ) : show === "android" ? (
           <>
             <p className="mt-0.5">{t("Buka lebih cepat dari layar utama dan terima pengingat seperti aplikasi biasa.")}</p>
             <Button size="sm" className="mt-3" onClick={async () => { const e = window.__mpInstall; if (!e) return; await e.prompt(); window.__mpInstall = null; hide(); }}>{t("Pasang")}</Button>

@@ -29,8 +29,8 @@ type Category = { id: string; name: string; allocated_idr: number };
 type Item = { id: string; category_id: string; name: string; estimated_idr: number; actual_idr: number | null; vendor_id: string | null; notes: string | null; vendors: { name: string } | null; funded_by?: Side | null };
 type PaymentRow = Payment & { vendors: { name: string } | null; budget_items: { name: string } | null };
 
-// Kartu ringkasan: nominal singkat di HP supaya tidak terpotong, lengkap di layar lebar
-const money = (n: number) => <><span className="sm:hidden">{formatIDRShort(n)}</span><span className="hidden sm:inline">{formatIDR(n)}</span></>;
+// Kartu ringkasan: nominal singkat saat kartunya sempit (HP, dan empat kartu sejajar di laptop), lengkap saat kartunya lebar
+const money = (n: number) => <><span className="sm:hidden lg:inline 2xl:hidden">{formatIDRShort(n)}</span><span className="hidden sm:inline lg:hidden 2xl:inline">{formatIDR(n)}</span></>;
 
 export function BudgetClient({ projectId, tz, totalBudget, weddingDate, splitPct, savings, savingsUpdatedAt, categories, items, payments, vendors, documents, canWrite }: {
   projectId: string; tz: string; totalBudget: number; weddingDate: string | null;
@@ -97,7 +97,7 @@ export function BudgetClient({ projectId, tz, totalBudget, weddingDate, splitPct
       )}
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span data-tour="budget-tabs" className="inline-flex"><Segmented items={[{ key: "kategori" as const, label: t("Kategori") }, { key: "jadwal" as const, label: t("Jadwal Pembayaran") }, ...(splitPct !== null ? [{ key: "pihak" as const, label: t("Per Pihak") }] : [])]} value={tab} onChange={setTab} /></span>
+        <span data-tour="budget-tabs" className="inline-flex max-w-full min-w-0"><Segmented items={[{ key: "kategori" as const, label: t("Kategori") }, { key: "jadwal" as const, label: t("Jadwal Pembayaran") }, ...(splitPct !== null ? [{ key: "pihak" as const, label: t("Per Pihak") }] : [])]} value={tab} onChange={setTab} /></span>
         {canWrite && tab === "kategori" && <Button variant="outline" size="sm" icon={<Plus />} onClick={() => setCatForm("new")}>{t("Kategori")}</Button>}
       </div>
 

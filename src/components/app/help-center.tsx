@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LifeBuoy, Play, RotateCcw, Search } from "lucide-react";
+import { LifeBuoy, Play, RotateCcw, Search, Smartphone } from "lucide-react";
+import { InstallGuide } from "@/components/app/install-guide";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -43,6 +44,11 @@ export function HelpCenter({ base }: { base: string | null }) {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
       <ProductTour id="bantuan" steps={TOURS.bantuan!} />
       <div className="flex min-w-0 flex-col gap-4">
+        <Card tour="help-install">
+          <CardHeader icon={<Smartphone />} title={t("Pasang Monaplan di HP")} subtitle={t("Bisa di Android maupun iPhone, tanpa Play Store atau App Store.")} />
+          <InstallGuide />
+        </Card>
+
         <Card tour="help-faq">
           <CardHeader icon={<LifeBuoy />} title={t("Pertanyaan umum")} />
           <div className="relative mb-3">

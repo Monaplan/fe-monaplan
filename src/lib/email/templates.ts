@@ -11,7 +11,7 @@ export type DigestPayment = { vendor: string; meta: string; amount: string; due:
 
 export type EmailData =
   // Email terjadwal dan transaksional
-  | { kind: "daily_digest"; name: string; couple: string; dateLabel: string; daysToGo: number | null; agenda: DigestAgenda[]; tasks: DigestTask[]; payments: DigestPayment[]; paymentTotal: string | null; url: string }
+  | { kind: "daily_digest"; name: string; couple: string; dateLabel: string; daysToGo: number | null; agenda: DigestAgenda[]; tasks: DigestTask[]; payments: DigestPayment[]; paymentTotal: string | null; url: string; pushTip?: boolean }
   | { kind: "rsvp_digest"; name: string; couple: string; responses: number; attending: number; notAttending: number; pax: number; recent: { name: string; status: string; attending: boolean; message?: string | null }[]; answered: number; totalGuests: number; url: string }
   | { kind: "trial_ended"; name: string; couple?: string | null; plan: string; price: string; original?: string | null; promo?: { name: string; code: string | null; saving: string; until: string | null } | null; url: string }
   | { kind: "receipt"; name: string; orderNumber: string; plan: string; amount: string; method: string; validity: string; discount?: string | null; original?: string | null; paidAt?: string | null; url: string }
@@ -133,7 +133,9 @@ function build(lang: Lang, d: EmailData): Built {
         + (d.tasks.length ? card(L("Tugas checklist", "Checklist tasks"), d.tasks.length, joinRows(d.tasks.map((t) => line(title(t.title) + meta(esc(t.meta)), pill(t.due, t.tone))))) : "")
         + (d.payments.length ? card(L("Pembayaran vendor", "Vendor payments"), d.payments.length,
           joinRows(d.payments.map((p) => line(title(p.vendor) + meta(esc(p.meta)) + `<div style="margin-top:6px">${pill(p.due, p.tone)}</div>`, `<span style="font-size:15px;font-weight:700;color:${C.n900};white-space:nowrap">${esc(p.amount)}</span>`)))
-          + (d.paymentTotal ? total(L("Total yang perlu disiapkan", "Total to prepare"), d.paymentTotal) : "")) : "");
+          + (d.paymentTotal ? total(L("Total yang perlu disiapkan", "Total to prepare"), d.paymentTotal) : "")) : "")
+        // Ajakan memasang di HP bagi yang belum menyalakan notifikasi HP
+        + (d.pushTip ? `<p style="margin:18px 0 0;padding:12px 14px;border-radius:12px;background:${C.p50};font-size:13px;line-height:20px;color:${C.n700}">${L(`<b>Tip:</b> pasang Monaplan di HP dan nyalakan notifikasi agar pengingat ini juga muncul langsung di HP. <a href="${d.url}/panduan" style="color:${C.p600};font-weight:600">Lihat caranya</a>`, `<b>Tip:</b> install Monaplan on your phone and turn on notifications so these reminders also appear on your phone. <a href="${d.url}/panduan" style="color:${C.p600};font-weight:600">See how</a>`)}</p>` : "");
       const days = d.daysToGo != null && d.daysToGo >= 0 ? ` &nbsp;·&nbsp; <b style="color:${C.gold}">${d.daysToGo === 0 ? L("Hari ini!", "Today!") : L(`${d.daysToGo} hari lagi`, `${d.daysToGo} days to go`)}</b>` : "";
       return {
         shell: {
@@ -276,7 +278,7 @@ export function sampleData(kind: SentEmailKind, url = "https://monaplan.vercel.a
   const origin = url.replace(/\/app\/.*$/, "");
   switch (kind) {
     case "daily_digest": return {
-      kind, name, couple: "Raka & Nadia", dateLabel: "Kamis, 15 Oktober 2026", daysToGo: 127, url,
+      kind, name, couple: "Raka & Nadia", dateLabel: "Kamis, 15 Oktober 2026", daysToGo: 127, url, pushTip: true,
       agenda: [
         { time: "10.00", end: "11.30", title: "Fitting busana akad", where: "Butik Anggun, Malang", note: "Bawa sepatu dan aksesori" },
         { time: "15.00", end: "16.00", title: "Test food katering", where: "Dapur Sari Rasa" },

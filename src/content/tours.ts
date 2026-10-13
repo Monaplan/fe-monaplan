@@ -107,10 +107,11 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "settings-staff", title: "Tautan panitia", body: "Bagikan ke keluarga atau penerima tamu tanpa perlu akun. Mereka bisa melihat rundown, menghubungi vendor, dan check-in tamu. Buat ulang tautan bila tersebar ke orang yang tidak semestinya." },
   ],
   panduan: [
-    { target: "panduan-header", title: "Panduan penggunaan", body: "Delapan langkah berurutan untuk memulai dari nol." },
+    { target: "panduan-header", title: "Panduan penggunaan", body: "Sembilan langkah berurutan untuk memulai dari nol, diawali memasang Monaplan di HP agar pengingat langsung sampai." },
     { target: "panduan-main", title: "Selesai otomatis", body: "Setiap langkah tercentang sendiri saat syaratnya terpenuhi, dan tombolnya membawamu ke halaman yang tepat." },
   ],
   bantuan: [
+    { target: "help-install", title: "Pasang di HP", body: "Ikuti langkah untuk Android atau iPhone agar Monaplan bisa dibuka dari layar utama dan pengingatnya muncul sebagai notifikasi." },
     { target: "help-faq", title: "Cari jawabannya dulu", body: "Ketik kata kunci atau pilih kategori untuk melihat pertanyaan yang sering diajukan." },
     { target: "help-tours", title: "Putar ulang tur halaman", body: "Pilih halaman mana pun untuk melihat turnya lagi, atau ulangi semua tur sekaligus." },
     { target: "help-contact", title: "Tidak ketemu jawabannya?", body: "Chat admin lewat WhatsApp. Pesan awalnya sudah terisi, tinggal kirim." },
