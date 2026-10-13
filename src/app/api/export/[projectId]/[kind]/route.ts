@@ -58,6 +58,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ project
         ...(data ?? []).map((r: any) => [r.wedding_events?.name, r.start_time?.slice(0, 5), r.end_time?.slice(0, 5), r.title, r.pic_name, r.location, r.vendors?.name, r.description])];
       break;
     }
+    case "tabungan": {
+      const { data } = await supabase.from("savings_deposits").select("amount_idr, deposited_on, note").eq("project_id", projectId).order("deposited_on");
+      const rowsData = (data ?? []) as { amount_idr: number; deposited_on: string; note: string | null }[];
+      rows = [["Tanggal", "Nominal", "Catatan"], ...rowsData.map((d) => [d.deposited_on, d.amount_idr, d.note]), [], ["Total", rowsData.reduce((s, d) => s + d.amount_idr, 0)]];
+      break;
+    }
     case "mahar": {
       const { data } = await supabase.from("gift_items").select("*").eq("project_id", projectId).order("type");
       rows = [["Jenis", "Nama", "Kategori", "Jumlah", "Estimasi", "Harga Beli", "Toko", "Link", "Status"],

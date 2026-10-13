@@ -494,5 +494,40 @@ await expectOk("pax dijepit maksimal 50", async () => {
   if (r.checked_in_pax !== 50) throw new Error(JSON.stringify(r));
 });
 
+console.log("\nRiwayat setoran tabungan");
+const savingsOf = async () => one(`select savings_idr::int s, savings_updated_at is not null u from wedding_projects where id = $1`, [P]);
+await expectOk("owner mencatat setoran; total proyek mengikuti jumlah setoran", async () => {
+  await as(A, "a@x.com", () => db.query(`insert into savings_deposits (project_id, amount_idr, deposited_on) values ($1, 1000000, '2026-09-01')`, [P]));
+  const r = await savingsOf();
+  if (r.s !== 1_000_000 || !r.u) throw new Error(JSON.stringify(r));
+});
+await expectOk("editor mencatat setoran; total = jumlah semua", async () => {
+  await as(B, "b@x.com", () => db.query(`insert into savings_deposits (project_id, amount_idr, note) values ($1, 250000, 'dari B')`, [P]));
+  const r = await savingsOf();
+  if (r.s !== 1_250_000) throw new Error(JSON.stringify(r));
+});
+await expectOk("ubah nominal memperbarui total", async () => {
+  await as(A, "a@x.com", () => db.query(`update savings_deposits set amount_idr = 2000000 where project_id = $1 and note is null`, [P]));
+  const r = await savingsOf();
+  if (r.s !== 2_250_000) throw new Error(JSON.stringify(r));
+});
+await expectErr("nominal 0 ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`insert into savings_deposits (project_id, amount_idr) values ($1, 0)`, [P])));
+await expectErr("nominal negatif ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`insert into savings_deposits (project_id, amount_idr) values ($1, -5)`, [P])));
+await expectOk("bukan anggota tidak melihat setoran", () => as(D, "d@x.com", async () => { const r = await one(`select count(*)::int c from savings_deposits`); if (r.c !== 0) throw new Error("bocor " + r.c); }));
+await expectErr("bukan anggota tidak bisa mencatat setoran", "row-level security", () => as(D, "d@x.com", () => db.query(`insert into savings_deposits (project_id, amount_idr) values ($1, 1)`, [P])));
+await expectOk("hapus semua setoran: total kembali 0", async () => {
+  await as(A, "a@x.com", () => db.query(`delete from savings_deposits where project_id = $1`, [P]));
+  const r = await one(`select savings_idr::int s, savings_updated_at is null u from wedding_projects where id = $1`, [P]);
+  if (r.s !== 0 || !r.u) throw new Error(JSON.stringify(r));
+});
+await expectOk("backfill saldo awal idempoten", async () => {
+  await db.query(`update wedding_projects set savings_idr = 750000, savings_updated_at = '2026-09-10T00:00:00Z' where id = $1`, [P]);
+  const sql = fs.readFileSync(path.join(ROOT, "20261013000007_savings_deposits.sql"), "utf8");
+  await db.exec(sql);
+  await db.exec(sql);
+  const r = await one(`select count(*)::int c, sum(amount_idr)::int s, min(note) n from savings_deposits where project_id = $1`, [P]);
+  if (r.c !== 1 || r.s !== 750_000 || r.n !== "Saldo awal") throw new Error(JSON.stringify(r));
+});
+
 console.log(`\n${pass} lulus, ${failN} gagal`);
 process.exit(failN ? 1 : 0);

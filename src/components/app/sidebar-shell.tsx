@@ -6,7 +6,7 @@ import { useSheetSwipe } from "@/components/ui/use-sheet-swipe";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock, FileText, Gift, HandCoins, Hourglass, PartyPopper, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield, ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X
+  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock, FileText, Gift, HandCoins, Hourglass, PiggyBank, UserCheck, PartyPopper, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield, ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X
 } from "lucide-react";
 import { LogoMark } from "./logo-mark";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -25,7 +25,7 @@ const ICONS = {
   dashboard: LayoutGrid, checklist: ListChecks, budget: Wallet, vendor: Store, tamu: Mail, rundown: Clock, gift: Gift,
   dokumen: FileText, kalender: CalendarDays, pengaturan: SlidersHorizontal, panduan: BookOpen, bantuan: CircleHelp,
   home: House, user: UserRound, tagihan: ReceiptText, admin: Shield, paket: Package, kode: KeyRound, order: ReceiptText,
-  palette: Palette, plane: Plane, harih: PartyPopper, amplop: HandCoins, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail,
+  palette: Palette, plane: Plane, harih: PartyPopper, amplop: HandCoins, tabungan: PiggyBank, hadir: UserCheck, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail,
 } as const;
 export type IconKey = keyof typeof ICONS;
 

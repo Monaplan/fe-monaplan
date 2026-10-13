@@ -11,7 +11,7 @@ const ts = require("typescript");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "mp-lib-"));
 
-for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts"]) {
+for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts"]) {
   // "server-only" hanya berlaku di bundel Next, jadi dilepas untuk uji ini
   const src = fs.readFileSync(path.join(ROOT, rel), "utf8").replace('import "server-only";', "");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
@@ -24,8 +24,9 @@ const load = (rel) => import(pathToFileURL(path.join(OUT, rel)).href);
 const { priceFor, discountOf, promoIsLive, MIN_CHARGE_IDR, upgradeQuote, creditOf, promoState, checkPromoCode, normalizeCode, promoExhausted } = await load("src/lib/pricing.mjs");
 const { safeNextPath } = await load("src/lib/paths.mjs");
 const { parseSort } = await load("src/lib/sort.mjs");
-const { fundingSplit, savingsPlan } = await load("src/lib/budget.mjs");
+const { fundingSplit, savingsPlan, depositsByMonth, depositTotal } = await load("src/lib/budget.mjs");
 const { extractCode } = await load("src/lib/checkin.mjs");
+const { evaluateIdle, parseSeen, makeSeen, IDLE_MS, TOUCH_MS, SB_COOKIE_RE, IDLE_COOKIE_MAX_AGE } = await load("src/lib/idle.mjs");
 const { parseTerms, cleanQuery } = await load("src/lib/search-terms.mjs");
 const { buildDesiredEvents, eventIdFor, planSync } = await load("src/lib/google/events.mjs");
 process.env.TOKEN_ENCRYPTION_KEY = "kunci-uji";
@@ -270,6 +271,39 @@ console.log("\nTarget tabungan");
   check("tanpa tanggal: tidak ada target per bulan", savingsPlan({ items, payments: pays, savings: 0, weddingDate: null, today: "2026-10-12" }).perMonth === null);
   check("batas sudah lewat: semua kekurangan bulan ini", savingsPlan({ items, payments: [], savings: 0, weddingDate: "2026-10-20", today: "2026-10-12" }).perMonth === 50_000_000);
   check("dana cukup: target 0", savingsPlan({ items, payments: pays, savings: 99_000_000, weddingDate: "2027-06-14", today: "2026-10-12" }).perMonth === 0);
+}
+
+console.log("\nRiwayat setoran");
+{
+  const dep = [{ amount_idr: 1_000_000, deposited_on: "2026-08-31" }, { amount_idr: 500_000, deposited_on: "2026-08-01" }, { amount_idr: 2_000_000, deposited_on: "2026-10-05" }];
+  const m = depositsByMonth(dep, "2026-10-13");
+  check("total semua setoran", depositTotal(dep) === 3_500_000);
+  check("bulan tanpa setoran terisi 0 (tanpa celah)", eq(m.map((x) => x.month), ["2026-08", "2026-09", "2026-10"]) && m[1].total === 0);
+  check("jumlah per bulan memakai tanggal setoran (31 Agustus tetap Agustus)", m[0].total === 1_500_000 && m[2].total === 2_000_000);
+  check("daftar kosong menghasilkan kosong", depositsByMonth([], "2026-10-13").length === 0);
+  check("berhenti di bulan ini walau setoran terakhir lebih lama", depositsByMonth([{ amount_idr: 1, deposited_on: "2026-07-02" }], "2026-09-30").length === 3);
+  check("melintasi pergantian tahun", eq(depositsByMonth([{ amount_idr: 1, deposited_on: "2026-12-10" }, { amount_idr: 1, deposited_on: "2027-02-01" }], "2027-02-10").map((x) => x.month), ["2026-12", "2027-01", "2027-02"]));
+}
+
+console.log("\nBatas tidak aktif sesi");
+{
+  const NOW = Date.UTC(2026, 9, 13, 12, 0, 0);
+  const DAY = 86_400_000;
+  const ev = (cookie, key = "sesi-a", now = NOW) => evaluateIdle({ cookie, sessionKey: key, now });
+  check("tanpa cookie: mulai hitung (init)", ev(undefined).action === "init" && ev(undefined).value === makeSeen("sesi-a", NOW));
+  check("cookie rusak (bukan angka) = init", ev("abc").action === "init" && ev("sesi-a.xyz").action === "init" && ev("").action === "init" && ev(".123").action === "init");
+  check("cookie sesi lain = init, tidak memaksa logout", ev(makeSeen("sesi-lama", NOW - 30 * DAY)).action === "init");
+  check("waktu di masa depan lebih dari 1 hari = init", ev(makeSeen("sesi-a", NOW + 2 * DAY)).action === "init");
+  check("selisih jam kecil di masa depan masih sah", ev(makeSeen("sesi-a", NOW + 60_000)).action === "ok");
+  check("baru dibuka (< 5 menit) = ok tanpa menulis", ev(makeSeen("sesi-a", NOW - 60_000)).action === "ok");
+  check("lewat 5 menit = touch dan nilai diperbarui", ev(makeSeen("sesi-a", NOW - TOUCH_MS - 1)).action === "touch" && ev(makeSeen("sesi-a", NOW - TOUCH_MS - 1)).value === makeSeen("sesi-a", NOW));
+  check("6 hari tidak aktif masih masuk (touch)", ev(makeSeen("sesi-a", NOW - 6 * DAY)).action === "touch");
+  check("tepat 7 hari belum kedaluwarsa", ev(makeSeen("sesi-a", NOW - IDLE_MS)).action === "touch");
+  check("lewat 7 hari = expire", ev(makeSeen("sesi-a", NOW - IDLE_MS - 1)).action === "expire");
+  check("8 hari = expire", ev(makeSeen("sesi-a", NOW - 8 * DAY)).action === "expire");
+  check("kunci sesi boleh memuat titik (UUID aman)", eq(parseSeen("a.b.c.1700000000000"), { key: "a.b.c", at: 1700000000000 }));
+  check("cookie lebih lama dari batas idle (agar tidak hilang sebelum diperiksa)", IDLE_COOKIE_MAX_AGE * 1000 > IDLE_MS * 10);
+  check("nama cookie sesi Supabase dikenali, termasuk yang terpecah", SB_COOKIE_RE.test("sb-abcd-auth-token") && SB_COOKIE_RE.test("sb-abcd-auth-token.0") && SB_COOKIE_RE.test("sb-abcd-auth-token.12") && !SB_COOKIE_RE.test("mp-seen") && !SB_COOKIE_RE.test("sb-abcd-auth-token-code-verifier"));
 }
 
 console.log("\nKode QR check-in");

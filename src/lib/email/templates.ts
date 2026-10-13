@@ -258,7 +258,7 @@ function build(lang: Lang, d: EmailData): Built {
     case "savings_reminder": {
       const body = L(`Sisihkan ${d.amount} bulan ini. Tinggal ${d.months} bulan menuju target.`, `Set aside ${d.amount} this month. ${d.months} month(s) left to reach the goal.`);
       const title = L("Target tabungan bulan ini", "This month's savings goal");
-      return { shell: { subject: title, preheader: body, kicker: L("Tabungan", "Savings"), heading: esc(d.amount), intro: para(esc(body)), cta: L("Buka budget", "Open budget"), ctaUrl: d.url }, text: [hi, body], title, body };
+      return { shell: { subject: title, preheader: body, kicker: L("Tabungan", "Savings"), heading: esc(d.amount), intro: para(esc(body)), cta: L("Buka tabungan", "Open savings"), ctaUrl: d.url }, text: [hi, body], title, body };
     }
   }
 }

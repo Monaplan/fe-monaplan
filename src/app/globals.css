@@ -362,3 +362,13 @@ html.dark .mp-splash-bar > span { background: #D9A3BE; }
   html.mp-splash #mp-splash { transition: opacity 200ms ease, visibility 0s linear 200ms; }
   .mp-splash-bar > span { transform: none; }
 }
+
+/* iPhone/iPad (Safari) memperbesar halaman saat kolom isian berfont di bawah 16 px disentuh. Di perangkat sentuh, semua isian dipaksa 16 px.
+   Aturan ini di luar layer Tailwind sehingga mengalahkan kelas text-sm dan sejenisnya di seluruh aplikasi, termasuk undangan tamu dan admin. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}

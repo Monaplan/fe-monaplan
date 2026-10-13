@@ -1,81 +1,21 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { PiggyBank, Users } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CurrencyInput } from "@/components/ui/inputs";
-import { AnchoredPopover } from "@/components/ui/anchored-popover";
-import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { ProgressBar } from "@/components/ui/progress";
 import { StatusPill } from "@/components/ui/pill";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/components/ui/cn";
-import { formatDateCompact, formatIDR, formatIDRShort, todayISO } from "@/lib/format";
-import { fundingSplit, savingsPlan, type Side, type SideTotals } from "@/lib/budget";
+import { formatIDR } from "@/lib/format";
+import { fundingSplit, type Side, type SideTotals } from "@/lib/budget";
 import { PARTY_SIDE, labelOf } from "@/lib/constants";
-import { saveSavings, saveSplitPct } from "./actions";
+import { saveSplitPct } from "./actions";
 import { useI18n } from "@/i18n/client";
 
 type ItemLite = { id: string; name: string; estimated_idr: number; actual_idr: number | null; funded_by?: Side | null; category_id: string };
 type PaymentLite = { budget_item_id: string | null; amount_idr: number; status: string };
-
-// Kartu Target Tabungan di halaman Budget (DESIGN.md 20.4)
-export function SavingsCard({ projectId, tz, items, payments, savings, updatedAt, weddingDate, canWrite, settingsHref }: {
-  projectId: string; tz: string; items: ItemLite[]; payments: PaymentLite[]; savings: number; updatedAt: string | null;
-  weddingDate: string | null; canWrite: boolean; settingsHref: string;
-}) {
-  const { t, lang } = useI18n();
-  const [open, setOpen] = useState(false);
-  const btn = useRef<HTMLButtonElement>(null);
-  const plan = savingsPlan({ items, payments, savings, weddingDate, today: todayISO(tz) });
-  const progress = plan.need ? Math.min(1, savings / plan.need) : 1;
-
-  return (
-    <Card tour="budget-savings" className="mb-4">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
-        <div className="min-w-0">
-          <p className="flex items-center gap-2 text-[13px] font-medium text-neutral-600"><PiggyBank className="size-4 text-plum-600" />{t("Target Tabungan")}</p>
-          {!weddingDate ? (
-            <p className="mt-2 text-[14px] text-neutral-700">{t("Isi tanggal pernikahan untuk menghitung target.")}{" "}
-              <a href={settingsHref} className="font-semibold text-plum-600 hover:underline">{t("Buka Pengaturan")}</a></p>
-          ) : plan.shortfall === 0 ? (
-            <>
-              <p className="mt-1 text-[20px] leading-7 font-bold text-neutral-900">{t("Dana sudah cukup")}</p>
-              <p className="mt-1 text-[13px] text-neutral-600">{t("Dana terkumpul menutup seluruh sisa tagihan.")}</p>
-            </>
-          ) : (
-            <>
-              <p className="tabular mt-1 text-[24px] leading-8 font-bold tracking-[-0.02em] text-neutral-900">
-                {formatIDR(plan.perMonth)}<span className="text-[15px] font-semibold text-neutral-500"> / {t("bulan")}</span></p>
-              <p className="mt-1 text-[13px] text-neutral-600">{t("Selama {n} bulan, sampai {date} (2 minggu sebelum hari H).", { n: plan.months ?? 1, date: formatDateCompact(plan.deadline, tz, lang) })}</p>
-            </>
-          )}
-        </div>
-        <div className="w-full md:max-w-[340px]">
-          <div className="mb-2 flex items-baseline justify-between gap-3 text-[13px]">
-            <span className="text-neutral-600">{t("Dana terkumpul")}</span>
-            <span className="tabular text-neutral-700"><b className="text-neutral-900">{formatIDRShort(savings)}</b> {t("dari {v1}", { v1: formatIDRShort(plan.need) })}</span>
-          </div>
-          <ProgressBar value={progress} />
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[12px] text-neutral-500">{updatedAt ? t("Diperbarui {date}", { date: formatDateCompact(updatedAt, tz, lang) }) : t("Belum pernah diisi")}</span>
-            {canWrite && <button ref={btn} type="button" onClick={() => setOpen((o) => !o)} className="text-[13px] font-semibold text-plum-600 hover:underline">{t("Perbarui dana terkumpul")}</button>}
-          </div>
-          {open && (
-            <AnchoredPopover anchor={btn} onClose={() => setOpen(false)} width={300}>
-              <ActionForm action={(fd) => saveSavings(projectId, fd)} onSuccess={() => setOpen(false)} className="gap-3 p-4">
-                <label htmlFor="sv-amount" className="text-[13px] font-semibold text-neutral-800">{t("Dana yang sudah terkumpul")}</label>
-                <CurrencyInput id="sv-amount" name="savings_idr" defaultValue={savings} autoFocus />
-                <SubmitButton size="sm">{t("Simpan")}</SubmitButton>
-              </ActionForm>
-            </AnchoredPopover>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
-}
 
 // Tab Per Pihak (DESIGN.md 20.3)
 export function SplitView({ projectId, items, payments, splitPct, canWrite }: {

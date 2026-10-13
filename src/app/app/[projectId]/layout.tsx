@@ -64,6 +64,7 @@ export default async function WorkspaceLayout({ children, params }: { children: 
         { href: base, label: t("Dashboard"), icon: "dashboard", exact: true },
         { href: `${base}/checklist`, label: t("To Do Checklist"), icon: "checklist", badge: overdue ?? 0, badgeTone: "danger" },
         { href: `${base}/budget`, label: t("Budgeting"), icon: "budget" },
+        { href: `${base}/tabungan`, label: t("Tabungan"), icon: "tabungan" },
         { href: `${base}/vendor`, label: t("Kelola Vendor"), icon: "vendor" },
         { href: `${base}/tamu`, label: t("Tamu & RSVP"), icon: "tamu", badge: rsvpNew ?? 0 },
       ],
@@ -81,6 +82,7 @@ export default async function WorkspaceLayout({ children, params }: { children: 
       title: t("Hari H"),
       items: [
         { href: `${base}/hari-h`, label: t("Mode Hari H"), icon: "harih" },
+        { href: `${base}/tamu-hadir`, label: t("Tamu Hadir"), icon: "hadir" },
         { href: `${base}/amplop-kado`, label: t("Amplop & Kado"), icon: "amplop" },
       ],
     },

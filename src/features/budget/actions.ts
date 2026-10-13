@@ -121,13 +121,3 @@ export async function saveSplitPct(projectId: string, pct: number): Promise<Acti
   revalidatePath("/app/[projectId]/budget", "page");
   return error ? dbError(error) : { ok: true, message: "Porsi biaya bersama tersimpan." };
 }
-
-// Dana tabungan yang sudah terkumpul
-export async function saveSavings(projectId: string, fd: FormData): Promise<ActionResult> {
-  const { supabase, canWrite } = await getProjectContext(projectId);
-  if (!canWrite) return fail("Kamu tidak punya izin mengubah data ini, atau akses ruang kerja sudah berakhir.");
-  const { error } = await supabase.from("wedding_projects")
-    .update({ savings_idr: parseIDR(fd.get("savings_idr")), savings_updated_at: new Date().toISOString() }).eq("id", projectId);
-  revalidatePath("/app/[projectId]", "layout");
-  return error ? dbError(error) : { ok: true, message: "Dana terkumpul tersimpan." };
-}

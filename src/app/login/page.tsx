@@ -17,10 +17,11 @@ export async function generateMetadata() {
   });
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; mode?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; mode?: string; expired?: string }> }) {
   const { t } = await getI18n();
-  const { next, error, mode } = await searchParams;
-  if (await getSession()) redirect(next && next.startsWith("/") ? next : "/mulai");
+  const { next, error, mode, expired } = await searchParams;
+  // Dari proxy setelah sesi diakhiri: jangan mengalihkan balik walau masih ada sisa sesi, supaya tidak berulang
+  if (!expired && await getSession()) redirect(next && next.startsWith("/") ? next : "/mulai");
   const signup = mode === "daftar";
   const { trial } = await getSettings();
 
@@ -33,7 +34,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         next={next}
         trialDays={trial.enabled ? trial.days : null}
         ownGoogle={googleOwnLoginEnabled()}
-        notice={error ? (error === "link" ? "Tautan sudah kedaluwarsa atau pernah dipakai. Silakan coba lagi." : error === "google" ? "Masuk dengan Google gagal. Coba lagi, atau masuk dengan email." : "Gagal masuk. Coba lagi, ya.") : undefined}
+        noticeTone={expired && !error ? "info" : "error"}
+        notice={expired && !error ? t("Sesi berakhir karena Monaplan tidak dibuka selama 7 hari. Silakan masuk lagi.") : error ? (error === "link" ? "Tautan sudah kedaluwarsa atau pernah dipakai. Silakan coba lagi." : error === "google" ? "Masuk dengan Google gagal. Coba lagi, atau masuk dengan email." : "Gagal masuk. Coba lagi, ya.") : undefined}
       />
     </AuthLayout>
   );

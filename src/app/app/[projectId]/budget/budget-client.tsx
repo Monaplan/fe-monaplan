@@ -16,8 +16,7 @@ import { cn } from "@/components/ui/cn";
 import { CategoryChart } from "@/components/app/charts-lazy";
 import { PARTY_SIDE, PAYMENT_KIND, labelOf } from "@/lib/constants";
 import type { Side } from "@/lib/budget";
-import { FundingBadge, SavingsCard, SplitView } from "@/features/budget/split-savings";
-import { useProjectBase } from "@/components/app/project-base";
+import { FundingBadge, SplitView } from "@/features/budget/split-savings";
 import { formatDateCompact, formatIDR, formatIDRShort, formatPercent, relativeDay, todayISO } from "@/lib/format";
 import { deleteCategory, deleteItem, deletePayment, markPaymentPaid, saveCategory, saveItem } from "@/features/budget/actions";
 import { PaymentFormModal, type Payment } from "@/features/budget/payment-form";
@@ -32,15 +31,14 @@ type PaymentRow = Payment & { vendors: { name: string } | null; budget_items: { 
 // Kartu ringkasan: nominal singkat saat kartunya sempit (HP, dan empat kartu sejajar di laptop), lengkap saat kartunya lebar
 const money = (n: number) => <><span className="sm:hidden lg:inline 2xl:hidden">{formatIDRShort(n)}</span><span className="hidden sm:inline lg:hidden 2xl:inline">{formatIDR(n)}</span></>;
 
-export function BudgetClient({ projectId, tz, totalBudget, weddingDate, splitPct, savings, savingsUpdatedAt, categories, items, payments, vendors, documents, canWrite }: {
-  projectId: string; tz: string; totalBudget: number; weddingDate: string | null;
-  // null bila migrasi tahap 1 (20261013000002 dan 20261013000003) belum dijalankan: fitur terkait disembunyikan
-  splitPct: number | null; savings: number | null; savingsUpdatedAt: string | null;
+export function BudgetClient({ projectId, tz, totalBudget, splitPct, categories, items, payments, vendors, documents, canWrite }: {
+  projectId: string; tz: string; totalBudget: number;
+  // null bila migrasi 20261013000002 belum dijalankan: tab Per Pihak disembunyikan
+  splitPct: number | null;
   categories: Category[]; items: Item[]; payments: PaymentRow[];
   vendors: { id: string; name: string }[]; documents: { id: string; title: string }[]; canWrite: boolean;
 }) {
   const { t, lang } = useI18n();
-  const base = useProjectBase();
   const [tab, setTab] = useState<"kategori" | "jadwal" | "pihak">("kategori");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [catForm, setCatForm] = useState<Category | "new" | null>(null);
@@ -83,11 +81,6 @@ export function BudgetClient({ projectId, tz, totalBudget, weddingDate, splitPct
         <StatCard icon={<CircleCheck />} title={t("Sudah Dibayar")} value={money(paid)} footer={<>{t("{n} pembayaran", { n: payments.filter((p) => p.status === "sudah_bayar").length })}</>} />
         <StatCard icon={<ReceiptText />} title={t("Sisa Tagihan")} value={money(unpaid)} footer={<>{payments.filter((p) => p.status === "belum_bayar").length}{" "}{t("belum dibayar")}</>} />
       </div>
-
-      {savings !== null && (
-        <SavingsCard projectId={projectId} tz={tz} items={items} payments={payments} savings={savings} updatedAt={savingsUpdatedAt}
-          weddingDate={weddingDate} canWrite={canWrite} settingsHref={`${base}/pengaturan`} />
-      )}
 
       {catStats.some((c) => c.estimated || c.actual) && (
         <Card tour="budget-chart" className="mb-4">

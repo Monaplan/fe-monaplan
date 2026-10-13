@@ -79,3 +79,34 @@ export function CategoryChart({ data }: { data: { name: string; estimated: numbe
     </div>
   );
 }
+
+// Setoran tabungan per bulan; bulan berjalan disorot, batas target per bulan ditandai garis putus-putus bila ada
+export function DepositChart({ data }: { data: { month: string; label: string; total: number; current: boolean }[] }) {
+  const t = useT();
+  const total = data.reduce((s, d) => s + d.total, 0);
+  return (
+    <div className="h-56" role="img" aria-label={t("Grafik setoran tabungan per bulan, total {formatIDR}", { formatIDR: formatIDR(total) })}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
+          <defs>
+            <linearGradient id="depDefault" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style={{ stopColor: "var(--color-plum-200)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--color-plum-50)" }} />
+            </linearGradient>
+            <linearGradient id="depActive" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style={{ stopColor: "var(--color-plum-600)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--color-plum-600)", stopOpacity: 0.15 }} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} stroke="var(--color-neutral-200)" strokeDasharray="4 4" />
+          <XAxis dataKey="label" tick={axis} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+          <YAxis tick={axis} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => formatIDRShort(v).replace(/^Rp\s/, "")} />
+          <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--color-plum-50)" }} />
+          <Bar dataKey="total" name="Setoran" radius={[8, 8, 8, 8]} maxBarSize={40}>
+            {data.map((d) => <Cell key={d.month} fill={d.current ? "url(#depActive)" : "url(#depDefault)"} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

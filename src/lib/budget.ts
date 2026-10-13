@@ -65,6 +65,28 @@ export function savingsPlan({ items, payments, savings, weddingDate, today }: {
   return { need, shortfall, savings, months, perMonth, deadline };
 }
 
+
+// Riwayat setoran: total, dan jumlah per bulan (YYYY-MM) tanpa celah, dari bulan setoran pertama sampai bulan ini
+type DepositLite = { amount_idr: number; deposited_on: string };
+export const depositTotal = (deposits: DepositLite[]) => deposits.reduce((s, d) => s + d.amount_idr, 0);
+
+export function depositsByMonth(deposits: DepositLite[], today: string): { month: string; total: number }[] {
+  if (!deposits.length) return [];
+  const sums = new Map<string, number>();
+  for (const d of deposits) { const m = d.deposited_on.slice(0, 7); sums.set(m, (sums.get(m) ?? 0) + d.amount_idr); }
+  const first = [...sums.keys()].sort()[0]!;
+  const last = [today.slice(0, 7), ...sums.keys()].sort().pop()!;
+  const out: { month: string; total: number }[] = [];
+  let [y, m] = first.split("-").map(Number) as [number, number];
+  for (;;) {
+    const key = `${y}-${String(m).padStart(2, "0")}`;
+    out.push({ month: key, total: sums.get(key) ?? 0 });
+    if (key >= last) break;
+    if (++m > 12) { m = 1; y++; }
+  }
+  return out;
+}
+
 function addDays(iso: string, n: number) {
   const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);

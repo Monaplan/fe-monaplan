@@ -181,7 +181,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
             <ProgressRow icon={<FileText />} title={t("Dokumen")} done={docsDone} total={(docs ?? []).length} />
           </div>
           {saving && saving.need > 0 && (
-            <Link href={`/app/${ref}/budget`} className="mt-5 flex items-center gap-3 rounded-md border border-neutral-200 p-3 hover:bg-plum-50">
+            <Link href={`/app/${ref}/tabungan`} className="mt-5 flex items-center gap-3 rounded-md border border-neutral-200 p-3 hover:bg-plum-50">
               <IconTile className="text-plum-700"><PiggyBank /></IconTile>
               <span className="flex-1 text-[13px] text-neutral-600"><b className="block text-neutral-800">{t("Target Tabungan")}</b>
                 {saving.shortfall === 0 ? t("Dana sudah cukup") : <span className="tabular">{t("{v1} per bulan", { v1: formatIDR(saving.perMonth) })}</span>}</span>

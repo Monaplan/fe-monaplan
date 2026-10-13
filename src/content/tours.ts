@@ -29,7 +29,6 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "budget-header", title: "Kelola uang pernikahan", body: "Semua anggaran, realisasi, dan jadwal pembayaran vendor ada di satu halaman." },
     { target: "budget-stats", title: "Ringkasan keuangan", body: "Total budget, realisasi, yang sudah dibayar, dan sisa tagihan. Semuanya terhitung otomatis dari item dan pembayaran." },
     { target: "budget-pay", title: "Catat setiap pembayaran", body: "DP, termin, dan pelunasan beserta jatuh temponya. Pembayaran yang jatuh tempo besok atau 7 hari lagi masuk ke email pagi dan Google Calendar." },
-    { target: "budget-savings", title: "Target tabungan", body: "Berapa yang perlu disisihkan per bulan agar semua tagihan lunas dua minggu sebelum hari H. Perbarui dana terkumpul kapan saja, dan pengingatnya muncul setiap tanggal 1." },
     { target: "budget-chart", title: "Estimasi dan realisasi", body: "Bandingkan rencana dan pengeluaran sebenarnya di setiap kategori, supaya tahu bagian mana yang membengkak." },
     { target: "budget-tabs", title: "Kategori atau jadwal", body: "Lihat budget per kategori lengkap dengan peringatan bila melebihi alokasi, beralih ke daftar jadwal pembayaran, atau buka Per Pihak untuk melihat bagian pihak pria dan pihak wanita." },
     { target: "budget-category", title: "Isi setiap kategori", body: "Buka kategori untuk menambah item, mengisi estimasi dan realisasi, serta mengatur alokasinya. Kategori adat ikut tersedia sesuai gaya pernikahanmu." },
@@ -69,6 +68,18 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "harih-attendance", title: "Check-in tamu", body: "Tekan Pindai QR untuk memindai QR masuk tamu, atau cari namanya. Tamu yang tidak terdaftar bisa langsung dimasukkan." },
     { target: "harih-vendor", title: "Hubungi vendor sekali ketuk", body: "Vendor berstatus deal tampil di sini dengan tombol telepon dan WhatsApp." },
     { target: "harih-timeline", title: "Rundown lengkap", body: "Kegiatan yang sudah lewat diredupkan, yang sedang berjalan disorot. Bagikan halaman ini ke panitia lewat Tautan Panitia di Pengaturan, tab Kolaborator." },
+  ],
+  tabungan: [
+    { target: "tabungan-header", title: "Tabungan nikah", body: "Catat setiap setoran tabungan untuk pernikahan. Dana terkumpul dihitung otomatis dari riwayat setoran." },
+    { target: "tabungan-target", title: "Target per bulan", body: "Berapa yang perlu disisihkan tiap bulan agar semua tagihan lunas dua minggu sebelum hari H. Angkanya menyesuaikan budget, pembayaran, dan setoran kalian." },
+    { target: "tabungan-chart", title: "Setoran per bulan", body: "Grafik menunjukkan seberapa konsisten kalian menabung. Bulan berjalan diberi warna lebih pekat." },
+    { target: "tabungan-list", title: "Riwayat setoran", body: "Ubah atau hapus setoran dari menu titik tiga. Pengingat target muncul setiap tanggal 1." },
+  ],
+  tamuhadir: [
+    { target: "tamuhadir-header", title: "Daftar tamu hadir", body: "Semua tamu yang sudah check-in, lengkap dengan jam masuk dan petugas yang memindai." },
+    { target: "tamuhadir-stats", title: "Rekap kehadiran", body: "Jumlah tamu dan orang yang sudah datang dibanding yang konfirmasi hadir." },
+    { target: "tamuhadir-list", title: "Cari dan saring", body: "Cari nama atau saring per grup. Salah pindai? Batalkan check-in dari menu titik tiga." },
+    { target: "tamuhadir-actions", title: "Unduh sebagai PDF", body: "Tombol Unduh PDF membuat tabel biasa berisi tamu yang hadir, siap dicetak atau dibagikan." },
   ],
   amplop: [
     { target: "amplop-header", title: "Amplop & Kado", body: "Catat amplop, transfer, dan kado dari tamu setelah acara. Semua tersimpan rapi untuk ucapan terima kasih dan sebagai catatan saat gantian kondangan nanti." },

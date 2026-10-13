@@ -7,3 +7,4 @@ import dynamic from "next/dynamic";
 const Fallback = ({ h }: { h: string }) => <div aria-hidden="true" className={`skeleton w-full rounded-xl ${h}`} />;
 export const SpendingChart = dynamic(() => import("./charts").then((m) => m.SpendingChart), { ssr: false, loading: () => <Fallback h="h-72" /> });
 export const CategoryChart = dynamic(() => import("./charts").then((m) => m.CategoryChart), { ssr: false, loading: () => <Fallback h="h-72" /> });
+export const DepositChart = dynamic(() => import("./charts").then((m) => m.DepositChart), { ssr: false, loading: () => <Fallback h="h-56" /> });

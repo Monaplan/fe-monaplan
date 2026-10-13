@@ -43,6 +43,7 @@ export function HariHClient({ projectId, data, canWrite }: { projectId: string; 
         header={<h1 data-tour="harih-header" className="text-[22px] leading-8 font-semibold text-neutral-900 md:text-[26px]">{t("Mode Hari H")}</h1>}
         onToggleTask={canWrite ? async (id, done) => (await setTaskStatus(projectId, id, done ? "done" : "todo")).ok : undefined}
         rundownHref={`${base}/rundown`}
+        arrivedHref={`${base}/tamu-hadir`}
         checkin={canWrite && data.attendance ? { open: () => setScan(true) } : null}
         extra={
           <Link href={`${base}/amplop-kado`} className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 hover:bg-plum-50">

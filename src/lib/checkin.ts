@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type CheckinGuest = {
   id: string; name: string; category: string; group: string | null; pax_invited: number; pax_confirmed: number; rsvp_status: string;
   checkin_code: string; checked_in_at: string | null; checked_in_pax: number | null;
+  side?: string; checked_in_by?: string | null;
 };
 export type CheckinResult = { guest_id: string; name: string; already: boolean; checked_in_at: string; checked_in_pax: number | null };
 type Res<T> = { ok: true; result: T } | { ok: false; error: string };
@@ -17,7 +18,7 @@ export function extractCode(raw: string): string | null {
 
 export async function listCheckinGuests(db: SupabaseClient, projectId: string): Promise<CheckinGuest[]> {
   const { data, error } = await db.from("guests")
-    .select("id, name, category, pax_invited, pax_confirmed, rsvp_status, checkin_code, checked_in_at, checked_in_pax, guest_groups(name)")
+    .select("id, name, category, side, pax_invited, pax_confirmed, rsvp_status, checkin_code, checked_in_at, checked_in_pax, checked_in_by, guest_groups(name)")
     .eq("project_id", projectId).order("name").limit(5000);
   if (error) return [];
   return (data ?? []).map((g: any) => ({ ...g, group: g.guest_groups?.name ?? null, guest_groups: undefined }));
@@ -42,4 +43,13 @@ export async function walkInGuest(admin: SupabaseClient, projectId: string, rawN
     .select("checkin_code").single();
   if (error || !data) return { ok: false, error: "Gagal menambah tamu. Coba lagi, ya." };
   return checkinByCode(admin, projectId, data.checkin_code, n, by);
+}
+
+// Tamu yang sudah check-in, urut waktu masuk. null bila kolom check-in belum ada (migrasi 20261013000006 belum dijalankan).
+export async function listArrivedGuests(db: SupabaseClient, projectId: string): Promise<CheckinGuest[] | null> {
+  const { data, error } = await db.from("guests")
+    .select("id, name, category, side, pax_invited, pax_confirmed, rsvp_status, checkin_code, checked_in_at, checked_in_pax, checked_in_by, guest_groups(name)")
+    .eq("project_id", projectId).not("checked_in_at", "is", null).order("checked_in_at", { ascending: true }).limit(5000);
+  if (error) return null;
+  return (data ?? []).map((g: any) => ({ ...g, group: g.guest_groups?.name ?? null, guest_groups: undefined }));
 }

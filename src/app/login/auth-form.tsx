@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, MailCheck, Gift, UserRound } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Field, Input } from "@/components/ui/form";
@@ -43,9 +42,8 @@ export function PasswordInput({ id, name, autoComplete, placeholder = "•••
   );
 }
 
-export function AuthForm({ mode: initial, next, notice, trialDays, ownGoogle }: { mode: "masuk" | "daftar"; next?: string; notice?: string; trialDays?: number | null; ownGoogle?: boolean }) {
+export function AuthForm({ mode: initial, next, notice, noticeTone = "error", trialDays, ownGoogle }: { mode: "masuk" | "daftar"; next?: string; notice?: string; noticeTone?: "error" | "info"; trialDays?: number | null; ownGoogle?: boolean }) {
   const t = useT();
-  const router = useRouter();
   const [mode, setMode] = useState(initial);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
@@ -63,13 +61,14 @@ export function AuthForm({ mode: initial, next, notice, trialDays, ownGoogle }: 
   const go = (r: { ok: boolean; data?: any; message?: string }) => {
     if (!r.ok) return;
     if (r.data?.confirm) setSentTo(r.message ?? "Cek email untuk konfirmasi.");
-    else if (r.data?.redirect) { router.replace(r.data.redirect); router.refresh(); }
+    // Muat ulang penuh (bukan navigasi klien) agar sesi baru terbaca server dan splash masuk ruang kerja ikut tampil
+    else if (r.data?.redirect) window.location.assign(r.data.redirect);
   };
 
   return (
     <div>
       <AuthHeading title={HEADINGS[mode].title} subtitle={HEADINGS[mode].subtitle} reserveLines />
-      {notice && <p role="alert" className="mt-6 rounded-xl bg-danger-bg px-4 py-3 text-[13px] text-danger">{notice}</p>}
+      {notice && <p role="alert" className={cn("mt-6 rounded-xl px-4 py-3 text-[13px]", noticeTone === "info" ? "bg-caution-bg text-caution" : "bg-danger-bg text-danger")}>{notice}</p>}
       <div className="h-8" />
       <Segmented
         className="mb-6"

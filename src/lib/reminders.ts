@@ -99,8 +99,8 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
         const plan = savingsPlan({ items: bItems ?? [], payments: bPays ?? [], savings: p.savings_idr, weddingDate: p.wedding_date, today });
         if (plan.perMonth && plan.months) {
           for (const uid of writers(p.id)) {
-            inApp.push({ userId: uid, projectId: p.id, linkPath: link(p, "budget"), type: "savings", key: `savings:${p.id}:${today.slice(0, 7)}`,
-              build: (_l, name) => ({ kind: "savings_reminder", name, amount: formatIDR(plan.perMonth), months: plan.months!, url: url(link(p, "budget")) }) });
+            inApp.push({ userId: uid, projectId: p.id, linkPath: link(p, "tabungan"), type: "savings", key: `savings:${p.id}:${today.slice(0, 7)}`,
+              build: (_l, name) => ({ kind: "savings_reminder", name, amount: formatIDR(plan.perMonth), months: plan.months!, url: url(link(p, "tabungan")) }) });
           }
         }
       }
@@ -289,6 +289,6 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
 // Isi push: sama dengan notifikasi dalam aplikasi, kecuali yang memuat nominal uang
 function pushBody(data: EmailData, fallback: string, lang: Lang) {
   if (data.kind === "payment_due") return data.payee;
-  if (data.kind === "savings_reminder") return lang === "en" ? "Open Budget to see this month's goal." : "Buka Budget untuk melihat target bulan ini.";
+  if (data.kind === "savings_reminder") return lang === "en" ? "Open Savings to see this month's goal." : "Buka Tabungan untuk melihat target bulan ini.";
   return fallback;
 }

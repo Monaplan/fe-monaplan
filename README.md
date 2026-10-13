@@ -56,12 +56,13 @@ Aplikasi web wedding planner all-in-one: checklist, budget, vendor, tamu dan RSV
 | | |
 |---|---|
 | ✅ **Checklist** | Tugas persiapan berfase, tenggatnya dihitung dari tanggal pernikahan. Template Umum dan adat Jawa, Sunda, Bali, Minang, Batak. Bagi tugas berdua dengan progres per orang. |
-| 💰 **Budgeting** | Anggaran per kategori, jadwal pembayaran, pembagian biaya pihak pria dan wanita, dan target tabungan per bulan. |
+| 💰 **Budgeting** | Anggaran per kategori, jadwal pembayaran, dan pembagian biaya pihak pria dan wanita. |
+| 🐷 **Tabungan** | Riwayat setoran tabungan nikah, target per bulan sampai hari H, dan grafik setoran. |
 | 🏪 **Vendor** | Pantau status negosiasi, DP, dan pelunasan. |
 | 💌 **Tamu & RSVP** | Daftar tamu, undangan lewat WhatsApp, konfirmasi kehadiran, dan QR masuk untuk tamu yang hadir. |
 | 🎴 **Undangan digital** | Tautan sendiri per pasangan dan per nama tamu, dengan lima tema. |
 | 🕒 **Rundown & Kalender** | Rundown hari H dan sinkronisasi Google Calendar. |
-| 🎉 **Mode Hari H** | Rundown yang berjalan sesuai jam, kontak vendor, check-in tamu dengan QR, dan tautan panitia tanpa akun. |
+| 🎉 **Mode Hari H** | Rundown yang berjalan sesuai jam, kontak vendor, check-in tamu dengan QR, daftar tamu hadir (ekspor PDF), dan tautan panitia tanpa akun. |
 | 🧧 **Amplop & Kado** | Catatan amplop, transfer, dan kado, plus ucapan terima kasih lewat WhatsApp. |
 | 📄 **Dokumen** | Berkas penting dan persyaratan KUA. |
 | 🎁 **Mahar & Seserahan** | Rencana, harga, dan status pembelian. |
@@ -73,7 +74,7 @@ Aplikasi web wedding planner all-in-one: checklist, budget, vendor, tamu dan RSV
 - Panel admin: pengguna, order dan lisensi, paket, promo, kode akses, trial, audit, dan ringkasan kondisi sistem.
 - Pembayaran online, kode promo, dan kode akses dari reseller.
 
-Tersedia dalam **bahasa Indonesia dan Inggris**, dengan **mode terang dan gelap**. Bisa dipasang di HP sebagai aplikasi (PWA) dengan notifikasi push.
+Tersedia dalam **bahasa Indonesia dan Inggris**, dengan **mode terang dan gelap**. Bisa dipasang di HP sebagai aplikasi (PWA) dengan splash screen dan notifikasi push. Sesi login berakhir bila tidak dibuka 7 hari.
 
 ## Tech stack
 

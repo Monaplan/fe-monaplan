@@ -25,7 +25,7 @@ const mins = (t: string | null) => (t ? Number(t.slice(0, 2)) * 60 + Number(t.sl
 const hhmm = (t: string | null) => (t ? t.slice(0, 5).replace(":", ".") : "");
 
 // Mode Hari H (DESIGN.md 20.5). Dipakai halaman anggota dan tautan panitia; aksi tambahan masuk lewat slot.
-export function HariHView({ data, header, onToggleTask, checkin, extra, staff, rundownHref }: {
+export function HariHView({ data, header, onToggleTask, checkin, extra, staff, rundownHref, arrivedHref }: {
   data: DayData;
   header?: ReactNode;
   onToggleTask?: (id: string, done: boolean) => Promise<boolean | void>;
@@ -33,6 +33,7 @@ export function HariHView({ data, header, onToggleTask, checkin, extra, staff, r
   extra?: ReactNode;
   staff?: boolean;
   rundownHref?: string;
+  arrivedHref?: string;
 }) {
   const { t, lang } = useI18n();
   const router = useRouter();
@@ -189,6 +190,7 @@ export function HariHView({ data, header, onToggleTask, checkin, extra, staff, r
                   <p className="flex items-center gap-2 text-[13px] font-medium text-neutral-600"><Users className="size-4 text-plum-600" aria-hidden="true" />{t("Hadir di lokasi")}</p>
                   <p className="tabular mt-1 text-[28px] leading-9 font-bold text-neutral-900">{att.checkedPax}<span className="text-[16px] font-semibold text-neutral-500"> / {t("{n} pax", { n: att.expectedPax })}</span></p>
                   <p className="text-[12.5px] text-neutral-500">{t("{a} dari {b} undangan yang konfirmasi hadir", { a: att.checkedIn, b: att.invitedGuests })}</p>
+                  {arrivedHref && <a href={arrivedHref} className="mt-1.5 inline-flex text-[13px] font-semibold text-plum-600 hover:underline">{t("Lihat daftar tamu hadir")}</a>}
                 </div>
                 {checkin && <Button size="lg" icon={<ScanLine />} onClick={checkin.open} className="w-full sm:w-auto">{t("Pindai QR")}</Button>}
               </div>

@@ -217,9 +217,12 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
       )}
 
       {selected.size > 0 && (
-        <div className="fixed inset-x-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-2xl flex-wrap items-center gap-2 rounded-full border border-neutral-200 bg-surface px-4 py-2 shadow-pop md:bottom-6">
-          <span className="text-sm font-semibold">{t("{size} dipilih", { size: selected.size })}</span>
-          <Select className="h-10 w-auto flex-1 rounded-full text-[13px] md:h-8" defaultValue="" onChange={(e) => {
+        <div role="region" aria-label={t("Aksi untuk tamu terpilih")} className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-2xl grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-surface p-3 shadow-pop md:flex md:flex-wrap md:items-center md:rounded-full md:px-4 md:py-2 md:bottom-6">
+          <div className="col-span-2 flex items-center justify-between md:contents">
+            <span className="text-[15px] font-semibold text-neutral-900 md:text-sm">{t("{size} dipilih", { size: selected.size })}</span>
+            <button type="button" aria-label={t("Batal pilih")} onClick={() => setSelected(new Set())} className="-mr-1 inline-flex size-10 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 md:order-last md:mr-0 md:size-8"><X className="size-4" /></button>
+          </div>
+          <Select className="col-span-2 h-11 rounded-xl text-[13px] md:h-8 md:w-auto md:flex-1 md:rounded-full" defaultValue="" onChange={(e) => {
             if (e.target.value === "") return;
             bulk(() => setGuestsGroup(projectId, [...selected], e.target.value === "none" ? null : e.target.value));
             e.target.value = "";
@@ -228,13 +231,12 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
             <option value="none">{t("Tanpa grup")}</option>
             {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
           </Select>
-          <Button size="sm" variant="secondary" icon={<CircleCheck />} onClick={() => bulk(() => markInvitationSent(projectId, [...selected]))}>{t("Tandai terkirim")}</Button>
-          <Button size="sm" variant="danger" icon={<Trash2 />} onClick={async () => {
+          <Button size="sm" variant="secondary" icon={<CircleCheck />} className="h-11 w-full md:h-9 md:w-auto" onClick={() => bulk(() => markInvitationSent(projectId, [...selected]))}>{t("Tandai terkirim")}</Button>
+          <Button size="sm" variant="danger" icon={<Trash2 />} className="h-11 w-full md:h-9 md:w-auto" onClick={async () => {
             if (await confirm({ title: t("Hapus {size} tamu?", { size: selected.size }), body: t("Jawaban RSVP dan ucapan dari tamu ini ikut terhapus. Tindakan ini tidak bisa dibatalkan."), tone: "danger", confirmLabel: t("Hapus") })) {
               bulk(() => deleteGuests(projectId, [...selected]));
             }
           }}>{t("Hapus")}</Button>
-          <button aria-label={t("Batal pilih")} onClick={() => setSelected(new Set())} className="p-1 text-neutral-500"><X className="size-4" /></button>
         </div>
       )}
 
