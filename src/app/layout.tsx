@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false, email: false, address: false },
   // Dibuka dari layar utama iPhone: tampil penuh seperti aplikasi, splash Monaplan menggantikan layar putih
   appleWebApp: { capable: true, title: SITE.name, statusBarStyle: "default", startupImage: startupImages() },
+  // Next hanya menulis mobile-web-app-capable; iOS masih butuh versi apple agar gambar layar pembuka dipakai
+  other: { "apple-mobile-web-app-capable": "yes" },
   openGraph: {
     type: "website",
     siteName: SITE.name,

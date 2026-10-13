@@ -7,7 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     name: SITE.shortTitle,
     short_name: SITE.name,
     description: SITE.description,
-    start_url: "/mulai",
+    // Halaman pembuka statis (public/buka.html) tampil seketika lalu pindah ke /mulai; id tetap agar instalasi lama dianggap aplikasi yang sama
+    start_url: "/buka.html",
     scope: "/",
     display: "standalone",
     background_color: "#FBF5F8",

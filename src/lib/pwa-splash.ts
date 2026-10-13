@@ -6,14 +6,11 @@ export const IPHONE_SCREENS: [number, number, number][] = [
 
 export const screenId = ([w, h, r]: [number, number, number]) => `${w}x${h}@${r}`;
 
-// Satu gambar terang dan satu gelap per ukuran; iOS memilih lewat media query
+// Satu gambar per ukuran (terang, sama dengan tema bawaan). Media query prefers-color-scheme tidak andal di iOS, jadi tidak dipakai
 export function startupImages() {
   return IPHONE_SCREENS.flatMap((s) => {
     const [w, h, r] = s;
     const media = `screen and (device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`;
-    return [
-      { url: `/pwa-splash/${screenId(s)}`, media: `${media} and (prefers-color-scheme: light)` },
-      { url: `/pwa-splash/${screenId(s)}-dark`, media: `${media} and (prefers-color-scheme: dark)` },
-    ];
+    return [{ url: `/pwa-splash/${screenId(s)}`, media }];
   });
 }

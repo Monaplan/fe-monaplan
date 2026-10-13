@@ -6,9 +6,10 @@
 const STATIC = "mp-static-v1";
 const OFFLINE = "mp-offline-v1";
 const OFFLINE_URL = "/offline";
+const LAUNCH_URL = "/buka.html";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(OFFLINE).then((c) => c.add(new Request(OFFLINE_URL, { cache: "reload" }))).catch(() => {}));
+  event.waitUntil(caches.open(OFFLINE).then((c) => c.addAll([new Request(OFFLINE_URL, { cache: "reload" }), new Request(LAUNCH_URL, { cache: "reload" })])).catch(() => {}));
   self.skipWaiting();
 });
 
@@ -34,6 +35,18 @@ self.addEventListener("fetch", (event) => {
       const res = await fetch(req);
       if (res.ok) cache.put(req, res.clone()).then(() => trim(cache)).catch(() => {});
       return res;
+    })());
+    return;
+  }
+
+  // Halaman pembuka PWA: dari cache agar tampil seketika, diperbarui di belakang
+  if (req.mode === "navigate" && url.pathname === LAUNCH_URL) {
+    event.respondWith((async () => {
+      const cache = await caches.open(OFFLINE);
+      const hit = await cache.match(LAUNCH_URL);
+      const fresh = fetch(req).then((res) => { if (res.ok) cache.put(LAUNCH_URL, res.clone()); return res; });
+      if (hit) { event.waitUntil(fresh.catch(() => {})); return hit; }
+      return fresh.catch(async () => (await caches.match(OFFLINE_URL)) || Response.error());
     })());
     return;
   }
