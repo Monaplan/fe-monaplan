@@ -28,6 +28,7 @@ export default async function SavingsPage({ params }: { params: Promise<{ projec
   }
   return (
     <SavingsClient projectId={projectId} tz={project.timezone} weddingDate={project.wedding_date} today={todayISO(project.timezone)}
-      canWrite={canWrite} deposits={deposits.data ?? []} items={items.data ?? []} payments={payments.data ?? []} />
+      canWrite={canWrite} deposits={deposits.data ?? []} items={items.data ?? []} payments={payments.data ?? []}
+      target={project.savings_target_idr ?? null} deadline={project.savings_deadline ?? null} targetSupported={project.savings_target_idr !== undefined} />
   );
 }

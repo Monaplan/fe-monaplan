@@ -222,10 +222,10 @@ export const EN9: Record<string, string> = {
   "Ringkasan RSVP": "RSVP summary",
 
   // Landing, harga, dan Aktivasi untuk fitur tahap 1
-  "13 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H": "13 complete modules, from checklist and budget to guest check-in on the big day",
+  "14 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H": "14 complete modules, from checklist and budget to guest check-in on the big day",
   "Notifikasi langsung di HP saat tamu mengonfirmasi hadir": "Instant phone notifications when guests confirm attendance",
   "Check-in tamu dengan QR, tautan panitia, dan catatan amplop di hari H": "QR guest check-in, a committee link, and envelope records on the big day",
-  "Tiga belas modul yang": "Thirteen modules,",
+  "Empat belas modul yang": "Fourteen modules,",
   "Rundown yang berjalan sesuai jam, kontak vendor sekali ketuk, dan check-in tamu dengan QR, juga lewat tautan panitia.": "A rundown that follows the clock, one-tap vendor contacts, and QR guest check-in, also through a committee link.",
   "Kirab pengantin": "Bridal procession",
   "Catat amplop, transfer, dan kado dari tamu, lalu kirim ucapan terima kasih lewat WhatsApp.": "Record envelopes, transfers, and gifts from guests, then send thank-you messages on WhatsApp.",
@@ -355,6 +355,7 @@ export const EN9: Record<string, string> = {
   "Catat setiap setoran tabungan untuk pernikahan. Dana terkumpul dihitung otomatis dari riwayat setoran.": "Record every savings deposit for the wedding. The amount saved is calculated automatically from your deposit history.",
   "Target per bulan": "Monthly goal",
   "Berapa yang perlu disisihkan tiap bulan agar semua tagihan lunas dua minggu sebelum hari H. Angkanya menyesuaikan budget, pembayaran, dan setoran kalian.": "How much to set aside each month so every bill is paid two weeks before the big day. The figure adjusts to your budget, payments, and deposits.",
+  "Berapa yang perlu disisihkan tiap bulan agar semua tagihan lunas dua minggu sebelum hari H. Angkanya menyesuaikan budget, pembayaran, dan setoran kalian. Mau pakai angka sendiri? Tekan Atur target.": "How much to set aside each month so every bill is paid two weeks before the big day. The figure adjusts to your budget, payments, and deposits. Want your own number? Press Set target.",
   "Setoran per bulan": "Deposits per month",
   "Grafik menunjukkan seberapa konsisten kalian menabung. Bulan berjalan diberi warna lebih pekat.": "The chart shows how consistently you save. The current month is shown in a darker color.",
   "Riwayat setoran": "Deposit history",
@@ -372,4 +373,31 @@ export const EN9: Record<string, string> = {
 
   // Bilah aksi massal di HP
   "Aksi untuk tamu terpilih": "Actions for selected guests",
+
+  // Target tabungan diatur sendiri
+  "Target": "Target",
+  "diatur sendiri": "set by you",
+  "Diatur sendiri": "Custom",
+  "Selama {n} bulan, sampai {date}.": "Over {n} months, until {date}.",
+  "Atur target": "Set target",
+  "Atur Target Tabungan": "Set Savings Target",
+  "Kosongkan isian untuk kembali ke hitungan otomatis.": "Leave the fields empty to go back to the automatic calculation.",
+  "Jumlah target": "Target amount",
+  "Kosong = otomatis, sebesar sisa tagihan vendor ({v1}).": "Empty = automatic, equal to the remaining vendor bills ({v1}).",
+  "Batas waktu menabung": "Saving deadline",
+  "Kosong = 2 minggu sebelum hari H.": "Empty = 2 weeks before the big day.",
+  "Kosong = tidak dihitung per bulan sampai tanggal pernikahan diisi.": "Empty = no monthly figure until the wedding date is set.",
+  "Pakai otomatis": "Use automatic",
+  "Isi target lebih dari nol, atau kosongkan untuk memakai hitungan otomatis.": "Enter a target above zero, or leave it empty to use the automatic calculation.",
+  "Tanggal batas tidak valid.": "The deadline date is not valid.",
+  "Kolom target belum ada. Jalankan migrasi 20261013000008_savings_target.sql di Supabase.": "The target column does not exist yet. Run the migration 20261013000008_savings_target.sql in Supabase.",
+
+  // Kartu tabungan Dashboard
+  "Catat setoran dan atur target tabungan nikah kalian.": "Log deposits and set your wedding savings target.",
+
+  // Landing: tabungan
+  "Alokasi per kategori, jadwal DP dan pelunasan, serta pembagian biaya pihak pria dan wanita.": "Allocation per category, down payment and settlement schedule, and cost split between the groom's and bride's sides.",
+  "Tabungan Nikah": "Wedding Savings",
+  "Catat setoran, atur target dan batas waktu sendiri, lalu lihat berapa yang perlu disisihkan tiap bulan.": "Log deposits, set your own target and deadline, then see how much to set aside each month.",
+  "Tabungan dan target per bulan": "Savings and monthly target",
 };

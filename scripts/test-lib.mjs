@@ -271,6 +271,14 @@ console.log("\nTarget tabungan");
   check("tanpa tanggal: tidak ada target per bulan", savingsPlan({ items, payments: pays, savings: 0, weddingDate: null, today: "2026-10-12" }).perMonth === null);
   check("batas sudah lewat: semua kekurangan bulan ini", savingsPlan({ items, payments: [], savings: 0, weddingDate: "2026-10-20", today: "2026-10-12" }).perMonth === 50_000_000);
   check("dana cukup: target 0", savingsPlan({ items, payments: pays, savings: 99_000_000, weddingDate: "2027-06-14", today: "2026-10-12" }).perMonth === 0);
+  const base2 = { items, payments: pays, savings: 4_000_000, weddingDate: "2027-06-14", today: "2026-10-12" };
+  check("target manual menggantikan sisa tagihan", savingsPlan({ ...base2, targetOverride: 20_000_000 }).shortfall === 16_000_000 && savingsPlan({ ...base2, targetOverride: 20_000_000 }).manualTarget === true);
+  check("target manual dihitung per bulan sampai batas otomatis (8 bulan)", savingsPlan({ ...base2, targetOverride: 20_000_000 }).perMonth === 2_000_000);
+  check("batas waktu manual dipakai (2027-01-12 = 4 bulan)", savingsPlan({ ...base2, targetOverride: 20_000_000, deadlineOverride: "2027-01-12" }).months === 4 && savingsPlan({ ...base2, targetOverride: 20_000_000, deadlineOverride: "2027-01-12" }).perMonth === 4_000_000);
+  check("target manual 0 atau null = otomatis", savingsPlan({ ...base2, targetOverride: 0 }).manualTarget === false && savingsPlan({ ...base2, targetOverride: null }).need === 40_000_000);
+  check("batas waktu rusak diabaikan", savingsPlan({ ...base2, deadlineOverride: "kapan-kapan" }).manualDeadline === false && savingsPlan({ ...base2, deadlineOverride: "kapan-kapan" }).deadline === "2027-05-31");
+  check("tanpa tanggal nikah tapi ada batas manual: tetap terhitung", savingsPlan({ ...base2, weddingDate: null, targetOverride: 10_000_000, deadlineOverride: "2027-01-12" }).perMonth === 1_500_000);
+  check("target manual sudah tercapai: kekurangan 0", savingsPlan({ ...base2, targetOverride: 3_000_000 }).shortfall === 0 && savingsPlan({ ...base2, targetOverride: 3_000_000 }).perMonth === 0);
 }
 
 console.log("\nRiwayat setoran");

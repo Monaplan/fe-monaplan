@@ -86,8 +86,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
   const paid = (payments ?? []).filter((p) => p.status === "sudah_bayar").length;
   const docsDone = (docs ?? []).filter((d) => d.is_done).length;
   // Target tabungan (kolom savings_idr ada setelah migrasi 20261013000003)
-  const saving = project.savings_idr !== undefined && project.wedding_date
-    ? savingsPlan({ items: items ?? [], payments: payments ?? [], savings: project.savings_idr, weddingDate: project.wedding_date, today })
+  const saving = project.savings_idr !== undefined && (project.wedding_date || project.savings_deadline)
+    ? savingsPlan({ items: items ?? [], payments: payments ?? [], savings: project.savings_idr, weddingDate: project.wedding_date, today, targetOverride: project.savings_target_idr, deadlineOverride: project.savings_deadline })
     : null;
 
   // Grafik pengeluaran tahun berjalan
@@ -181,10 +181,23 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
             <ProgressRow icon={<FileText />} title={t("Dokumen")} done={docsDone} total={(docs ?? []).length} />
           </div>
           {saving && saving.need > 0 && (
-            <Link href={`/app/${ref}/tabungan`} className="mt-5 flex items-center gap-3 rounded-md border border-neutral-200 p-3 hover:bg-plum-50">
+            <Link href={`/app/${ref}/tabungan`} className="mt-5 block rounded-md border border-neutral-200 p-3 hover:bg-plum-50">
+              <span className="flex items-center gap-3">
+                <IconTile className="text-plum-700"><PiggyBank /></IconTile>
+                <span className="flex-1 text-[13px] text-neutral-600"><b className="block text-neutral-800">{t("Target Tabungan")}</b>
+                  {saving.shortfall === 0 ? t("Dana sudah cukup") : <span className="tabular">{t("{v1} per bulan", { v1: formatIDR(saving.perMonth) })}</span>}</span>
+                <ArrowRight className="size-4 text-plum-600" />
+              </span>
+              <span className="tabular mt-2 flex items-center justify-between text-[12px] text-neutral-500">
+                <span>{t("Terkumpul")} {formatIDR(Math.max(0, saving.savings))}</span><span>{formatIDR(saving.need)}</span>
+              </span>
+              <ProgressBar value={Math.min(1, Math.max(0, saving.savings) / saving.need)} className="mt-1 h-1.5" />
+            </Link>
+          )}
+          {project.savings_idr !== undefined && !(saving && saving.need > 0) && (
+            <Link href={`/app/${ref}/tabungan`} className="mt-5 flex items-center gap-3 rounded-md border border-dashed border-neutral-300 p-3 hover:bg-plum-50">
               <IconTile className="text-plum-700"><PiggyBank /></IconTile>
-              <span className="flex-1 text-[13px] text-neutral-600"><b className="block text-neutral-800">{t("Target Tabungan")}</b>
-                {saving.shortfall === 0 ? t("Dana sudah cukup") : <span className="tabular">{t("{v1} per bulan", { v1: formatIDR(saving.perMonth) })}</span>}</span>
+              <span className="flex-1 text-[13px] text-neutral-600"><b className="block text-neutral-800">{t("Target Tabungan")}</b>{t("Catat setoran dan atur target tabungan nikah kalian.")}</span>
               <ArrowRight className="size-4 text-plum-600" />
             </Link>
           )}

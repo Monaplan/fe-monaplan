@@ -91,12 +91,12 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
         }
       }
       // Target tabungan: tanggal 1 setiap bulan pukul 08.00 sampai 11.00 (cukup beberapa putaran cron), hanya bila kolom savings_idr ada (migrasi 20261013000003)
-      if (today.endsWith("-01") && hour < 11 && p.wedding_date && typeof p.savings_idr === "number") {
+      if (today.endsWith("-01") && hour < 11 && (p.wedding_date || p.savings_deadline) && typeof p.savings_idr === "number") {
         const [{ data: bItems }, { data: bPays }] = await Promise.all([
           admin.from("budget_items").select("id, estimated_idr, actual_idr").eq("project_id", p.id),
           admin.from("expense_payments").select("budget_item_id, amount_idr, status").eq("project_id", p.id),
         ]);
-        const plan = savingsPlan({ items: bItems ?? [], payments: bPays ?? [], savings: p.savings_idr, weddingDate: p.wedding_date, today });
+        const plan = savingsPlan({ items: bItems ?? [], payments: bPays ?? [], savings: p.savings_idr, weddingDate: p.wedding_date, today, targetOverride: p.savings_target_idr, deadlineOverride: p.savings_deadline });
         if (plan.perMonth && plan.months) {
           for (const uid of writers(p.id)) {
             inApp.push({ userId: uid, projectId: p.id, linkPath: link(p, "tabungan"), type: "savings", key: `savings:${p.id}:${today.slice(0, 7)}`,

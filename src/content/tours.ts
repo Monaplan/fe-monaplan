@@ -71,7 +71,7 @@ export const TOURS: Record<string, TourStep[]> = {
   ],
   tabungan: [
     { target: "tabungan-header", title: "Tabungan nikah", body: "Catat setiap setoran tabungan untuk pernikahan. Dana terkumpul dihitung otomatis dari riwayat setoran." },
-    { target: "tabungan-target", title: "Target per bulan", body: "Berapa yang perlu disisihkan tiap bulan agar semua tagihan lunas dua minggu sebelum hari H. Angkanya menyesuaikan budget, pembayaran, dan setoran kalian." },
+    { target: "tabungan-target", title: "Target per bulan", body: "Berapa yang perlu disisihkan tiap bulan agar semua tagihan lunas dua minggu sebelum hari H. Angkanya menyesuaikan budget, pembayaran, dan setoran kalian. Mau pakai angka sendiri? Tekan Atur target." },
     { target: "tabungan-chart", title: "Setoran per bulan", body: "Grafik menunjukkan seberapa konsisten kalian menabung. Bulan berjalan diberi warna lebih pekat." },
     { target: "tabungan-list", title: "Riwayat setoran", body: "Ubah atau hapus setoran dari menu titik tiga. Pengingat target muncul setiap tanggal 1." },
   ],

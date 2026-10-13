@@ -138,6 +138,9 @@ export type Project = {
   split_pria_pct?: number;
   savings_idr?: number;
   savings_updated_at?: string | null;
+  // Ada setelah migrasi 20261013000008 (target tabungan buatan sendiri)
+  savings_target_idr?: number | null;
+  savings_deadline?: string | null;
   staff_token?: string | null;
   staff_can_record_gifts?: boolean;
 };

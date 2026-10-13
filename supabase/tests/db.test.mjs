@@ -529,5 +529,25 @@ await expectOk("backfill saldo awal idempoten", async () => {
   if (r.c !== 1 || r.s !== 750_000 || r.n !== "Saldo awal") throw new Error(JSON.stringify(r));
 });
 
+console.log("\nTarget tabungan diatur sendiri");
+const targetSql = fs.readFileSync(path.join(ROOT, "20261013000008_savings_target.sql"), "utf8");
+await db.exec(targetSql);
+await db.exec(targetSql);
+await expectOk("migrasi target idempoten; kolom awalnya kosong", async () => {
+  const r = await one(`select savings_target_idr is null t, savings_deadline is null d from wedding_projects where id = $1`, [P]);
+  if (!r.t || !r.d) throw new Error(JSON.stringify(r));
+});
+await expectOk("owner mengisi target dan batas waktu", async () => {
+  await as(A, "a@x.com", () => db.query(`update wedding_projects set savings_target_idr = 30000000, savings_deadline = '2027-03-01' where id = $1`, [P]));
+  const r = await one(`select savings_target_idr::int t, savings_deadline::text d from wedding_projects where id = $1`, [P]);
+  if (r.t !== 30_000_000 || r.d !== "2027-03-01") throw new Error(JSON.stringify(r));
+});
+await expectErr("target nol ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`update wedding_projects set savings_target_idr = 0 where id = $1`, [P])));
+await expectOk("kosongkan target kembali ke otomatis", async () => {
+  await as(A, "a@x.com", () => db.query(`update wedding_projects set savings_target_idr = null, savings_deadline = null where id = $1`, [P]));
+  const r = await one(`select savings_target_idr is null t, savings_deadline is null d from wedding_projects where id = $1`, [P]);
+  if (!r.t || !r.d) throw new Error(JSON.stringify(r));
+});
+
 console.log(`\n${pass} lulus, ${failN} gagal`);
 process.exit(failN ? 1 : 0);

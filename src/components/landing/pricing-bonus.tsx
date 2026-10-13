@@ -20,7 +20,7 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { pl
   const single = plans.length === 1;
 
   const points = (p: PricedPlan) => [
-    { icon: <LayoutGrid />, text: t("13 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H") },
+    { icon: <LayoutGrid />, text: t("14 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H") },
     { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema") },
     { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
     { icon: <Users />, text: t("Undang pasangan dan keluarga ikut mengerjakan, hingga {n} orang tanpa biaya tambahan", { n: p.max_collaborators }) },

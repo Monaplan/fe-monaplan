@@ -4,7 +4,7 @@ import { BackToTop } from "@/components/landing/back-to-top";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
 import {
-  ArrowRight, BellRing, BookOpen, CalendarDays, Check, CircleCheck, Clock, FileText, Gift, HandCoins, LayoutGrid, ListChecks, Mail, Palette, PartyPopper, Plane, ScanLine, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
+  ArrowRight, BellRing, BookOpen, CalendarDays, Check, CircleCheck, Clock, FileText, Gift, HandCoins, LayoutGrid, ListChecks, Mail, Palette, PartyPopper, PiggyBank, Plane, ScanLine, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Logo } from "@/components/app/logo";
@@ -34,12 +34,15 @@ export async function generateMetadata() {
   return pageMetadata({ path: "/", tr: await getT() });
 }
 
+const MOCK_RP = ["Rp 4.500.000", "Rp 27.000.000", "Rp 45.000.000"];
+
 const FEATURES = [
   { icon: <LayoutGrid />, title: "Dashboard", text: "Hitung mundur, budget terpakai, tamu hadir, dan agenda 14 hari ke depan." },
   { icon: <SlidersHorizontal />, title: "Pengaturan Pernikahan", text: "Data pasangan, acara, budget, target tamu, dan kolaborator." },
   { icon: <BookOpen />, title: "Panduan Penggunaan", text: "Sembilan langkah yang tercentang otomatis saat kamu mengisinya, termasuk cara memasang Monaplan di HP." },
   { icon: <ListChecks />, title: "To Do Checklist", text: "Checklist per fase, due date dihitung mundur dari hari H, dan progres tiap orang saat tugas dibagi berdua." },
-  { icon: <Wallet />, title: "Budgeting", text: "Alokasi per kategori, jadwal DP dan pelunasan, pembagian biaya pihak pria dan wanita, serta target tabungan per bulan." },
+  { icon: <Wallet />, title: "Budgeting", text: "Alokasi per kategori, jadwal DP dan pelunasan, serta pembagian biaya pihak pria dan wanita." },
+  { icon: <PiggyBank />, title: "Tabungan Nikah", text: "Catat setoran, atur target dan batas waktu sendiri, lalu lihat berapa yang perlu disisihkan tiap bulan." },
   { icon: <Store />, title: "Kelola Vendor", text: "Dari prospek sampai deal, bandingkan paket, dan chat WhatsApp langsung." },
   { icon: <Mail />, title: "Tamu & RSVP", text: "Link RSVP pribadi per tamu lewat WhatsApp, rekap kehadiran otomatis, dan QR masuk untuk tamu yang hadir." },
   { icon: <Clock />, title: "Rundown Hari H", text: "Susunan acara dengan PIC dan lokasi, plus PDF formal untuk dicetak." },
@@ -76,6 +79,7 @@ const em = "italic text-plum-600";
 const MARQUEE: [React.ReactNode, string][] = [
   [<ListChecks key="1" />, "Checklist per fase"],
   [<Wallet key="2" />, "Budget dan jadwal pelunasan"],
+  [<PiggyBank key="18" />, "Tabungan dan target per bulan"],
   [<Store key="3" />, "Kelola vendor"],
   [<Mail key="4" />, "Tamu dan RSVP"],
   [<WhatsAppIcon key="5" />, "Undangan lewat WhatsApp"],
@@ -271,7 +275,7 @@ export default async function LandingPage() {
         {/* Fitur */}
         <section id="fitur" aria-labelledby="fitur-title" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
           <SectionHead id="fitur-title" label={t("Isi aplikasinya")} sub={t("Vendor yang deal masuk ke budget, jadwal pembayaran masuk ke kalender, dan RSVP tamu terekap otomatis.")}>
-            {t("Tiga belas modul yang")} <em className={em}>{t("saling terhubung.")}</em>
+            {t("Empat belas modul yang")} <em className={em}>{t("saling terhubung.")}</em>
           </SectionHead>
 
           <div className="grid gap-4 md:grid-cols-6">
@@ -292,7 +296,7 @@ export default async function LandingPage() {
             <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-3">
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><Wallet /></span>
               <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Budgeting")}</h3>
-              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Alokasi per kategori, jadwal DP dan pelunasan, pembagian biaya pihak pria dan wanita, serta target tabungan per bulan.")}</p>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Alokasi per kategori, jadwal DP dan pelunasan, serta pembagian biaya pihak pria dan wanita.")}</p>
               <div aria-hidden="true" className="mt-5 flex h-24 items-end gap-2">
                 {[[t("Venue"), 80, 70], [t("Katering"), 90, 95], [t("Dekor"), 45, 30], [t("Foto"), 40, 40], [t("Busana"), 55, 20]].map(([label, est, act]) => (
                   <div key={label as string} className="flex flex-1 flex-col items-center gap-1.5">
@@ -377,6 +381,21 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
+            </article>
+            <article className="hover-lift reveal grid items-center gap-5 rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-6 md:grid-cols-2 md:gap-10">
+              <div>
+                <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><PiggyBank /></span>
+                <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Tabungan Nikah")}</h3>
+                <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Catat setoran, atur target dan batas waktu sendiri, lalu lihat berapa yang perlu disisihkan tiap bulan.")}</p>
+              </div>
+              <div aria-hidden="true" className="rounded-xl bg-plum-50 p-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div><p className="text-[11px] font-medium text-neutral-600">{t("Target per bulan")}</p><p className="tabular text-[20px] font-bold text-neutral-900">{MOCK_RP[0]}</p></div>
+                  <span className="rounded-full bg-plum-100 px-2 py-0.5 text-[11px] font-semibold text-plum-700">{t("Diatur sendiri")}</span>
+                </div>
+                <div className="mt-3 flex justify-between text-[11px] text-neutral-600"><span>{t("Terkumpul")} {MOCK_RP[1]}</span><span>{MOCK_RP[2]}</span></div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-plum-100"><div className="h-full w-[60%] rounded-full bg-plum-600" /></div>
+              </div>
             </article>
           </div>
 

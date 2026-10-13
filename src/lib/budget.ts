@@ -45,26 +45,37 @@ export function fundingSplit(items: ItemLite[], payments: PaymentLite[], priaPct
   return { pria: done(pria), wanita: done(wanita), sharedPlan, sharedPaid: looseShared, pct };
 }
 
-// Target tabungan per bulan sampai 14 hari sebelum hari H, dibulatkan ke atas per Rp1.000
+// Target tabungan per bulan. Tanpa pengaturan: jumlah = sisa tagihan vendor, batas waktu = 14 hari sebelum hari H, dibulatkan ke atas per Rp1.000.
+// targetOverride (jumlah) dan deadlineOverride (tanggal) diisi pengguna; kosong berarti otomatis.
 export const SAVINGS_BUFFER_DAYS = 14;
 
-export function savingsPlan({ items, payments, savings, weddingDate, today }: {
+export function savingsPlan({ items, payments, savings, weddingDate, today, targetOverride, deadlineOverride }: {
   items: ItemLite[]; payments: PaymentLite[]; savings: number; weddingDate: string | null; today: string;
+  targetOverride?: number | null; deadlineOverride?: string | null;
 }) {
   const projected = items.reduce((s, i) => s + planOf(i), 0);
   const paid = payments.filter((p) => p.status === "sudah_bayar").reduce((s, p) => s + p.amount_idr, 0);
-  const need = Math.max(0, projected - paid);
+  const autoNeed = Math.max(0, projected - paid);
+  const manualTarget = targetOverride != null && targetOverride > 0;
+  const need = manualTarget ? targetOverride! : autoNeed;
   const shortfall = Math.max(0, need - Math.max(0, savings));
-  if (!weddingDate) return { need, shortfall, savings, months: null, perMonth: null, deadline: null };
+  const manualDeadline = !!deadlineOverride && /^\d{4}-\d{2}-\d{2}$/.test(deadlineOverride);
+  const base = { need, autoNeed, shortfall, savings, manualTarget, manualDeadline };
+  const deadline = manualDeadline ? deadlineOverride! : weddingDate ? addDays(weddingDate, -SAVINGS_BUFFER_DAYS) : null;
+  if (!deadline) return { ...base, months: null, perMonth: null, deadline: null };
 
-  const deadline = addDays(weddingDate, -SAVINGS_BUFFER_DAYS);
   const days = Math.round((Date.parse(`${deadline}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
   // Sisa bulan (minimal 1): bila batas sudah lewat, seluruh kekurangan menjadi target bulan ini
   const months = Math.max(1, Math.ceil(days / 30.44));
   const perMonth = shortfall ? Math.ceil(shortfall / months / 1000) * 1000 : 0;
-  return { need, shortfall, savings, months, perMonth, deadline };
+  return { ...base, months, perMonth, deadline };
 }
 
+function addDays(iso: string, n: number) {
+  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
 // Riwayat setoran: total, dan jumlah per bulan (YYYY-MM) tanpa celah, dari bulan setoran pertama sampai bulan ini
 type DepositLite = { amount_idr: number; deposited_on: string };
@@ -87,8 +98,3 @@ export function depositsByMonth(deposits: DepositLite[], today: string): { month
   return out;
 }
 
-function addDays(iso: string, n: number) {
-  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}

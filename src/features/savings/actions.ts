@@ -41,3 +41,19 @@ export async function deleteDeposit(projectId: string, id: string): Promise<Acti
   const { error } = await supabase.from("savings_deposits").delete().eq("id", id).eq("project_id", projectId);
   return done(error, "Setoran dihapus.");
 }
+
+// Atur target sendiri. Jumlah kosong = otomatis (sisa tagihan vendor); batas waktu kosong = 2 minggu sebelum hari H.
+export async function saveSavingsTarget(projectId: string, fd: FormData): Promise<ActionResult> {
+  const { supabase, canWrite } = await getProjectContext(projectId);
+  if (!canWrite) return fail("Kamu tidak punya izin mengubah data ini, atau akses ruang kerja sudah berakhir.");
+  const rawAmount = str(fd.get("savings_target_idr"));
+  const amount = rawAmount ? parseIDR(rawAmount) : 0;
+  if (rawAmount && amount <= 0) return fail("Isi target lebih dari nol, atau kosongkan untuk memakai hitungan otomatis.");
+  if (amount > 10_000_000_000) return fail("Nominal terlalu besar.");
+  const rawDeadline = str(fd.get("savings_deadline"));
+  if (rawDeadline && !/^\d{4}-\d{2}-\d{2}$/.test(rawDeadline)) return fail("Tanggal batas tidak valid.");
+  const { error } = await supabase.from("wedding_projects")
+    .update({ savings_target_idr: amount > 0 ? amount : null, savings_deadline: rawDeadline ?? null }).eq("id", projectId);
+  if (error?.code === "42703" || /savings_target_idr|savings_deadline/.test(error?.message ?? "")) return fail("Kolom target belum ada. Jalankan migrasi 20261013000008_savings_target.sql di Supabase.");
+  return done(error, "Target tabungan tersimpan.");
+}
