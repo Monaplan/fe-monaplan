@@ -13,6 +13,7 @@ import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
 import { EN } from "@/i18n/en";
 import { SITE } from "@/lib/seo";
+import { startupImages } from "@/lib/pwa-splash";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   category: "lifestyle",
   formatDetection: { telephone: false, email: false, address: false },
   // Dibuka dari layar utama iPhone: tampil penuh seperti aplikasi, splash Monaplan menggantikan layar putih
-  appleWebApp: { capable: true, title: SITE.name, statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: SITE.name, statusBarStyle: "default", startupImage: startupImages() },
   openGraph: {
     type: "website",
     siteName: SITE.name,
