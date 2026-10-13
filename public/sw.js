@@ -4,7 +4,7 @@
 //   agar data pribadi tidak tertinggal di perangkat dan tidak basi.
 // - Menerima push dan membuka halaman terkait saat notifikasi diketuk.
 const STATIC = "mp-static-v1";
-const OFFLINE = "mp-offline-v1";
+const OFFLINE = "mp-offline-v2";
 const OFFLINE_URL = "/offline";
 const LAUNCH_URL = "/buka.html";
 
@@ -39,14 +39,19 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Halaman pembuka PWA: dari cache agar tampil seketika, diperbarui di belakang
+  // Halaman pembuka PWA: versi terbaru dari jaringan (berkas statis di CDN, cepat), cache bila lambat lebih dari 1,5 detik atau offline
   if (req.mode === "navigate" && url.pathname === LAUNCH_URL) {
     event.respondWith((async () => {
       const cache = await caches.open(OFFLINE);
-      const hit = await cache.match(LAUNCH_URL);
-      const fresh = fetch(req).then((res) => { if (res.ok) cache.put(LAUNCH_URL, res.clone()); return res; });
-      if (hit) { event.waitUntil(fresh.catch(() => {})); return hit; }
-      return fresh.catch(async () => (await caches.match(OFFLINE_URL)) || Response.error());
+      const net = fetch(req).then((res) => { if (res.ok) cache.put(LAUNCH_URL, res.clone()); return res; });
+      const slow = new Promise((resolve) => setTimeout(resolve, 1500)).then(() => cache.match(LAUNCH_URL));
+      try {
+        const first = await Promise.race([net, slow]);
+        if (first) return first;
+        return await net;
+      } catch {
+        return (await cache.match(LAUNCH_URL)) || (await caches.match(OFFLINE_URL)) || Response.error();
+      }
     })());
     return;
   }
