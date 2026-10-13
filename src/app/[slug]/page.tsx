@@ -49,7 +49,11 @@ export default async function InvitePage({ params, searchParams }: { params: Pro
   ]);
   const found = lookup as Lookup | null;
   const guest = found?.matches === 1 ? found.guest! : null;
-  const { data: invites } = guest ? await admin.from("guest_event_invites").select("event_id").eq("guest_id", guest.id) : { data: [] as { event_id: string }[] };
+  const [{ data: invites }, { data: codeRow }] = await Promise.all([
+    guest ? admin.from("guest_event_invites").select("event_id").eq("guest_id", guest.id) : Promise.resolve({ data: [] as { event_id: string }[] }),
+    // Kode QR masuk untuk tamu yang sudah Hadir (kolom ada setelah migrasi 20261013000006; galat diabaikan)
+    guest?.rsvp_status === "hadir" ? admin.from("guests").select("checkin_code").eq("id", guest.id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
   const ids = (invites ?? []).map((i) => i.event_id);
   const events = (allEvents ?? []).filter((e) => !ids.length || ids.includes(e.id));
   const tz = project.timezone;
@@ -72,6 +76,7 @@ export default async function InvitePage({ params, searchParams }: { params: Pro
           defaultName={to}
           paxMax={guest?.pax_invited ?? 5}
           initial={guest && guest.rsvp_status !== "belum_respon" ? { status: guest.rsvp_status, pax: guest.pax_confirmed || 1, message: "" } : null}
+          initialCode={(codeRow as { checkin_code?: string } | null)?.checkin_code ?? null}
         />
       )}
     </RsvpView>

@@ -4,7 +4,7 @@ import { EN } from "@/i18n/en";
 import type { Lang } from "@/i18n/config";
 import { parseTerms } from "./search-terms";
 
-export type SearchGroupKey = "tugas" | "vendor" | "tamu" | "budget" | "pembayaran" | "mahar" | "dokumen" | "acara" | "rundown" | "agenda" | "inspirasi" | "perjalanan";
+export type SearchGroupKey = "tugas" | "vendor" | "tamu" | "budget" | "pembayaran" | "mahar" | "dokumen" | "acara" | "rundown" | "agenda" | "inspirasi" | "perjalanan" | "amplop";
 export type SearchHit = { id: string; group: SearchGroupKey; title: string; sub: string | null; path: string };
 export type SearchResult = { groups: { key: SearchGroupKey; hits: SearchHit[] }[]; total: number };
 
@@ -48,6 +48,7 @@ const SPECS: Spec[] = [
   { key: "rundown", table: "rundown_items", select: "id, title, pic_name, location", cols: ["title", "pic_name", "location", "description"], path: () => "rundown", title: (r) => r.title, sub: (r) => r.pic_name ?? r.location },
   { key: "inspirasi", table: "inspiration_items", select: "id, title, category, note", cols: ["title", "note", "category"], path: () => "rona-impian", title: (r) => r.title, sub: (r) => r.category },
   { key: "perjalanan", table: "trip_items", select: "id, title, location, kind", cols: ["title", "location", "notes"], path: () => "honeymoon-planner", title: (r) => r.title, sub: (r) => r.location ?? r.kind },
+  { key: "amplop", table: "gift_receipts", select: "id, giver_name, item_name, kind", cols: ["giver_name", "item_name", "notes"], path: () => "amplop-kado", title: (r) => r.giver_name, sub: (r) => r.item_name ?? r.kind },
   { key: "agenda", table: "agenda_items", select: "id, title, location", cols: ["title", "location", "description"], path: () => "kalender", title: (r) => r.title, sub: (r) => r.location },
 ];
 

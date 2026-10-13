@@ -272,7 +272,7 @@ export const EN3: Record<string, string> = {
   "Catat setiap pembayaran": "Record every payment",
   "DP, termin, dan pelunasan beserta jatuh temponya. Pengingat dikirim H-7 dan H-1 sebelum jatuh tempo.": "Down payments, installments, and final payments with due dates. Reminders go out 7 days and 1 day before they are due.",
   "Kategori atau jadwal": "Categories or schedule",
-  "Lihat budget per kategori lengkap dengan peringatan bila melebihi alokasi, atau beralih ke daftar jadwal pembayaran.": "See the budget by category with warnings when over allocation, or switch to the payment schedule list.",
+  "Lihat budget per kategori lengkap dengan peringatan bila melebihi alokasi, beralih ke daftar jadwal pembayaran, atau buka Per Pihak untuk melihat bagian pihak pria dan pihak wanita.": "See the budget by category with warnings when over allocation, switch to the payment schedule list, or open By Side to see the groom's and bride's shares.",
   "Catat vendor incaran": "Record the vendors you like",
   "Simpan kontak, paket, dan harga vendor yang sedang kalian pertimbangkan.": "Save the contacts, packages, and prices of vendors you are considering.",
   "Tabel atau pipeline": "Table or pipeline",

@@ -8,6 +8,7 @@ import { parseIDR, todayISO } from "@/lib/format";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const KINDS = ["dp", "termin", "pelunasan", "lainnya"];
+const SIDES = ["pria", "wanita", "bersama"];
 
 function done(projectId: string, error: { code?: string; message?: string } | null, message: string): ActionResult {
   revalidatePath("/app/[projectId]", "layout");
@@ -48,6 +49,8 @@ export async function saveItem(projectId: string, fd: FormData): Promise<ActionR
     actual_idr: actualRaw ? parseIDR(actualRaw) : null,
     vendor_id: str(fd.get("vendor_id")),
     notes: str(fd.get("notes")),
+    // Kolom funded_by hanya dikirim bila form menampilkannya (migrasi 20261013000002 sudah dijalankan)
+    ...(SIDES.includes(String(fd.get("funded_by"))) && { funded_by: String(fd.get("funded_by")) }),
   };
   const { error } = id
     ? await supabase.from("budget_items").update(row).eq("id", id).eq("project_id", projectId)
@@ -107,4 +110,24 @@ export async function deletePayment(projectId: string, id: string): Promise<Acti
   const { supabase } = await getProjectContext(projectId);
   const { error } = await supabase.from("expense_payments").delete().eq("id", id).eq("project_id", projectId);
   return done(projectId, error, "Pembayaran dihapus.");
+}
+
+// Porsi pihak pria untuk biaya bersama (0 sampai 100)
+export async function saveSplitPct(projectId: string, pct: number): Promise<ActionResult> {
+  const { supabase, canWrite } = await getProjectContext(projectId);
+  if (!canWrite) return fail("Kamu tidak punya izin mengubah data ini, atau akses ruang kerja sudah berakhir.");
+  const value = Math.min(100, Math.max(0, Math.round(Number(pct) || 0)));
+  const { error } = await supabase.from("wedding_projects").update({ split_pria_pct: value }).eq("id", projectId);
+  revalidatePath("/app/[projectId]/budget", "page");
+  return error ? dbError(error) : { ok: true, message: "Porsi biaya bersama tersimpan." };
+}
+
+// Dana tabungan yang sudah terkumpul
+export async function saveSavings(projectId: string, fd: FormData): Promise<ActionResult> {
+  const { supabase, canWrite } = await getProjectContext(projectId);
+  if (!canWrite) return fail("Kamu tidak punya izin mengubah data ini, atau akses ruang kerja sudah berakhir.");
+  const { error } = await supabase.from("wedding_projects")
+    .update({ savings_idr: parseIDR(fd.get("savings_idr")), savings_updated_at: new Date().toISOString() }).eq("id", projectId);
+  revalidatePath("/app/[projectId]", "layout");
+  return error ? dbError(error) : { ok: true, message: "Dana terkumpul tersimpan." };
 }

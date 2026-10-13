@@ -8,5 +8,6 @@ import { EN5 } from "./en/part5";
 import { EN6 } from "./en/part6";
 import { EN7 } from "./en/part7";
 import { EN8 } from "./en/part8";
+import { EN9 } from "./en/part9";
 
-export const EN: Record<string, string> = { ...EN1, ...EN2, ...EN3, ...EN4, ...EN5, ...EN6, ...EN7, ...EN8 };
+export const EN: Record<string, string> = { ...EN1, ...EN2, ...EN3, ...EN4, ...EN5, ...EN6, ...EN7, ...EN8, ...EN9 };

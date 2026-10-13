@@ -12,6 +12,7 @@ import { ThemeSwitcher } from "@/components/app/theme";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { LiveCountdown } from "@/components/app/live-countdown";
 import { ProductTour } from "@/components/app/product-tour";
+import { PushCard } from "@/components/app/push-card";
 import { TOURS } from "@/content/tours";
 import { getI18n } from "@/i18n/server";
 import { getT } from "@/i18n/server";
@@ -73,6 +74,8 @@ export default async function AccountPage() {
           </div>
         </Card>
       </div>
+
+      <PushCard />
 
       <Card tour="akun-tampilan">
         <CardHeader title={t("Tampilan dan bahasa")} subtitle={t("Tema terang, gelap, atau ikuti perangkat.")} />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CircleAlert, CircleCheck, CircleHelp, CircleX, Heart, Loader2, Minus, Plus } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { Turnstile, turnstileEnabled } from "@/components/ui/turnstile";
+import { QrCard } from "@/components/rsvp/qr-card";
 
 type Status = "hadir" | "tidak_hadir" | "ragu";
 const OPTIONS: { key: Status; label: string; icon: React.ReactNode }[] = [
@@ -16,7 +17,9 @@ const btnPrimary = "inline-flex h-12 w-full items-center justify-center gap-2 ro
 const btnGhost = "mt-4 inline-flex h-10 items-center justify-center rounded-full border border-[var(--rv-card-border)] bg-[var(--rv-soft)] px-4 text-sm font-medium transition-transform active:scale-[0.97]";
 
 // Formulir memakai variabel tema (--rv-*) dari pembungkus halaman. preview = tidak mengirim apa pun (halaman contoh).
-export function RsvpForm({ slug, defaultName, paxMax, initial, preview }: { slug: string; defaultName: string; paxMax: number; initial: { status: string; pax: number; message: string } | null; preview?: boolean }) {
+export function RsvpForm({ slug, defaultName, paxMax, initial, preview, initialCode }: { slug: string; defaultName: string; paxMax: number; initial: { status: string; pax: number; message: string } | null; preview?: boolean; initialCode?: string | null }) {
+  // Kode check-in tamu ini (QR Masuk); diisi server bila tamu sudah Hadir, atau dari jawaban API setelah mengirim Hadir
+  const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [name, setName] = useState(defaultName);
   const [status, setStatus] = useState<Status | null>((initial?.status as Status) ?? null);
   const [pax, setPax] = useState(Math.min(initial?.pax ?? 1, paxMax));
@@ -44,6 +47,7 @@ export function RsvpForm({ slug, defaultName, paxMax, initial, preview }: { slug
     // Token captcha hanya berlaku sekali, jadi widget dimuat ulang setelah setiap pengiriman
     setCaptcha(null); setCaptchaKey((k) => k + 1);
     if (!res.ok) return setError(j.message ?? "Gagal menyimpan. Coba lagi, ya.");
+    setCode(typeof j.checkin_code === "string" ? j.checkin_code : null);
     setDone(true);
   }
 
@@ -55,6 +59,7 @@ export function RsvpForm({ slug, defaultName, paxMax, initial, preview }: { slug
         <p className="mt-1 text-sm text-[var(--rv-muted)]">
           {status === "hadir" ? `Kami menantikan kehadiran ${pax} orang.` : status === "tidak_hadir" ? "Terima kasih atas doa dan restunya." : "Kabari kami lagi bila sudah pasti, ya."}
         </p>
+        {status === "hadir" && code && <QrCard code={code} name={name.trim()} pax={pax} />}
         <button className={btnGhost} onClick={() => setDone(false)}>Ubah jawaban</button>
       </div>
     );

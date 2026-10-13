@@ -14,7 +14,10 @@ import { ProgressBar } from "@/components/ui/progress";
 import { Segmented } from "@/components/ui/tabs";
 import { cn } from "@/components/ui/cn";
 import { CategoryChart } from "@/components/app/charts-lazy";
-import { PAYMENT_KIND, labelOf } from "@/lib/constants";
+import { PARTY_SIDE, PAYMENT_KIND, labelOf } from "@/lib/constants";
+import type { Side } from "@/lib/budget";
+import { FundingBadge, SavingsCard, SplitView } from "@/features/budget/split-savings";
+import { useProjectBase } from "@/components/app/project-base";
 import { formatDateCompact, formatIDR, formatIDRShort, formatPercent, relativeDay, todayISO } from "@/lib/format";
 import { deleteCategory, deleteItem, deletePayment, markPaymentPaid, saveCategory, saveItem } from "@/features/budget/actions";
 import { PaymentFormModal, type Payment } from "@/features/budget/payment-form";
@@ -23,18 +26,22 @@ import { TOURS } from "@/content/tours";
 import { useI18n } from "@/i18n/client";
 
 type Category = { id: string; name: string; allocated_idr: number };
-type Item = { id: string; category_id: string; name: string; estimated_idr: number; actual_idr: number | null; vendor_id: string | null; notes: string | null; vendors: { name: string } | null };
+type Item = { id: string; category_id: string; name: string; estimated_idr: number; actual_idr: number | null; vendor_id: string | null; notes: string | null; vendors: { name: string } | null; funded_by?: Side | null };
 type PaymentRow = Payment & { vendors: { name: string } | null; budget_items: { name: string } | null };
 
 // Kartu ringkasan: nominal singkat di HP supaya tidak terpotong, lengkap di layar lebar
 const money = (n: number) => <><span className="sm:hidden">{formatIDRShort(n)}</span><span className="hidden sm:inline">{formatIDR(n)}</span></>;
 
-export function BudgetClient({ projectId, tz, totalBudget, categories, items, payments, vendors, documents, canWrite }: {
-  projectId: string; tz: string; totalBudget: number; categories: Category[]; items: Item[]; payments: PaymentRow[];
+export function BudgetClient({ projectId, tz, totalBudget, weddingDate, splitPct, savings, savingsUpdatedAt, categories, items, payments, vendors, documents, canWrite }: {
+  projectId: string; tz: string; totalBudget: number; weddingDate: string | null;
+  // null bila migrasi tahap 1 (20261013000002 dan 20261013000003) belum dijalankan: fitur terkait disembunyikan
+  splitPct: number | null; savings: number | null; savingsUpdatedAt: string | null;
+  categories: Category[]; items: Item[]; payments: PaymentRow[];
   vendors: { id: string; name: string }[]; documents: { id: string; title: string }[]; canWrite: boolean;
 }) {
   const { t, lang } = useI18n();
-  const [tab, setTab] = useState<"kategori" | "jadwal">("kategori");
+  const base = useProjectBase();
+  const [tab, setTab] = useState<"kategori" | "jadwal" | "pihak">("kategori");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [catForm, setCatForm] = useState<Category | "new" | null>(null);
   const [itemForm, setItemForm] = useState<{ item?: Item; categoryId?: string } | null>(null);
@@ -77,6 +84,11 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
         <StatCard icon={<ReceiptText />} title={t("Sisa Tagihan")} value={money(unpaid)} footer={<>{payments.filter((p) => p.status === "belum_bayar").length}{" "}{t("belum dibayar")}</>} />
       </div>
 
+      {savings !== null && (
+        <SavingsCard projectId={projectId} tz={tz} items={items} payments={payments} savings={savings} updatedAt={savingsUpdatedAt}
+          weddingDate={weddingDate} canWrite={canWrite} settingsHref={`${base}/pengaturan`} />
+      )}
+
       {catStats.some((c) => c.estimated || c.actual) && (
         <Card tour="budget-chart" className="mb-4">
           <CardHeader title={t("Estimasi dan Realisasi per Kategori")} />
@@ -85,11 +97,13 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
       )}
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span data-tour="budget-tabs" className="inline-flex"><Segmented items={[{ key: "kategori", label: t("Kategori") }, { key: "jadwal", label: t("Jadwal Pembayaran") }]} value={tab} onChange={setTab} /></span>
+        <span data-tour="budget-tabs" className="inline-flex"><Segmented items={[{ key: "kategori" as const, label: t("Kategori") }, { key: "jadwal" as const, label: t("Jadwal Pembayaran") }, ...(splitPct !== null ? [{ key: "pihak" as const, label: t("Per Pihak") }] : [])]} value={tab} onChange={setTab} /></span>
         {canWrite && tab === "kategori" && <Button variant="outline" size="sm" icon={<Plus />} onClick={() => setCatForm("new")}>{t("Kategori")}</Button>}
       </div>
 
-      {tab === "kategori" ? (
+      {tab === "pihak" && splitPct !== null ? (
+        <SplitView projectId={projectId} items={items} payments={payments} splitPct={splitPct} canWrite={canWrite} />
+      ) : tab === "kategori" ? (
         <div className="flex flex-col gap-3">
           {catStats.map((c) => {
             const over = c.allocated_idr > 0 && c.actual > c.allocated_idr;
@@ -138,7 +152,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
                       return (
                         <div key={i.id} data-row-id={i.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 border-b border-neutral-200 px-4 py-3 last:border-0 hover:bg-plum-50 sm:px-5 md:grid-cols-[minmax(0,1fr)_140px_140px_140px_40px] md:items-center">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-neutral-800">{i.name}</p>
+                            <p className="flex min-w-0 items-center gap-2"><span className="truncate text-sm font-medium text-neutral-800">{i.name}</span>{splitPct !== null && i.funded_by && <FundingBadge side={i.funded_by} />}</p>
                             {i.vendors && <p className="text-xs text-neutral-500">{i.vendors.name}</p>}
                           </div>
                           <div className="col-start-2 row-start-1 md:hidden">{menu}</div>
@@ -228,6 +242,7 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
               <Field label={t("Estimasi")} htmlFor="i-est"><CurrencyInput id="i-est" name="estimated_idr" defaultValue={itemForm.item?.estimated_idr} /></Field>
               <Field label={t("Realisasi (nilai deal)")} htmlFor="i-act"><CurrencyInput id="i-act" name="actual_idr" defaultValue={itemForm.item?.actual_idr} /></Field>
             </div>
+            {splitPct !== null && <FundedByField defaultValue={itemForm.item?.funded_by ?? "bersama"} />}
             <Field label={t("Vendor terkait")} htmlFor="i-vendor">
               <Select id="i-vendor" name="vendor_id" defaultValue={itemForm.item?.vendor_id ?? ""}>
                 <option value="">{t("Tidak ada")}</option>
@@ -253,6 +268,17 @@ export function BudgetClient({ projectId, tz, totalBudget, categories, items, pa
         />
       )}
     </>
+  );
+}
+
+function FundedByField({ defaultValue }: { defaultValue: Side }) {
+  const { t } = useI18n();
+  const [side, setSide] = useState<Side>(defaultValue);
+  return (
+    <Field label={t("Ditanggung oleh")}>
+      <input type="hidden" name="funded_by" value={side} />
+      <Segmented fullWidth items={PARTY_SIDE.map((s) => ({ key: s.key as Side, label: t(s.label) }))} value={side} onChange={setSide} />
+    </Field>
   );
 }
 

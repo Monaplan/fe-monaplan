@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { notifyRsvp } from "@/lib/push";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIp } from "@/lib/codes";
@@ -53,5 +54,21 @@ export async function POST(request: Request) {
     const code = Object.keys(MESSAGES).find((k) => error.message.includes(k)) ?? "UNKNOWN";
     return NextResponse.json({ error: code, message: MESSAGES[code] ?? "Gagal menyimpan. Coba lagi, ya." }, { status: 400 });
   }
-  return NextResponse.json({ ok: true });
+
+  // Tamu yang hadir mendapat kode QR masuk, dan pemilik serta editor menerima push (bila sudah diaktifkan)
+  let checkinCode: string | null = null;
+  const { data: project } = await admin.from("wedding_projects").select("id, slug, title").eq("slug", d.slug).maybeSingle();
+  if (project) {
+    if (d.status === "hadir") {
+      // Pencocokan nama memakai aturan yang sama dengan submit_rsvp_by_name (sapaan dan spasi diabaikan)
+      const { data: lookup } = await admin.rpc("rsvp_lookup", { p_slug: d.slug, p_name: d.name });
+      const guestId = (lookup as { matches?: number; guest?: { id: string } } | null)?.matches === 1 ? (lookup as { guest: { id: string } }).guest.id : null;
+      if (guestId) {
+        const { data: row } = await admin.from("guests").select("checkin_code").eq("id", guestId).maybeSingle();
+        checkinCode = (row as { checkin_code?: string } | null)?.checkin_code ?? null;
+      }
+    }
+    after(() => notifyRsvp(admin, project, d.name, d.status, d.pax));
+  }
+  return NextResponse.json({ ok: true, checkin_code: checkinCode });
 }

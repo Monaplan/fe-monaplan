@@ -317,3 +317,9 @@ html, body { overflow-x: clip; }
 
 /* Animasi yang berjalan terus dijeda saat elemennya di luar layar (diatur oleh AnimationGate), supaya tidak membebani pengguliran */
 [data-paused], [data-paused]::before, [data-paused]::after, [data-paused] > svg { animation-play-state: paused !important; }
+
+/* Garis pindai di pemindai QR check-in (mati bila pengguna mengurangi gerak) */
+@keyframes scan-sweep { 0%, 100% { transform: translateY(-120px); opacity: .4; } 50% { transform: translateY(120px); opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .scan-line { animation: scan-sweep 2.4s ease-in-out infinite; }
+}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, Gift, KeyRound, LayoutGrid, Printer, ShieldCheck, Tag, Users, X } from "lucide-react";
+import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, Gift, KeyRound, LayoutGrid, Printer, ScanLine, ShieldCheck, Tag, Users, X } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { BONUSES, BONUS_TOTAL } from "@/content/bonus";
 import { Button } from "@/components/ui/button";
@@ -141,11 +141,12 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
           const promo = price.final < price.original - price.credit;
           const base = price.original - price.credit;
           const points = [
-            { icon: <LayoutGrid />, text: t("11 modul lengkap, dari checklist dan budget sampai rundown hari H") },
+            { icon: <LayoutGrid />, text: t("13 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H") },
             { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema") },
             { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
             { icon: <Users />, text: t("Undang pasangan dan keluarga ikut mengerjakan, hingga {n} orang tanpa biaya tambahan", { n: p.max_collaborators }) },
-            { icon: <CircleCheck />, text: t("Notifikasi langsung saat tamu mengonfirmasi hadir") },
+            { icon: <CircleCheck />, text: t("Notifikasi langsung di HP saat tamu mengonfirmasi hadir") },
+            { icon: <ScanLine />, text: t("Check-in tamu dengan QR, tautan panitia, dan catatan amplop di hari H") },
             { icon: <Printer />, text: t("Rundown hari H siap dicetak dalam PDF") },
             ...(p.max_projects && p.max_projects > 1 ? [{ icon: <Briefcase />, text: t("{n} proyek pernikahan", { n: p.max_projects }) }] : []),
           ];

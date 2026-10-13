@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Papa from "papaparse";
 import {
-  CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageSquareText, Pencil, Plus, Search, Send, Trash2, Users, X
+  CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageSquareText, Pencil, Plus, Search, Send, Trash2, Undo2, Users, X
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -19,11 +19,12 @@ import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/dialogs";
 import { cn } from "@/components/ui/cn";
 import { GUEST_CATEGORY, PARTY_SIDE, RSVP_STATUS, labelOf } from "@/lib/constants";
-import { formatDateCompact, formatPhone, normalizePhone, waLink } from "@/lib/format";
+import { formatDateCompact, formatPhone, formatTime, normalizePhone, waLink } from "@/lib/format";
 import { composeMessage, PLACEHOLDERS, type EventLite } from "@/lib/messages";
 import {
   deleteGuests, importGuests, markInvitationSent, saveGuest, saveTemplate, setGuestsGroup,
 } from "@/features/guests/actions";
+import { undoCheckinAction } from "@/features/guests/checkin-actions";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
 import { useI18n } from "@/i18n/client";
@@ -33,8 +34,13 @@ type Guest = {
   id: string; name: string; phone_e164: string | null; side: string; category: string; group_id: string | null; pax_invited: number;
   self_registered: boolean; rsvp_status: string; pax_confirmed: number; rsvp_message: string | null; rsvp_responded_at: string | null;
   invitation_sent_at: string | null; notes: string | null;
+  // Ada setelah migrasi 20261013000006 (check-in QR)
+  checkin_code?: string; checked_in_at?: string | null; checked_in_pax?: number | null;
 };
 type Group = { id: string; name: string; side: string };
+
+// Nilai filter status untuk tamu yang sudah check-in di hari H
+const CHECKED_IN = "__checkin";
 
 const rsvpTone = (s: string): Tone => (s === "hadir" ? "positive" : s === "tidak_hadir" ? "danger" : s === "ragu" ? "caution" : "neutral");
 
@@ -74,11 +80,13 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
     ragu: guests.filter((g) => g.rsvp_status === "ragu").length,
     belum: guests.filter((g) => g.rsvp_status === "belum_respon").length,
     sent: guests.filter((g) => g.invitation_sent_at).length,
+    arrived: guests.filter((g) => g.checked_in_at),
   };
+  const hasCheckin = guests.some((g) => g.checkin_code !== undefined);
 
   const filtered = guests.filter((g) =>
     (!q || g.name.toLowerCase().includes(q.toLowerCase()) || g.phone_e164?.includes(q.replace(/\D/g, "") || "~")) &&
-    (!fGroup || g.group_id === fGroup) && (!fSide || g.side === fSide) && (!fStatus || g.rsvp_status === fStatus) &&
+    (!fGroup || g.group_id === fGroup) && (!fSide || g.side === fSide) && (!fStatus || (fStatus === CHECKED_IN ? !!g.checked_in_at : g.rsvp_status === fStatus)) &&
     (!fSent || (fSent === "sudah" ? !!g.invitation_sent_at : !g.invitation_sent_at)));
 
   const link = (g: Guest) => `${baseUrl}/${slug}?to=${encodeURIComponent(g.name)}`;
@@ -117,13 +125,14 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
         }
       />
 
-      <div data-tour="tamu-stats" className="-mx-4 mb-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-5 md:px-0">
+      <div data-tour="tamu-stats" tabIndex={0} role="region" aria-label={t("Ringkasan RSVP")} className={cn("-mx-4 mb-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:px-0", hasCheckin ? "md:grid-cols-3 lg:grid-cols-6" : "md:grid-cols-5")}>
         {[
           { label: t("Undangan"), value: stats.total, sub: t("{n} sudah dikirim", { n: stats.sent }) },
           { label: t("Total Pax"), value: stats.pax, sub: t("kuota undangan") },
           { label: t("Hadir"), value: stats.hadir.length, sub: `${stats.hadir.reduce((s, g) => s + g.pax_confirmed, 0)} pax` },
-          { label: t("Tidak Hadir"), value: stats.tidak, sub: `${stats.ragu} masih ragu` },
+          { label: t("Tidak Hadir"), value: stats.tidak, sub: t("{n} masih ragu", { n: stats.ragu }) },
           { label: t("Belum Respon"), value: stats.belum, sub: t("tamu") },
+          ...(hasCheckin ? [{ label: t("Hadir di Lokasi"), value: stats.arrived.length, sub: `${stats.arrived.reduce((s, g) => s + (g.checked_in_pax ?? 0), 0)} pax` }] : []),
         ].map((s) => (
           <div key={t(s.label)} className="min-w-[150px] snap-start rounded-lg border border-neutral-200 bg-surface p-4">
             <p className="text-[13px] font-medium text-neutral-600">{t(s.label)}</p>
@@ -169,7 +178,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
             </div>
             <Select value={fGroup} onChange={(e) => setFGroup(e.target.value)} aria-label={t("Filter grup")}><option value="">{t("Semua grup")}</option>{groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</Select>
             <Select value={fSide} onChange={(e) => setFSide(e.target.value)} aria-label={t("Filter pihak")}><option value="">{t("Semua pihak")}</option>{PARTY_SIDE.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}</Select>
-            <Select value={fStatus} onChange={(e) => setFStatus(e.target.value)} aria-label={t("Filter status RSVP")}><option value="">{t("Semua status")}</option>{RSVP_STATUS.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}</Select>
+            <Select value={fStatus} onChange={(e) => setFStatus(e.target.value)} aria-label={t("Filter status RSVP")}><option value="">{t("Semua status")}</option>{RSVP_STATUS.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}{hasCheckin && <option value={CHECKED_IN}>{t("Sudah check-in")}</option>}</Select>
             <Select value={fSent} onChange={(e) => setFSent(e.target.value)} aria-label={t("Filter pengiriman")}><option value="">{t("Terkirim & belum")}</option><option value="sudah">{t("Sudah dikirim")}</option><option value="belum">{t("Belum dikirim")}</option></Select>
           </div>
           <div className="hidden grid-cols-[32px_1.5fr_1fr_1fr_70px_130px_120px_40px] items-center gap-3 bg-neutral-50 px-5 py-2.5 text-xs font-medium text-neutral-500 md:grid">
@@ -188,7 +197,8 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
               <span className="col-start-2 truncate text-[13px] text-neutral-600 md:col-start-auto">{groupName(g.group_id) ?? "-"}</span>
               <span className="col-start-2 text-[13px] text-neutral-600 tabular md:col-start-auto">{formatPhone(g.phone_e164)}</span>
               <span className="col-start-2 text-[13px] text-neutral-600 tabular md:col-start-auto md:text-right">{g.rsvp_status === "hadir" ? `${g.pax_confirmed}/` : ""}{g.pax_invited} pax</span>
-              <span className="col-start-2 md:col-start-auto"><StatusPill tone={rsvpTone(g.rsvp_status)}>{t(labelOf(RSVP_STATUS, g.rsvp_status))}</StatusPill></span>
+              <span className="col-start-2 md:col-start-auto"><StatusPill tone={rsvpTone(g.rsvp_status)}>{t(labelOf(RSVP_STATUS, g.rsvp_status))}</StatusPill>
+                {g.checked_in_at && <span className="mt-0.5 block text-[11px] font-medium text-plum-700">{t("Masuk {time}", { time: formatTime(g.checked_in_at, tz, false, lang) })}</span>}</span>
               <span className="col-start-2 md:col-start-auto">
                 {g.invitation_sent_at ? (
                   <span className="inline-flex items-center gap-1 text-xs text-plum-700"><CircleCheck className="size-3.5" />{t("Terkirim")}</span>
@@ -243,6 +253,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
         { label: t("Buka halaman RSVP"), icon: <Link2 />, href: link(g), external: true },
         { label: t("Ubah"), icon: <Pencil />, hidden: !canWrite, onClick: () => setForm(g) },
         { label: t("Hapus tanda terkirim"), icon: <X />, hidden: !canWrite || !g.invitation_sent_at, action: () => markInvitationSent(projectId, [g.id], false) },
+        { label: t("Batalkan check-in"), icon: <Undo2 />, hidden: !canWrite || !g.checked_in_at, confirm: t("Batalkan check-in {name}?", { name: g.name }), action: () => undoCheckinAction(projectId, g.id) },
         { label: t("Hapus"), icon: <Trash2 />, danger: true, hidden: !canWrite, confirm: t("Hapus {name}?", { name: g.name }), action: () => deleteGuests(projectId, [g.id]) },
       ]} />
     );

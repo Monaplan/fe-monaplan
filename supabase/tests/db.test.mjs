@@ -433,5 +433,66 @@ await expectErr("B tidak bisa unggah ke folder storage_prefix proyek orang lain"
 });
 await expectErr("B tidak bisa unggah ke proyek yang bukan miliknya", "row-level security", () => as(B, "b@x.com", () => db.query(`insert into storage.objects (bucket_id, name) values ('project-files', $1)`, [`44444444-4444-4444-4444-444444444444/documents/x.pdf`])));
 
+console.log("\nTahap 1: Amplop & Kado");
+await expectOk("owner mencatat amplop", () => as(A, "a@x.com", () => db.query(`insert into gift_receipts (project_id, giver_name, kind, amount_idr, side) values ($1, 'Hendra', 'amplop', 200000, 'pria')`, [P])));
+await expectOk("editor mencatat kado", () => as(B, "b@x.com", () => db.query(`insert into gift_receipts (project_id, giver_name, kind, item_name) values ($1, 'Keluarga Siregar', 'kado', 'Set piring')`, [P])));
+await expectErr("kado tanpa nama barang ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`insert into gift_receipts (project_id, giver_name, kind) values ($1, 'X', 'kado')`, [P])));
+await expectErr("amplop tanpa nominal ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`insert into gift_receipts (project_id, giver_name, kind) values ($1, 'X', 'amplop')`, [P])));
+await expectOk("bukan anggota tidak melihat catatan amplop", () => as(D, "d@x.com", async () => { const r = await one(`select count(*)::int c from gift_receipts`); if (r.c !== 0) throw new Error("bocor " + r.c); }));
+await expectErr("bukan anggota tidak bisa mencatat amplop", "row-level security", () => as(D, "d@x.com", () => db.query(`insert into gift_receipts (project_id, giver_name, kind, amount_idr) values ($1, 'hack', 'amplop', 1)`, [P])));
+await expectOk("updated_at terisi trigger saat diubah", async () => {
+  await as(A, "a@x.com", () => db.query(`update gift_receipts set thanked_at = now() where project_id = $1 and giver_name = 'Hendra'`, [P]));
+  const r = await one(`select thanked_at is not null t from gift_receipts where giver_name = 'Hendra'`);
+  if (!r.t) throw new Error("thanked_at kosong");
+});
+
+console.log("\nTahap 1: pembagian biaya dan tabungan");
+await expectOk("funded_by bawaan bersama", async () => {
+  const cat = await one(`select id from budget_categories where project_id = $1 limit 1`, [P]);
+  const r = await as(A, "a@x.com", () => one(`insert into budget_items (project_id, category_id, name, estimated_idr) values ($1, $2, 'Uji pihak', 1000) returning funded_by`, [P, cat.id]));
+  if (r.funded_by !== "bersama") throw new Error(r.funded_by);
+});
+await expectErr("funded_by di luar enum ditolak", "invalid input value", () => as(A, "a@x.com", () => db.query(`update budget_items set funded_by = 'tetangga' where project_id = $1`, [P])));
+await expectErr("split_pria_pct di atas 100 ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`update wedding_projects set split_pria_pct = 120 where id = $1`, [P])));
+await expectErr("savings_idr negatif ditolak", "check constraint", () => as(A, "a@x.com", () => db.query(`update wedding_projects set savings_idr = -1 where id = $1`, [P])));
+await expectOk("editor bisa memperbarui dana terkumpul", () => as(B, "b@x.com", () => db.query(`update wedding_projects set savings_idr = 5000000, savings_updated_at = now(), split_pria_pct = 60 where id = $1`, [P])));
+
+console.log("\nTahap 1: tautan panitia");
+await expectOk("slug panitia, q, offline dicadangkan", async () => {
+  const r = await one(`select reserved_slug('panitia') a, reserved_slug('q') b, reserved_slug('offline') c, reserved_slug('raka-nadia') d`);
+  if (!r.a || !r.b || !r.c || r.d) throw new Error(JSON.stringify(r));
+});
+await expectOk("staff_token disimpan", () => as(A, "a@x.com", () => db.query(`update wedding_projects set staff_token = 'token-uji-panitia-123456' where id = $1`, [P])));
+await expectErr("staff_token unik", "duplicate key", () => db.query(`update wedding_projects set staff_token = 'token-uji-panitia-123456' where id <> $1 and owner_id = $2`, [P, D]));
+
+console.log("\nTahap 1: langganan push");
+await expectOk("pengguna menyimpan langganannya sendiri", () => as(A, "a@x.com", () => db.query(`insert into push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://push.example/a1', 'p256dh-kunci-uji', 'auth-uji1')`, [A])));
+await expectErr("tidak bisa menyimpan langganan atas nama orang lain", "row-level security", () => as(A, "a@x.com", () => db.query(`insert into push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://push.example/b1', 'p256dh-kunci-uji', 'auth-uji1')`, [B])));
+await expectOk("langganan orang lain tidak terlihat", () => as(B, "b@x.com", async () => { const r = await one(`select count(*)::int c from push_subscriptions`); if (r.c !== 0) throw new Error("bocor " + r.c); }));
+await expectErr("endpoint unik", "duplicate key", () => db.query(`insert into push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://push.example/a1', 'x-kunci-uji', 'y-auth-uji')`, [B]));
+
+console.log("\nTahap 1: check-in QR");
+const GC = await as(A, "a@x.com", () => one(`insert into guests (project_id, name, pax_invited, pax_confirmed, rsvp_status) values ($1, 'Tamu QR', 3, 2, 'hadir') returning id, checkin_code`, [P]));
+await expectOk("kode check-in otomatis 10 karakter tanpa karakter mirip", async () => { if (!/^[2-9A-HJKMNP-Z]{10}$/.test(GC.checkin_code)) throw new Error(GC.checkin_code); });
+await expectOk("tamu lama ikut mendapat kode", async () => { const r = await one(`select count(*)::int c from guests where checkin_code is null`); if (r.c !== 0) throw new Error("c=" + r.c); });
+await expectErr("anggota tidak bisa memanggil checkin_guest langsung", "permission denied", () => as(A, "a@x.com", () => db.query(`select checkin_guest($1, $2, null, 'x')`, [P, GC.checkin_code])));
+await expectOk("server check-in (kode huruf kecil), pax bawaan dari konfirmasi", async () => {
+  const r = (await one(`select checkin_guest($1, $2, null, 'Panitia') r`, [P, GC.checkin_code.toLowerCase()])).r;
+  if (r.already || r.checked_in_pax !== 2) throw new Error(JSON.stringify(r));
+});
+await expectOk("pindai ulang tidak membuat data ganda", async () => {
+  const r = (await one(`select checkin_guest($1, $2, 9::smallint, 'Panitia') r`, [P, GC.checkin_code])).r;
+  if (!r.already || r.checked_in_pax !== 2) throw new Error(JSON.stringify(r));
+});
+await expectErr("kode proyek lain ditolak", "CHECKIN_NOT_FOUND", async () => {
+  const other = await one(`select id from wedding_projects where id <> $1 limit 1`, [P]);
+  await db.query(`select checkin_guest($1, $2, null, null)`, [other?.id ?? "00000000-0000-0000-0000-000000000000", GC.checkin_code]);
+});
+await expectOk("pax dijepit maksimal 50", async () => {
+  const g = await one(`insert into guests (project_id, name, pax_invited) values ($1, 'Rombongan', 20) returning checkin_code`, [P]);
+  const r = (await one(`select checkin_guest($1, $2, 300::smallint, null) r`, [P, g.checkin_code])).r;
+  if (r.checked_in_pax !== 50) throw new Error(JSON.stringify(r));
+});
+
 console.log(`\n${pass} lulus, ${failN} gagal`);
 process.exit(failN ? 1 : 0);

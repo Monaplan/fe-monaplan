@@ -14,8 +14,8 @@ const PHASES = [
   { key: "dasar", from: 180, range: "Lebih dari 6 bulan", title: "Susun fondasinya", text: "Tanggal, budget, dan daftar tamu awal.", tools: ["Checklist", "Budget"] },
   { key: "vendor", from: 90, range: "3 sampai 6 bulan", title: "Kunci vendor dan dokumen", text: "Booking vendor, dokumen KUA, dan catat DP.", tools: ["Vendor", "Dokumen"] },
   { key: "undangan", from: 30, range: "1 sampai 3 bulan", title: "Undang dan pantau RSVP", text: "Kirim link RSVP lewat WhatsApp, rekap porsi.", tools: ["Tamu & RSVP", "Mahar & Seserahan"] },
-  { key: "harih", from: 0, range: "Kurang dari 1 bulan", title: "Rapikan hari H", text: "Finalkan rundown dan lunasi vendor.", tools: ["Rundown Hari H", "Reminder & Calendar"] },
-  { key: "pasca", from: -9999, range: "Setelah hari H", title: "Urus yang tersisa", text: "Ambil hasil foto, perbarui dokumen, lalu berangkat berdua.", tools: ["Honeymoon Planner"] },
+  { key: "harih", from: 0, range: "Kurang dari 1 bulan", title: "Rapikan hari H", text: "Finalkan rundown, lunasi vendor, lalu jalankan hari H dari satu layar.", tools: ["Rundown Hari H", "Mode Hari H"] },
+  { key: "pasca", from: -9999, range: "Setelah hari H", title: "Urus yang tersisa", text: "Catat amplop dan kirim ucapan terima kasih, perbarui dokumen, lalu berangkat berdua.", tools: ["Amplop & Kado", "Honeymoon Planner"] },
 ] as const;
 
 const DAY = 86_400_000;

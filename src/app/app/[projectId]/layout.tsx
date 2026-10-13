@@ -78,6 +78,13 @@ export default async function WorkspaceLayout({ children, params }: { children: 
       ],
     },
     {
+      title: t("Hari H"),
+      items: [
+        { href: `${base}/hari-h`, label: t("Mode Hari H"), icon: "harih" },
+        { href: `${base}/amplop-kado`, label: t("Amplop & Kado"), icon: "amplop" },
+      ],
+    },
+    {
       title: t("Bonus"),
       items: [
         { href: `${base}/rona-impian`, label: t("Rona Impian"), icon: "palette" },

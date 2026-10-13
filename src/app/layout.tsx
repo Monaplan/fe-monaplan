@@ -5,6 +5,7 @@ import { jakarta, cormorant } from "./fonts";
 import { ToastProvider } from "@/components/ui/toast";
 import { DialogProvider } from "@/components/ui/dialogs";
 import { ThemeSync } from "@/components/app/theme";
+import { SwRegister } from "@/components/app/sw-register";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
@@ -57,6 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ToastProvider>
             <DialogProvider>{children}</DialogProvider>
             <ThemeSync />
+            <SwRegister />
           </ToastProvider>
         </I18nProvider>
         {/* Statistik pengunjung dan kecepatan halaman milik Vercel; hanya aktif di situs yang di-deploy ke Vercel */}

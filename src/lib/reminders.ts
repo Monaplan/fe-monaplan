@@ -5,6 +5,8 @@ import { sendTemplated } from "@/lib/email";
 import { renderEmail, type DigestAgenda, type DigestPayment, type DigestTask, type EmailData, type Lang } from "@/lib/email/templates";
 import { addDaysISO, diffDays, formatDateCompact, formatDateLong, formatIDR, formatTime } from "@/lib/format";
 import { projectPath } from "@/lib/paths";
+import { savingsPlan } from "@/lib/budget";
+import { sendPush } from "@/lib/push";
 import { getPricingContext } from "@/lib/settings";
 import { priceFor, promoExhausted, promoState } from "@/lib/pricing";
 
@@ -83,6 +85,20 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
         for (const uid of writers(p.id)) {
           inApp.push({ userId: uid, projectId: p.id, linkPath: link(p, "budget"), type: "payment_due", key: `payment_due:${pay.id}:H-${dueIn}`,
             build: (_l, name) => ({ kind: "payment_due", name, payee: (pay as any).vendors?.name ?? pay.label ?? "Vendor", amount: formatIDR(pay.amount_idr), dueIn: dueIn as 1 | 7, url: url(link(p, "budget")) }) });
+        }
+      }
+      // Target tabungan: tanggal 1 setiap bulan pukul 08.00 sampai 11.00 (cukup beberapa putaran cron), hanya bila kolom savings_idr ada (migrasi 20261013000003)
+      if (today.endsWith("-01") && hour < 11 && p.wedding_date && typeof p.savings_idr === "number") {
+        const [{ data: bItems }, { data: bPays }] = await Promise.all([
+          admin.from("budget_items").select("id, estimated_idr, actual_idr").eq("project_id", p.id),
+          admin.from("expense_payments").select("budget_item_id, amount_idr, status").eq("project_id", p.id),
+        ]);
+        const plan = savingsPlan({ items: bItems ?? [], payments: bPays ?? [], savings: p.savings_idr, weddingDate: p.wedding_date, today });
+        if (plan.perMonth && plan.months) {
+          for (const uid of writers(p.id)) {
+            inApp.push({ userId: uid, projectId: p.id, linkPath: link(p, "budget"), type: "savings", key: `savings:${p.id}:${today.slice(0, 7)}`,
+              build: (_l, name) => ({ kind: "savings_reminder", name, amount: formatIDR(plan.perMonth), months: plan.months!, url: url(link(p, "budget")) }) });
+          }
         }
       }
     }
@@ -213,7 +229,7 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
     }
   }
 
-  let created = 0, emailed = 0, failed = 0;
+  let created = 0, emailed = 0, failed = 0, pushed = 0;
   const nameOf = (u: Profile) => u.full_name ?? u.email.split("@")[0]!;
   const langOf = (u: Profile): Lang => (u.language === "en" ? "en" : "id");
 
@@ -221,11 +237,16 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
   await pool(inApp, 5, async (c) => {
     const u = prof.get(c.userId);
     if (!u) return;
-    const r = renderEmail(langOf(u), c.build(langOf(u), nameOf(u)), { appUrl: base });
+    const data = c.build(langOf(u), nameOf(u));
+    const r = renderEmail(langOf(u), data, { appUrl: base });
     const res = await admin.from("notifications")
       .upsert({ user_id: c.userId, project_id: c.projectId ?? null, type: c.type, title: r.title, body: r.body, link_path: c.linkPath, channel: "in_app", dedupe_key: `${c.key}:${c.userId}:in_app` }, { onConflict: "dedupe_key", ignoreDuplicates: true })
       .select("id");
-    if (res.data?.length) created++;
+    if (res.data?.length) {
+      created++;
+      // Notifikasi baru juga dikirim ke HP lewat push (tanpa nominal uang)
+      pushed += await sendPush(admin, [c.userId], { title: r.title, body: pushBody(data, r.body, langOf(u)), url: c.linkPath, tag: c.key });
+    }
   });
 
   // Email (ringkasan harian, RSVP, trial berakhir)
@@ -259,5 +280,12 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
     }
   });
 
-  return { inApp: inApp.length, emails: mail.length, created, emailed, failed };
+  return { inApp: inApp.length, emails: mail.length, created, emailed, failed, pushed };
+}
+
+// Isi push: sama dengan notifikasi dalam aplikasi, kecuali yang memuat nominal uang
+function pushBody(data: EmailData, fallback: string, lang: Lang) {
+  if (data.kind === "payment_due") return data.payee;
+  if (data.kind === "savings_reminder") return lang === "en" ? "Open Budget to see this month's goal." : "Buka Budget untuk melihat target bulan ini.";
+  return fallback;
 }

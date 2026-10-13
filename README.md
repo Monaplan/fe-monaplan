@@ -55,12 +55,14 @@ Aplikasi web wedding planner all-in-one: checklist, budget, vendor, tamu dan RSV
 
 | | |
 |---|---|
-| ✅ **Checklist** | Tugas persiapan berfase, tenggatnya dihitung dari tanggal pernikahan. Template Umum dan adat Jawa, Sunda, Bali, Minang, Batak. |
-| 💰 **Budgeting** | Anggaran per kategori, jadwal pembayaran, dan ringkasan pengeluaran. |
+| ✅ **Checklist** | Tugas persiapan berfase, tenggatnya dihitung dari tanggal pernikahan. Template Umum dan adat Jawa, Sunda, Bali, Minang, Batak. Bagi tugas berdua dengan progres per orang. |
+| 💰 **Budgeting** | Anggaran per kategori, jadwal pembayaran, pembagian biaya pihak pria dan wanita, dan target tabungan per bulan. |
 | 🏪 **Vendor** | Pantau status negosiasi, DP, dan pelunasan. |
-| 💌 **Tamu & RSVP** | Daftar tamu, undangan lewat WhatsApp, dan konfirmasi kehadiran. |
+| 💌 **Tamu & RSVP** | Daftar tamu, undangan lewat WhatsApp, konfirmasi kehadiran, dan QR masuk untuk tamu yang hadir. |
 | 🎴 **Undangan digital** | Tautan sendiri per pasangan dan per nama tamu, dengan lima tema. |
 | 🕒 **Rundown & Kalender** | Rundown hari H dan sinkronisasi Google Calendar. |
+| 🎉 **Mode Hari H** | Rundown yang berjalan sesuai jam, kontak vendor, check-in tamu dengan QR, dan tautan panitia tanpa akun. |
+| 🧧 **Amplop & Kado** | Catatan amplop, transfer, dan kado, plus ucapan terima kasih lewat WhatsApp. |
 | 📄 **Dokumen** | Berkas penting dan persyaratan KUA. |
 | 🎁 **Mahar & Seserahan** | Rencana, harga, dan status pembelian. |
 | 🎨 **Rona Impian & Honeymoon** | Papan inspirasi dan perencana bulan madu. |
@@ -71,7 +73,7 @@ Aplikasi web wedding planner all-in-one: checklist, budget, vendor, tamu dan RSV
 - Panel admin: pengguna, order dan lisensi, paket, promo, kode akses, trial, audit, dan ringkasan kondisi sistem.
 - Pembayaran online, kode promo, dan kode akses dari reseller.
 
-Tersedia dalam **bahasa Indonesia dan Inggris**, dengan **mode terang dan gelap**.
+Tersedia dalam **bahasa Indonesia dan Inggris**, dengan **mode terang dan gelap**. Bisa dipasang di HP sebagai aplikasi (PWA) dengan notifikasi push.
 
 ## Tech stack
 
@@ -84,7 +86,7 @@ Tersedia dalam **bahasa Indonesia dan Inggris**, dengan **mode terang dan gelap*
 | Pembayaran | Midtrans Snap |
 | Email | Resend |
 | Keamanan | Cloudflare Turnstile, Content Security Policy, validasi dengan Zod |
-| Integrasi | Google OAuth dan Google Calendar |
+| Integrasi | Google OAuth dan Google Calendar, Web Push (VAPID), pemindai dan pembuat QR (qr-scanner, uqr) |
 | Hosting dan pemantauan | Vercel (Analytics dan Speed Insights) |
 | Pengujian | Uji database dengan PGlite, uji pustaka dan terjemahan dengan skrip Node |
 
@@ -110,3 +112,15 @@ npm run test:db     # uji skema dan aturan akses database
 npm run test:lib    # uji fungsi pustaka
 npm run test:i18n   # uji kelengkapan terjemahan
 ```
+
+## Notifikasi HP (opsional)
+
+Buat kunci sekali dengan `npx web-push generate-vapid-keys`, lalu isi di `.env` dan di Vercel:
+
+```bash
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+VAPID_SUBJECT=mailto:admin@domainkamu.id
+```
+
+Bila kosong, fitur notifikasi HP otomatis disembunyikan. Push dikirim oleh `/api/cron/reminders` dan saat tamu mengirim RSVP.

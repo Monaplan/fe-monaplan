@@ -2,7 +2,7 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { DateField } from "@/components/ui/date-field";
-import { ArrowDown, ArrowUp, Check, ChevronDown, ListChecks, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, ListChecks, Pencil, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/card";
@@ -25,6 +25,18 @@ type Task = {
   priority: string; due_date: string | null; assignee_id: string | null; vendor_id: string | null; sort_order: number;
 };
 type Member = { id: string; name: string; avatar: string | null };
+
+// Nilai filter untuk tugas yang belum punya penanggung jawab
+const NO_PIC = "__none";
+
+function Avatar({ m, className }: { m: Member; className?: string }) {
+  return (
+    <span title={m.name} className={cn("inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-plum-100 text-[12px] font-semibold text-plum-700", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {m.avatar ? <img src={m.avatar} alt={m.name} referrerPolicy="no-referrer" className="size-full object-cover" /> : initials(m.name)}
+    </span>
+  );
+}
 
 // Cincin progres kecil di kepala fase
 function PhaseRing({ value }: { value: number }) {
@@ -84,11 +96,21 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
     (!q || t.title.toLowerCase().includes(q.toLowerCase())) &&
     (!phase || t.phase_key === phase) &&
     (!status || t.status === status) &&
-    (!pic || t.assignee_id === pic) &&
+    (!pic || (pic === NO_PIC ? !t.assignee_id : t.assignee_id === pic)) &&
     (!lateOnly || isLate(t))), [optimistic, q, phase, status, pic, lateOnly]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const done = optimistic.filter((t) => t.status === "done").length;
   const memberById = Object.fromEntries(members.map((m) => [m.id, m]));
+  // Bagi tugas: progres per penanggung jawab, ditambah tugas yang belum dibagi. Hanya tampil bila sudah ada tugas yang dibagi.
+  const shares = useMemo(() => {
+    const rows = members.map((m) => {
+      const mine = optimistic.filter((t) => t.assignee_id === m.id);
+      return { key: m.id, member: m as Member | null, total: mine.length, done: mine.filter((t) => t.status === "done").length };
+    }).filter((r) => r.total > 0);
+    const free = optimistic.filter((t) => !t.assignee_id || !memberById[t.assignee_id]);
+    if (rows.length && free.length) rows.push({ key: NO_PIC, member: null, total: free.length, done: free.filter((t) => t.status === "done").length });
+    return rows;
+  }, [optimistic, members]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggle(t: Task) {
     const next = t.status === "done" ? "todo" : "done";
@@ -129,11 +151,37 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
           <Select value={pic} onChange={(e) => setPic(e.target.value)} aria-label={t("Filter penanggung jawab")}>
             <option value="">{t("Semua PIC")}</option>
             {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            <option value={NO_PIC}>{t("Belum dibagi")}</option>
           </Select>
           <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-surface px-3 text-sm">
             <input type="checkbox" className="accent-plum-600" checked={lateOnly} onChange={(e) => setLateOnly(e.target.checked)} />{" "}{t("Hanya terlambat")}</label>
         </div>
       </Card>
+
+      {shares.length > 0 && (
+        <section data-tour="checklist-share" aria-label={t("Bagi tugas")} className="scrollbar-thin -mx-4 mb-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:overflow-visible sm:px-0">
+          {shares.map((s) => {
+            const active = pic === s.key;
+            const name = s.member?.name ?? t("Belum dibagi");
+            return (
+              <button key={s.key} type="button" onClick={() => setPic(active ? "" : s.key)} aria-pressed={active}
+                className={cn("flex min-w-42 shrink-0 snap-start items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors sm:min-w-0",
+                  active ? "border-plum-900 bg-plum-900 text-white" : "border-plum-100 bg-plum-50 hover:border-plum-200")}>
+                {s.member ? <Avatar m={s.member} className={active ? "ring-2 ring-white/30" : ""} /> : (
+                  <span className={cn("inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed", active ? "border-white/50 text-white" : "border-neutral-300 text-neutral-500")} aria-hidden="true"><UserRound className="size-4" /></span>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className={cn("block truncate text-[11px] font-semibold tracking-widest uppercase", active ? "text-white/70" : "text-plum-700")}>{name}</span>
+                  <span className="tabular mt-0.5 block text-[15px] font-bold">{t("{done} dari {total} selesai", { done: s.done, total: s.total })}</span>
+                  <span className={cn("mt-2 block h-1 overflow-hidden rounded-full", active ? "bg-white/20" : "bg-plum-100")}>
+                    <span className={cn("block h-full rounded-full transition-[width] duration-500", active ? "bg-white" : "bg-plum-600")} style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
 
       {optimistic.length === 0 ? (
         <Card>
@@ -229,11 +277,7 @@ export function ChecklistClient({ projectId, tz, tasks, vendors, members, canWri
                                   : <span>{t(task.category)}</span>)}
                               </span>
                             </button>
-                            {m && (
-                              <span title={m.name} className="hidden size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-plum-100 text-[10px] font-semibold text-plum-700 sm:inline-flex">
-                                {m.avatar ? <img src={m.avatar} alt={m.name} referrerPolicy="no-referrer" className="size-7 object-cover" /> : initials(m.name)}
-                              </span>
-                            )}
+                            {m && <Avatar m={m} className="size-6 text-[9px] sm:size-7 sm:text-[10px]" />}
                             {when && <span className={cn("hidden shrink-0 text-[13px] font-semibold whitespace-nowrap sm:block", toneText)}>{when}</span>}
                             {canWrite && (
                               <RowMenu items={[

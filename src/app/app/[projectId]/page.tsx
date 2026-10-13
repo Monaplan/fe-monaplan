@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  ArrowDown, ArrowRight, ArrowUp, BookOpen, CalendarDays, FileText, Heart, ListChecks, MapPin, Target, Timer, Users, Wallet,
+  ArrowDown, ArrowRight, ArrowUp, BookOpen, CalendarDays, FileText, Heart, ListChecks, MapPin, PartyPopper, PiggyBank, Target, Timer, Users, Wallet,
 } from "lucide-react";
 import { withProjectData } from "@/lib/access";
 import { guideFrom } from "@/lib/guide";
@@ -15,6 +15,7 @@ import {
   addDaysISO, diffDays, formatDateCompact, formatDateShort, formatIDR, formatIDRShort, formatPercent, formatTime,
   isoDateInTz, relativeDay, todayISO,
 } from "@/lib/format";
+import { savingsPlan } from "@/lib/budget";
 import { QuickAdd } from "./quick-add";
 import { CountdownHero } from "./countdown-hero";
 import { CountUp } from "@/components/ui/count-up";
@@ -38,7 +39,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
     const [tasks, items, payments, guests, docs, events, feed, vendors, allocated, templates, rundown, manual] = await Promise.all([
       supabase.from("tasks").select("phase_key, status").eq("project_id", pid),
       supabase.from("budget_items").select("id, name, actual_idr, estimated_idr").eq("project_id", pid),
-      supabase.from("expense_payments").select("id, label, kind, amount_idr, due_date, status, paid_at, vendors(name)").eq("project_id", pid),
+      supabase.from("expense_payments").select("id, label, kind, amount_idr, due_date, status, paid_at, budget_item_id, vendors(name)").eq("project_id", pid),
       supabase.from("guests").select("rsvp_status, pax_confirmed, rsvp_responded_at, invitation_sent_at").eq("project_id", pid),
       supabase.from("document_checklist_items").select("is_done").eq("project_id", pid),
       supabase.from("wedding_events").select("name, type, starts_at, venue_name").eq("project_id", pid).order("sort_order").order("starts_at"),
@@ -82,6 +83,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
   const tasksDone = (tasks ?? []).filter((t) => t.status === "done").length;
   const paid = (payments ?? []).filter((p) => p.status === "sudah_bayar").length;
   const docsDone = (docs ?? []).filter((d) => d.is_done).length;
+  // Target tabungan (kolom savings_idr ada setelah migrasi 20261013000003)
+  const saving = project.savings_idr !== undefined && project.wedding_date
+    ? savingsPlan({ items: items ?? [], payments: payments ?? [], savings: project.savings_idr, weddingDate: project.wedding_date, today })
+    : null;
 
   // Grafik pengeluaran tahun berjalan
   const year = Number(today.slice(0, 4));
@@ -119,7 +124,15 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
         </div>
       </div>
 
-      <div className="stagger grid gap-4 lg:grid-cols-12">
+      {daysLeft === 0 && (
+        <Link href={`/app/${ref}/hari-h`} className="mb-4 flex items-center gap-3 rounded-2xl bg-plum-700 p-4 text-white hover:bg-plum-800">
+          <PartyPopper className="size-6 shrink-0" />
+          <span className="flex-1"><b className="block text-[15px]">{t("Hari ini hari H")}</b><span className="text-[13px] text-white/80">{t("Buka Mode Hari H untuk rundown, kontak vendor, dan check-in tamu.")}</span></span>
+          <ArrowRight className="size-5" />
+        </Link>
+      )}
+
+      <div className="stagger grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-12">
         <Card tour="countdown" className="lg:col-span-5 lg:row-span-2">
           <CountdownHero weddingDate={project.wedding_date} createdAt={project.created_at ?? new Date().toISOString()} today={today} tz={tz}
             place={mainEvent?.venue_name ?? project.city ?? null} settingsHref={`/app/${ref}/pengaturan?tab=budget`} />
@@ -163,6 +176,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
             <ProgressRow icon={<Wallet />} title={t("Pelunasan")} done={paid} total={(payments ?? []).length} />
             <ProgressRow icon={<FileText />} title={t("Dokumen")} done={docsDone} total={(docs ?? []).length} />
           </div>
+          {saving && saving.need > 0 && (
+            <Link href={`/app/${ref}/budget`} className="mt-5 flex items-center gap-3 rounded-md border border-neutral-200 p-3 hover:bg-plum-50">
+              <IconTile className="text-plum-700"><PiggyBank /></IconTile>
+              <span className="flex-1 text-[13px] text-neutral-600"><b className="block text-neutral-800">{t("Target Tabungan")}</b>
+                {saving.shortfall === 0 ? t("Dana sudah cukup") : <span className="tabular">{t("{v1} per bulan", { v1: formatIDR(saving.perMonth) })}</span>}</span>
+              <ArrowRight className="size-4 text-plum-600" />
+            </Link>
+          )}
           {guide.done < guide.total && (
             <Link href={`/app/${ref}/panduan`} className="mt-5 flex items-center gap-3 rounded-md bg-plum-50 p-3 hover:bg-plum-100">
               <IconTile className="border-plum-200 text-plum-700"><BookOpen /></IconTile>

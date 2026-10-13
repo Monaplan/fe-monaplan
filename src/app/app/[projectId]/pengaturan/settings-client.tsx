@@ -28,6 +28,7 @@ import { useI18n } from "@/i18n/client";
 import { RsvpThemePicker } from "./rsvp-theme-picker";
 import { StylePicker } from "@/components/app/style-picker";
 import type { WeddingStyleId } from "@/content/wedding-styles";
+import { StaffLinkCard } from "@/features/project/staff-link-card";
 import { useT } from "@/i18n/client";
 
 type Event = { id: string; type: string; name: string; starts_at: string | null; ends_at: string | null; venue_name: string | null; venue_address: string | null; maps_url: string | null; dress_code: string | null; notes: string | null; sort_order: number };
@@ -269,6 +270,13 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
           ) : (
             <Card><p className="text-[13px] text-neutral-600">{t("Hanya pemilik ruang kerja yang bisa mengundang dan mengatur kolaborator.")}</p></Card>
           )}
+          {/* Kolom staff_token ada setelah migrasi 20261013000004 */}
+          {isOwner && project.staff_token !== undefined && (
+            <div className="lg:col-start-2">
+              <StaffLinkCard projectId={pid} coupleName={project.title} token={project.staff_token ?? null} canRecordGifts={!!project.staff_can_record_gifts} />
+            </div>
+          )}
+          <p className="text-[12px] text-neutral-500 lg:col-start-1 lg:row-start-2">{t("Semua kolaborator, termasuk Viewer, bisa melihat catatan Amplop & Kado.")}</p>
         </div>
       )}
 

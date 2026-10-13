@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { GUEST_CATEGORY, PARTY_SIDE, PAYMENT_KIND, PHASE_LABEL, PURCHASE_STATUS, RSVP_STATUS, TASK_STATUS, VENDOR_STATUS, labelOf } from "@/lib/constants";
+import { GIFT_RECEIPT_KIND, GUEST_CATEGORY, PARTY_SIDE, PAYMENT_KIND, PHASE_LABEL, PURCHASE_STATUS, RSVP_STATUS, TASK_STATUS, VENDOR_STATUS, labelOf } from "@/lib/constants";
 
 function csv(rows: (string | number | null | undefined)[][]) {
   const esc = (v: string | number | null | undefined) => {
@@ -15,16 +15,17 @@ function csv(rows: (string | number | null | undefined)[][]) {
 export async function GET(_req: Request, { params }: { params: Promise<{ projectId: string; kind: string }> }) {
   const { projectId, kind } = await params;
   const supabase = await createClient();
-  const { data: project } = await supabase.from("wedding_projects").select("title").eq("id", projectId).maybeSingle();
+  const { data: project } = await supabase.from("wedding_projects").select("title, timezone").eq("id", projectId).maybeSingle();
   if (!project) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   let rows: (string | number | null | undefined)[][] = [];
   switch (kind) {
     case "tamu": {
       const { data } = await supabase.from("guests").select("*, guest_groups(name)").eq("project_id", projectId).order("name");
-      rows = [["Nama", "WhatsApp", "Pihak", "Grup", "Kategori", "Kuota Pax", "Status RSVP", "Pax Hadir", "Ucapan", "Undangan Dikirim", "Catatan"],
+      rows = [["Nama", "WhatsApp", "Pihak", "Grup", "Kategori", "Kuota Pax", "Status RSVP", "Pax Hadir", "Ucapan", "Undangan Dikirim", "Check-in", "Pax Datang", "Catatan"],
         ...(data ?? []).map((g: any) => [g.name, g.phone_e164, labelOf(PARTY_SIDE, g.side), g.guest_groups?.name, labelOf(GUEST_CATEGORY, g.category), g.pax_invited,
-          labelOf(RSVP_STATUS, g.rsvp_status), g.pax_confirmed, g.rsvp_message, g.invitation_sent_at ? "Ya" : "Belum", g.notes])];
+          labelOf(RSVP_STATUS, g.rsvp_status), g.pax_confirmed, g.rsvp_message, g.invitation_sent_at ? "Ya" : "Belum",
+          g.checked_in_at ? new Date(g.checked_in_at).toLocaleString("id-ID", { timeZone: project.timezone ?? "Asia/Jakarta" }) : "", g.checked_in_pax, g.notes])];
       break;
     }
     case "budget": {
@@ -32,8 +33,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ project
         supabase.from("budget_items").select("*, budget_categories(name), vendors(name)").eq("project_id", projectId),
         supabase.from("expense_payments").select("*, vendors(name), budget_items(name)").eq("project_id", projectId).order("due_date"),
       ]);
-      rows = [["ITEM BUDGET"], ["Kategori", "Item", "Vendor", "Estimasi", "Realisasi", "Catatan"],
-        ...(items ?? []).map((i: any) => [i.budget_categories?.name, i.name, i.vendors?.name, i.estimated_idr, i.actual_idr, i.notes]),
+      rows = [["ITEM BUDGET"], ["Kategori", "Item", "Vendor", "Estimasi", "Realisasi", "Ditanggung Oleh", "Catatan"],
+        ...(items ?? []).map((i: any) => [i.budget_categories?.name, i.name, i.vendors?.name, i.estimated_idr, i.actual_idr, labelOf(PARTY_SIDE, i.funded_by ?? "bersama"), i.notes]),
         [], ["JADWAL PEMBAYARAN"], ["Label", "Jenis", "Item", "Vendor", "Nominal", "Jatuh Tempo", "Status", "Tanggal Bayar", "Metode"],
         ...(pays ?? []).map((p: any) => [p.label, labelOf(PAYMENT_KIND, p.kind), p.budget_items?.name, p.vendors?.name, p.amount_idr, p.due_date,
           p.status === "sudah_bayar" ? "Lunas" : "Belum dibayar", p.paid_at, p.payment_method])];
@@ -61,6 +62,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ project
       const { data } = await supabase.from("gift_items").select("*").eq("project_id", projectId).order("type");
       rows = [["Jenis", "Nama", "Kategori", "Jumlah", "Estimasi", "Harga Beli", "Toko", "Link", "Status"],
         ...(data ?? []).map((g: any) => [g.type, g.name, g.category, g.quantity, g.estimated_price_idr, g.actual_price_idr, g.store_name, g.purchase_url, labelOf(PURCHASE_STATUS, g.status)])];
+      break;
+    }
+    case "amplop": {
+      const { data } = await supabase.from("gift_receipts").select("*").eq("project_id", projectId).order("received_on");
+      rows = [["Nama Pemberi", "Pihak", "Jenis", "Nominal", "Barang", "Tanggal Diterima", "Ucapan Terkirim", "Dicatat Lewat", "Catatan"],
+        ...(data ?? []).map((r: any) => [r.giver_name, labelOf(PARTY_SIDE, r.side), labelOf(GIFT_RECEIPT_KIND, r.kind), r.amount_idr, r.item_name, r.received_on,
+          r.thanked_at ? "Ya" : "Belum", r.recorded_via === "panitia" ? "Panitia" : "Aplikasi", r.notes])];
       break;
     }
     default:

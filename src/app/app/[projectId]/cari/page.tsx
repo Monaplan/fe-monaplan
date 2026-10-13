@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Clock, FileText, Gift, Heart, ListChecks, Mail, Palette, Plane, Search, Store, Wallet } from "lucide-react";
+import { CalendarDays, Clock, FileText, Gift, Heart, ListChecks, Mail, Palette, HandCoins, Plane, Search, Store, Wallet } from "lucide-react";
 import { getProjectContext } from "@/lib/access";
 import { Card, PageHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/form";
@@ -15,11 +15,11 @@ export async function generateMetadata() {
 
 const ICON: Record<SearchGroupKey, React.ReactNode> = {
   tugas: <ListChecks />, vendor: <Store />, tamu: <Mail />, budget: <Wallet />, pembayaran: <Wallet />,
-  mahar: <Gift />, dokumen: <FileText />, acara: <Heart />, rundown: <Clock />, agenda: <CalendarDays />, inspirasi: <Palette />, perjalanan: <Plane />,
+  mahar: <Gift />, dokumen: <FileText />, acara: <Heart />, rundown: <Clock />, agenda: <CalendarDays />, inspirasi: <Palette />, perjalanan: <Plane />, amplop: <HandCoins />,
 };
 const LABEL: Record<SearchGroupKey, string> = {
   tugas: "Tugas", vendor: "Vendor", tamu: "Tamu", budget: "Budget", pembayaran: "Pembayaran",
-  mahar: "Mahar & Seserahan", dokumen: "Dokumen", acara: "Acara", rundown: "Rundown", agenda: "Agenda", inspirasi: "Rona Impian", perjalanan: "Honeymoon Planner",
+  mahar: "Mahar & Seserahan", dokumen: "Dokumen", acara: "Acara", rundown: "Rundown", agenda: "Agenda", inspirasi: "Rona Impian", perjalanan: "Honeymoon Planner", amplop: "Amplop & Kado",
 };
 
 export default async function SearchPage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ q?: string }> }) {

@@ -4,7 +4,7 @@ import { BackToTop } from "@/components/landing/back-to-top";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
 import {
-  ArrowRight, BookOpen, CalendarDays, Check, CircleCheck, Clock, FileText, Gift, LayoutGrid, ListChecks, Mail, Palette, Plane, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
+  ArrowRight, BellRing, BookOpen, CalendarDays, Check, CircleCheck, Clock, FileText, Gift, HandCoins, LayoutGrid, ListChecks, Mail, Palette, PartyPopper, Plane, ScanLine, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Logo } from "@/components/app/logo";
@@ -37,18 +37,20 @@ const FEATURES = [
   { icon: <LayoutGrid />, title: "Dashboard", text: "Hitung mundur, budget terpakai, tamu hadir, dan agenda 14 hari ke depan." },
   { icon: <SlidersHorizontal />, title: "Pengaturan Pernikahan", text: "Data pasangan, acara, budget, target tamu, dan kolaborator." },
   { icon: <BookOpen />, title: "Panduan Penggunaan", text: "Delapan langkah yang tercentang otomatis saat kamu mengisinya." },
-  { icon: <ListChecks />, title: "To Do Checklist", text: "Checklist per fase, due date dihitung mundur dari hari H." },
-  { icon: <Wallet />, title: "Budgeting", text: "Alokasi per kategori, realisasi, jadwal DP dan pelunasan, dan peringatan bila melebihi budget." },
+  { icon: <ListChecks />, title: "To Do Checklist", text: "Checklist per fase, due date dihitung mundur dari hari H, dan progres tiap orang saat tugas dibagi berdua." },
+  { icon: <Wallet />, title: "Budgeting", text: "Alokasi per kategori, jadwal DP dan pelunasan, pembagian biaya pihak pria dan wanita, serta target tabungan per bulan." },
   { icon: <Store />, title: "Kelola Vendor", text: "Dari prospek sampai deal, bandingkan paket, dan chat WhatsApp langsung." },
-  { icon: <Mail />, title: "Tamu & RSVP", text: "Link RSVP pribadi per tamu, kirim lewat WhatsApp, rekap kehadiran otomatis." },
+  { icon: <Mail />, title: "Tamu & RSVP", text: "Link RSVP pribadi per tamu lewat WhatsApp, rekap kehadiran otomatis, dan QR masuk untuk tamu yang hadir." },
   { icon: <Clock />, title: "Rundown Hari H", text: "Susunan acara dengan PIC dan lokasi, plus PDF formal untuk dicetak." },
   { icon: <Gift />, title: "Mahar & Seserahan", text: "Daftar item, harga, link toko, dan status pembelian." },
   { icon: <FileText />, title: "Dokumen Penting", text: "Checklist dokumen KUA atau catatan sipil dan arsip berkas yang privat." },
-  { icon: <CalendarDays />, title: "Reminder & Calendar", text: "Tugas, pembayaran vendor, acara, dan agenda. Bisa disinkronkan ke Google Calendar." },
+  { icon: <CalendarDays />, title: "Reminder & Calendar", text: "Tugas, pembayaran vendor, acara, dan agenda. Masuk ke Google Calendar dan notifikasi HP." },
+  { icon: <PartyPopper />, title: "Mode Hari H", text: "Rundown yang berjalan sesuai jam, kontak vendor sekali ketuk, dan check-in tamu dengan QR, juga lewat tautan panitia." },
+  { icon: <HandCoins />, title: "Amplop & Kado", text: "Catat amplop, transfer, dan kado dari tamu, lalu kirim ucapan terima kasih lewat WhatsApp." },
 ];
 
 const FAQ = [
-  { q: "Apa itu Monaplan?", a: "Aplikasi wedding planner untuk calon pengantin di Indonesia: checklist, budget, vendor, tamu dan RSVP, rundown, mahar, dokumen, dan pengingat." },
+  { q: "Apa itu Monaplan?", a: "Aplikasi wedding planner untuk calon pengantin di Indonesia: checklist, budget, vendor, tamu dan RSVP, rundown, mahar, dokumen, pengingat, sampai check-in tamu dan catatan amplop di hari H." },
   { q: "Takut ribet dipakai?", a: "Mulai dari satu tugas. Checklist rekomendasi sudah terisi begitu data pernikahan dimasukkan, jadi tidak perlu menyusun dari nol." },
   { q: "Apakah bisa dipakai bersama pasangan atau keluarga?", a: "Bisa. Pemilik mengundang kolaborator sebagai Editor atau Viewer, sebanyak yang diizinkan paketnya. Mereka tidak perlu membayar." },
   { q: "Kami sama-sama sibuk kerja, apakah tetap terkejar?", a: "Justru karena itu. Progres kecil yang konsisten terasa lebih ringan daripada menumpuk di akhir, dan pasangan bisa ikut mengerjakan." },
@@ -56,6 +58,10 @@ const FAQ = [
   { q: "Berapa lama akses setelah membayar?", a: "Selamanya. Sekali bayar, tanpa langganan." },
   { q: "Apakah ada masa coba gratis?", a: "Ada, selama fitur trial aktif. Akun baru bisa langsung mencoba semua modul tanpa memilih paket dan tanpa kartu kredit. Setelah trial berakhir, data tetap aman dan bisa dilihat; aktifkan akses selamanya untuk kembali mengedit." },
   { q: "Bisakah jadwal dari Monaplan muncul di Google Calendar?", a: "Bisa. Hubungkan akun Google dari halaman Reminder & Calendar. Jadwalmu muncul di kalender khusus Monaplan." },
+  { q: "Bagaimana check-in tamu di hari H?", a: "Tamu yang menjawab hadir mendapat QR masuk di undangannya. Penerima tamu memindainya dari HP lewat Mode Hari H atau tautan panitia tanpa perlu akun, dan jumlah yang hadir langsung terekap." },
+  { q: "Bisakah mencatat amplop dan kado dari tamu?", a: "Bisa. Catat amplop, transfer, dan kado di Amplop & Kado, lalu kirim ucapan terima kasih lewat WhatsApp dengan satu ketukan." },
+  { q: "Biaya ditanggung dua keluarga, bisa dipisah?", a: "Bisa. Tandai setiap item budget ditanggung pihak pria, pihak wanita, atau bersama, lalu lihat rekap per pihak. Target tabungan per bulan juga dihitung otomatis." },
+  { q: "Apakah Monaplan bisa dipasang di HP?", a: "Bisa, tanpa unduh dari Play Store atau App Store. Buka Monaplan di browser HP lalu pilih Pasang atau Tambahkan ke Layar Utama, kemudian nyalakan notifikasi di halaman Akun." },
   { q: "Pernikahanku masih lama, apakah terlalu cepat memulai?", a: "Tidak. Kamu punya waktu untuk mencicil persiapan tanpa dikejar tenggat." },
   { q: "Apakah data pernikahan kami aman?", a: "Data tiap ruang kerja dipisahkan di database, berkas disimpan privat, dan pengolahan data mengikuti UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi." },
   { q: "Apa yang terjadi bila masa trial habis?", a: "Data tetap aman dan bisa dilihat serta diekspor. Aktifkan akses selamanya untuk mengedit lagi. Halaman RSVP tamu tetap berjalan 30 hari." },
@@ -76,6 +82,10 @@ const MARQUEE: [React.ReactNode, string][] = [
   [<Gift key="7" />, "Mahar dan seserahan"],
   [<FileText key="8" />, "Dokumen KUA dan catatan sipil"],
   [<CalendarDays key="9" />, "Reminder dan Google Calendar"],
+  [<PartyPopper key="14" />, "Mode Hari H"],
+  [<ScanLine key="15" />, "Check-in tamu dengan QR"],
+  [<HandCoins key="16" />, "Catatan amplop dan kado"],
+  [<BellRing key="17" />, "Notifikasi langsung di HP"],
   [<Palette key="10" />, "Rona Impian"],
   [<Plane key="11" />, "Honeymoon Planner"],
   [<Users key="12" />, "Dikerjakan berdua"],
@@ -260,14 +270,14 @@ export default async function LandingPage() {
         {/* Fitur */}
         <section id="fitur" aria-labelledby="fitur-title" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
           <SectionHead id="fitur-title" label={t("Isi aplikasinya")} sub={t("Vendor yang deal masuk ke budget, jadwal pembayaran masuk ke kalender, dan RSVP tamu terekap otomatis.")}>
-            {t("Sebelas modul yang")} <em className={em}>{t("saling terhubung.")}</em>
+            {t("Tiga belas modul yang")} <em className={em}>{t("saling terhubung.")}</em>
           </SectionHead>
 
           <div className="grid gap-4 md:grid-cols-6">
             <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-3">
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><ListChecks /></span>
               <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("To Do Checklist")}</h3>
-              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Checklist per fase, due date dihitung mundur dari hari H.")}</p>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Checklist per fase, due date dihitung mundur dari hari H, dan progres tiap orang saat tugas dibagi berdua.")}</p>
               <ul aria-hidden="true" className="mt-5 space-y-3">
                 {[[t("12 sampai 6 bulan"), 100], [t("6 sampai 3 bulan"), 62], [t("3 sampai 1 bulan"), 25], [t("Minggu terakhir"), 0]].map(([label, v]) => (
                   <li key={label as string}>
@@ -281,7 +291,7 @@ export default async function LandingPage() {
             <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-3">
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><Wallet /></span>
               <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Budgeting")}</h3>
-              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Alokasi per kategori, realisasi, jadwal DP dan pelunasan, dan peringatan bila melebihi budget.")}</p>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Alokasi per kategori, jadwal DP dan pelunasan, pembagian biaya pihak pria dan wanita, serta target tabungan per bulan.")}</p>
               <div aria-hidden="true" className="mt-5 flex h-24 items-end gap-2">
                 {[[t("Venue"), 80, 70], [t("Katering"), 90, 95], [t("Dekor"), 45, 30], [t("Foto"), 40, 40], [t("Busana"), 55, 20]].map(([label, est, act]) => (
                   <div key={label as string} className="flex flex-1 flex-col items-center gap-1.5">
@@ -298,7 +308,7 @@ export default async function LandingPage() {
             <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-2">
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><Mail /></span>
               <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Tamu & RSVP")}</h3>
-              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Link RSVP pribadi per tamu, kirim lewat WhatsApp, rekap kehadiran otomatis. Pilih salah satu dari lima tema undangan.")}</p>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Link RSVP pribadi per tamu lewat WhatsApp, rekap kehadiran otomatis, dan QR masuk untuk tamu yang hadir.")}</p>
               <ul aria-hidden="true" className="mt-4 space-y-2">
                 {[["Bapak Hendra", t("Hadir"), true], ["Ibu Sari", t("Hadir"), true], ["Mas Dimas", t("Ragu"), false]].map(([n, s, ok]) => (
                   <li key={n as string} className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 text-[12px]">
@@ -329,11 +339,43 @@ export default async function LandingPage() {
             <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-2">
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><CalendarDays /></span>
               <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Reminder & Calendar")}</h3>
-              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Tugas, pembayaran vendor, acara, dan agenda. Bisa disinkronkan ke Google Calendar.")}</p>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Tugas, pembayaran vendor, acara, dan agenda. Masuk ke Google Calendar dan notifikasi HP.")}</p>
               <div aria-hidden="true" className="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] text-neutral-500">
                 {Array.from({ length: 14 }, (_, i) => <span key={i} className={[3, 8, 11].includes(i) ? "rounded-md bg-plum-600 py-1 font-semibold text-white" : "rounded-md bg-neutral-50 py-1"}>{i + 1}</span>)}
               </div>
               <p aria-hidden="true" className="mt-3 flex items-center gap-1.5 text-[11px] text-neutral-500"><span className="size-2 rounded-full bg-plum-600" />{t("Tugas, pembayaran, dan acara")}</p>
+            </article>
+
+            <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-3">
+              <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><PartyPopper /></span>
+              <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Mode Hari H")}</h3>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Rundown yang berjalan sesuai jam, kontak vendor sekali ketuk, dan check-in tamu dengan QR, juga lewat tautan panitia.")}</p>
+              <div aria-hidden="true" className="mt-5 grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-2">
+                <div className="rounded-xl bg-plum-700 p-3 text-white">
+                  <p className="text-[9px] font-bold tracking-widest text-white/70 uppercase">{t("Sekarang")}</p>
+                  <p className="tabular mt-1 text-[13px] font-bold">19.00 - 19.30</p>
+                  <p className="truncate text-[13px] font-semibold">{t("Kirab pengantin")}</p>
+                </div>
+                <div className="rounded-xl bg-plum-50 p-3">
+                  <p className="flex items-center gap-1 text-[10px] font-medium text-neutral-600"><ScanLine className="size-3 text-plum-600" />{t("Hadir di lokasi")}</p>
+                  <p className="tabular mt-1 text-[18px] font-bold text-neutral-900">214<span className="text-[11px] font-semibold text-neutral-500"> / 300</span></p>
+                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-plum-100"><div className="h-full w-[71%] rounded-full bg-plum-600" /></div>
+                </div>
+              </div>
+            </article>
+
+            <article className="hover-lift reveal rounded-2xl border border-neutral-200/80 bg-surface p-6 shadow-card md:col-span-3">
+              <span className="inline-flex size-10 items-center justify-center rounded-xl bg-plum-100 text-plum-700 [&_svg]:size-5" aria-hidden="true"><HandCoins /></span>
+              <h3 className="mt-4 text-[17px] font-semibold text-neutral-900">{t("Amplop & Kado")}</h3>
+              <p className="mt-1 text-[14px] leading-6 text-neutral-600">{t("Catat amplop, transfer, dan kado dari tamu, lalu kirim ucapan terima kasih lewat WhatsApp.")}</p>
+              <ul aria-hidden="true" className="mt-4 space-y-2">
+                {[["Bapak Hendra", t("Amplop"), "Rp 200.000", true], ["Keluarga Siregar", t("Kado"), t("Set piring"), false]].map(([n, k, v, done]) => (
+                  <li key={n as string} className="flex items-center justify-between gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-[12px]">
+                    <span className="min-w-0 truncate text-neutral-800">{n}<span className="ml-2 text-neutral-500">{k} · {v}</span></span>
+                    <span className={done ? "shrink-0 rounded-full bg-plum-100 px-2 py-0.5 font-medium text-plum-700" : "shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 font-medium text-neutral-600"}>{done ? t("Sudah") : t("Kirim ucapan")}</span>
+                  </li>
+                ))}
+              </ul>
             </article>
           </div>
 

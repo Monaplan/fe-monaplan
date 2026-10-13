@@ -1,4 +1,4 @@
-import { ArrowRight, BellRing, Check, CircleCheck, LayoutGrid, Palette, Plane, Printer, ShieldCheck, Tag, Users, Briefcase } from "lucide-react";
+import { ArrowRight, BellRing, Check, CircleCheck, LayoutGrid, Palette, Plane, Printer, ScanLine, ShieldCheck, Tag, Users, Briefcase } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { ButtonLink } from "@/components/ui/button";
 import { CountUp } from "@/components/ui/count-up";
@@ -20,11 +20,12 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { pl
   const single = plans.length === 1;
 
   const points = (p: PricedPlan) => [
-    { icon: <LayoutGrid />, text: t("11 modul lengkap, dari checklist dan budget sampai rundown hari H") },
+    { icon: <LayoutGrid />, text: t("13 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H") },
     { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema") },
     { icon: <BellRing />, text: t("Pengingat DP dan pelunasan masuk ke email dan Google Calendar, jadi tidak ada yang terlewat") },
     { icon: <Users />, text: t("Undang pasangan dan keluarga ikut mengerjakan, hingga {n} orang tanpa biaya tambahan", { n: p.max_collaborators }) },
-    { icon: <CircleCheck />, text: t("Notifikasi langsung saat tamu mengonfirmasi hadir") },
+    { icon: <CircleCheck />, text: t("Notifikasi langsung di HP saat tamu mengonfirmasi hadir") },
+    { icon: <ScanLine />, text: t("Check-in tamu dengan QR, tautan panitia, dan catatan amplop di hari H") },
     { icon: <Printer />, text: t("Rundown hari H siap dicetak dalam PDF") },
     ...(p.max_projects > 1 ? [{ icon: <Briefcase />, text: t("{n} proyek pernikahan", { n: p.max_projects }) }] : []),
   ];

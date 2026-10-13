@@ -11,6 +11,8 @@ const csp = [
   "font-src 'self' data: https://*.midtrans.com",
   `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.midtrans.com https://challenges.cloudflare.com ${filesOrigin}`.trim(),
   "frame-src https://*.midtrans.com https://pay.google.com https://challenges.cloudflare.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",
@@ -47,6 +49,14 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: csp },
         ],
       },
+      // Kamera hanya dibuka untuk pemindai QR check-in (Mode Hari H dan tautan panitia); entri ini menimpa nilai umum di atas
+      ...["/app/:ref/hari-h", "/panitia/:token"].map((source) => ({
+        source,
+        headers: [{ key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=(self), interest-cohort=()" }],
+      })),
+      // Halaman panitia: tidak diindeks dan tidak membocorkan token lewat Referer
+      { source: "/panitia/:token", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }] },
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/" }] },
     ];
   },
 };

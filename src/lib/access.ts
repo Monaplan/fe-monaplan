@@ -134,6 +134,12 @@ export type Project = {
   cover_image_path: string | null;
   onboarding_completed_at: string | null;
   archived_at: string | null;
+  // Kolom tahap 1: tidak ada bila migrasi 20261013000002 sampai 20261013000004 belum dijalankan
+  split_pria_pct?: number;
+  savings_idr?: number;
+  savings_updated_at?: string | null;
+  staff_token?: string | null;
+  staff_can_record_gifts?: boolean;
 };
 
 export type Member = {

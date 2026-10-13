@@ -21,7 +21,7 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 // Nama rute aplikasi: tidak boleh jadi alamat undangan (domain/slug). Harus sama dengan reserved_slug() di database.
-export const RESERVED_SLUGS = new Set(["app", "admin", "akun", "aktivasi", "api", "auth", "checkout", "gabung", "login", "mulai", "onboarding", "privasi", "rsvp", "reset-password", "lupa-password", "icon", "apple-icon", "manifest", "robots", "sitemap", "opengraph-image", "favicon", "proyek"]);
+export const RESERVED_SLUGS = new Set(["app", "admin", "akun", "aktivasi", "api", "auth", "checkout", "gabung", "login", "mulai", "onboarding", "privasi", "rsvp", "reset-password", "lupa-password", "icon", "apple-icon", "manifest", "robots", "sitemap", "opengraph-image", "favicon", "proyek", "panitia", "q", "offline", "sw"]);
 
 // Tujuan pengalihan setelah masuk. Hanya alamat dalam situs: diawali satu "/", tanpa garis miring terbalik
 // (peramban menganggapnya "/"), tanpa karakter kontrol, dan tanpa skema. Selain itu dikembalikan fallback.

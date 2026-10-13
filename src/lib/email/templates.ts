@@ -19,7 +19,8 @@ export type EmailData =
   // Hanya untuk notifikasi dalam aplikasi (email untuk ini digabung ke ringkasan harian)
   | { kind: "agenda_reminder"; name: string; title: string; startsAt: string; location?: string | null; offsetMinutes: number; url: string }
   | { kind: "task_due"; name: string; title: string; dueIn: 0 | 3; url: string }
-  | { kind: "payment_due"; name: string; payee: string; amount: string; dueIn: 1 | 7; url: string };
+  | { kind: "payment_due"; name: string; payee: string; amount: string; dueIn: 1 | 7; url: string }
+  | { kind: "savings_reminder"; name: string; amount: string; months: number; url: string };
 
 export type EmailKind = EmailData["kind"];
 // Jenis yang benar-benar dikirim lewat email (dipakai halaman pratinjau admin)
@@ -251,6 +252,11 @@ function build(lang: Lang, d: EmailData): Built {
       const t = d.dueIn === 1 ? L("besok", "tomorrow") : L("7 hari lagi", "in 7 days");
       const body = `${d.payee} · ${d.amount}`;
       return { shell: { subject: L(`Pembayaran jatuh tempo ${t}`, `Payment due ${t}`), preheader: body, kicker: L("Pembayaran", "Payment"), heading: esc(d.payee), intro: para(esc(body)), cta: L("Buka budget", "Open budget"), ctaUrl: d.url }, text: [hi, body], title: L(`Pembayaran jatuh tempo ${t}`, `Payment due ${t}`), body };
+    }
+    case "savings_reminder": {
+      const body = L(`Sisihkan ${d.amount} bulan ini. Tinggal ${d.months} bulan menuju target.`, `Set aside ${d.amount} this month. ${d.months} month(s) left to reach the goal.`);
+      const title = L("Target tabungan bulan ini", "This month's savings goal");
+      return { shell: { subject: title, preheader: body, kicker: L("Tabungan", "Savings"), heading: esc(d.amount), intro: para(esc(body)), cta: L("Buka budget", "Open budget"), ctaUrl: d.url }, text: [hi, body], title, body };
     }
   }
 }

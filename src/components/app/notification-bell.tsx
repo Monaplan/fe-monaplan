@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, BellRing, CalendarDays, CheckCheck, CreditCard, Mail, Wallet } from "lucide-react";
+import { Bell, BellRing, CalendarDays, CheckCheck, CreditCard, Mail, PiggyBank, Wallet } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { useToast } from "@/components/ui/toast";
 import { fetchNotifications, markNotificationRead, markNotificationsRead } from "@/features/notifications/actions";
@@ -16,6 +16,7 @@ const POLL_MS = 45_000;
 function iconFor(type?: string) {
   if (type === "rsvp_response") return <Mail />;
   if (type?.startsWith("payment")) return <Wallet />;
+  if (type === "savings") return <PiggyBank />;
   if (type?.startsWith("license")) return <CreditCard />;
   if (type === "agenda" || type === "task_due") return <CalendarDays />;
   return <Bell />;

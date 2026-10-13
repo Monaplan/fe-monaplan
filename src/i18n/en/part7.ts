@@ -32,7 +32,7 @@ export const EN7: Record<string, string> = {
   "kamu bisa pakai Monaplan.": "you can use Monaplan.",
   "Isi aplikasinya": "What's inside",
   "11 modul untuk persiapan nikah,": "11 modules for wedding planning,",
-  "saling terhubung.": "connected to each other.",
+  "saling terhubung.": "all connected.",
   "Dekor": "Decor",
   "Busana": "Attire",
   "Link RSVP pribadi per tamu, kirim lewat WhatsApp, rekap kehadiran otomatis. Pilih salah satu dari lima tema undangan.": "A personal RSVP link per guest, sent via WhatsApp, with attendance summarized automatically. Choose from five invitation themes.",

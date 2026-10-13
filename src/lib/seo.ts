@@ -8,11 +8,12 @@ export const SITE = {
   title: "Monaplan: Satu tempat untuk semua rencana nikahmu",
   shortTitle: "Monaplan: Satu tempat untuk semua rencana nikahmu",
   description:
-    "Aplikasi wedding planner untuk persiapan nikah: checklist, budget, vendor, tamu dan RSVP WhatsApp, rundown hari H, sampai dokumen KUA. Coba gratis.",
+    "Aplikasi wedding planner untuk persiapan nikah: checklist, budget, vendor, RSVP WhatsApp, rundown, check-in tamu QR, sampai catatan amplop. Coba gratis.",
   keywords: [
     "wedding planner", "aplikasi wedding planner", "checklist persiapan pernikahan", "budget pernikahan",
     "daftar tamu pernikahan", "RSVP online", "undangan WhatsApp", "rundown pernikahan", "mahar dan seserahan",
-    "dokumen nikah KUA", "persiapan nikah",
+    "dokumen nikah KUA", "persiapan nikah", "check-in tamu QR", "buku tamu digital", "catatan amplop pernikahan",
+    "pembagian biaya pernikahan", "tabungan nikah",
   ],
   locale: "id_ID",
   themeColor: "#8C3A63",
@@ -24,7 +25,7 @@ export const NOINDEX: Metadata["robots"] = { index: false, follow: false, nocach
 // Path yang tidak boleh dirayapi (robots.txt) dan diberi header X-Robots-Tag: noindex
 export const PRIVATE_PATHS = [
   "/app/", "/w/", "/admin", "/akun", "/aktivasi", "/onboarding", "/checkout", "/gabung/", "/rsvp/", "/mulai",
-  "/reset-password", "/lupa-password", "/auth/", "/api/",
+  "/reset-password", "/lupa-password", "/auth/", "/api/", "/panitia/", "/q/", "/offline",
 ];
 
 // tr: fungsi terjemah (getT) agar judul dan deskripsi mengikuti bahasa pengunjung

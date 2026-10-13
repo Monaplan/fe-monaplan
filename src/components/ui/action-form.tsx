@@ -64,12 +64,12 @@ export function ActionForm({ action, children, onSuccess, className, successMess
   );
 }
 
-export function SubmitButton({ children, variant = "primary", className, icon, size }: { children: ReactNode; variant?: ButtonVariant; className?: string; icon?: ReactNode; size?: "sm" | "md" | "lg" }) {
+export function SubmitButton({ children, variant = "primary", className, icon, size, onClick }: { children: ReactNode; variant?: ButtonVariant; className?: string; icon?: ReactNode; size?: "sm" | "md" | "lg"; onClick?: () => void }) {
   const pending = useContext(PendingCtx);
   const formId = useContext(FormIdCtx);
   // Atribut form menjaga tombol tetap terhubung walau dirender di footer modal (di luar elemen <form>)
   return (
-    <Button type="submit" form={formId} variant={variant} loading={pending} icon={icon} size={size} className={className}>
+    <Button type="submit" form={formId} variant={variant} loading={pending} icon={icon} size={size} className={className} onClick={onClick}>
       {children}
     </Button>
   );

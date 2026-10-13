@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  CalendarDays, Clock, FileText, Gift, Heart, ListChecks, Loader2, Mail, Palette, Plane, Search, Store, Wallet, type LucideIcon,
+  CalendarDays, Clock, FileText, Gift, Heart, ListChecks, Loader2, Mail, Palette, HandCoins, Plane, Search, Store, Wallet, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/components/ui/cn";
 import { useI18n } from "@/i18n/client";
@@ -24,6 +24,7 @@ const META: Record<string, { label: string; icon: LucideIcon }> = {
   agenda: { label: "Agenda", icon: CalendarDays },
   inspirasi: { label: "Rona Impian", icon: Palette },
   perjalanan: { label: "Honeymoon Planner", icon: Plane },
+  amplop: { label: "Amplop & Kado", icon: HandCoins },
 };
 
 // Kotak pencarian di header: hasil langsung dari semua modul, panah dan Enter untuk memilih, Ctrl K untuk memfokus.

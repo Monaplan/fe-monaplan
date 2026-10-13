@@ -11,7 +11,7 @@ const ts = require("typescript");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "mp-lib-"));
 
-for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts"]) {
+for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts"]) {
   // "server-only" hanya berlaku di bundel Next, jadi dilepas untuk uji ini
   const src = fs.readFileSync(path.join(ROOT, rel), "utf8").replace('import "server-only";', "");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
@@ -24,6 +24,8 @@ const load = (rel) => import(pathToFileURL(path.join(OUT, rel)).href);
 const { priceFor, discountOf, promoIsLive, MIN_CHARGE_IDR, upgradeQuote, creditOf, promoState, checkPromoCode, normalizeCode, promoExhausted } = await load("src/lib/pricing.mjs");
 const { safeNextPath } = await load("src/lib/paths.mjs");
 const { parseSort } = await load("src/lib/sort.mjs");
+const { fundingSplit, savingsPlan } = await load("src/lib/budget.mjs");
+const { extractCode } = await load("src/lib/checkin.mjs");
 const { parseTerms, cleanQuery } = await load("src/lib/search-terms.mjs");
 const { buildDesiredEvents, eventIdFor, planSync } = await load("src/lib/google/events.mjs");
 process.env.TOKEN_ENCRYPTION_KEY = "kunci-uji";
@@ -229,6 +231,53 @@ check("arah dari URL dipakai", parseSort({ sort: "nama", dir: "desc" }, COLS, "t
 check("kolom di luar daftar ditolak", parseSort({ sort: "password; drop table x" }, COLS, "tanggal").column === "created_at");
 check("kunci prototipe ditolak", parseSort({ sort: "constructor" }, COLS, "tanggal").key === "tanggal");
 check("arah tak dikenal diabaikan", parseSort({ sort: "nama", dir: "sideways" }, COLS, "tanggal").dir === "asc");
+
+console.log("\nPembagian biaya per pihak");
+{
+  const items = [
+    { id: "a", estimated_idr: 10_000_000, actual_idr: null, funded_by: "pria" },
+    { id: "b", estimated_idr: 5_000_000, actual_idr: 6_000_000, funded_by: "wanita" },
+    { id: "c", estimated_idr: 3_000_001, actual_idr: null, funded_by: "bersama" },
+    { id: "d", estimated_idr: 1_000_000, actual_idr: null },
+  ];
+  const pays = [
+    { budget_item_id: "a", amount_idr: 4_000_000, status: "sudah_bayar" },
+    { budget_item_id: "b", amount_idr: 1_000_000, status: "belum_bayar" },
+    { budget_item_id: "c", amount_idr: 1_000_001, status: "sudah_bayar" },
+    { budget_item_id: null, amount_idr: 500_000, status: "sudah_bayar" },
+  ];
+  const r = fundingSplit(items, pays, 50);
+  const total = items.reduce((s, i) => s + (i.actual_idr ?? i.estimated_idr), 0);
+  check("rencana kedua pihak = total rencana", r.pria.plan + r.wanita.plan === total, JSON.stringify(r));
+  check("dibayar kedua pihak = total lunas", r.pria.paid + r.wanita.paid === 5_500_001);
+  check("item pria hanya ke pria", r.pria.plan >= 10_000_000 && r.wanita.plan < 10_000_000);
+  check("tanpa funded_by dianggap bersama", r.sharedPlan === 4_000_001);
+  check("porsi 70% pria", fundingSplit([{ id: "x", estimated_idr: 1000, actual_idr: null, funded_by: "bersama" }], [], 70).pria.plan === 700);
+  check("persen di luar 0-100 dijepit", fundingSplit([{ id: "x", estimated_idr: 1000, actual_idr: null }], [], 150).wanita.plan === 0);
+  check("sisa tidak negatif", fundingSplit([{ id: "x", estimated_idr: 100, actual_idr: null, funded_by: "pria" }], [{ budget_item_id: "x", amount_idr: 500, status: "sudah_bayar" }], 50).pria.remaining === 0);
+}
+
+console.log("\nTarget tabungan");
+{
+  const items = [{ id: "a", estimated_idr: 50_000_000, actual_idr: null }];
+  const pays = [{ budget_item_id: "a", amount_idr: 10_000_000, status: "sudah_bayar" }];
+  const r = savingsPlan({ items, payments: pays, savings: 4_000_000, weddingDate: "2027-06-14", today: "2026-10-12" });
+  check("kebutuhan = rencana - dibayar", r.need === 40_000_000);
+  check("kekurangan dikurangi dana terkumpul", r.shortfall === 36_000_000);
+  check("batas = H-14", r.deadline === "2027-05-31");
+  check("jumlah bulan dibulatkan ke atas", r.months === 8, String(r.months));
+  check("per bulan dibulatkan ke atas per Rp1.000", r.perMonth === 4_500_000, String(r.perMonth));
+  check("tanpa tanggal: tidak ada target per bulan", savingsPlan({ items, payments: pays, savings: 0, weddingDate: null, today: "2026-10-12" }).perMonth === null);
+  check("batas sudah lewat: semua kekurangan bulan ini", savingsPlan({ items, payments: [], savings: 0, weddingDate: "2026-10-20", today: "2026-10-12" }).perMonth === 50_000_000);
+  check("dana cukup: target 0", savingsPlan({ items, payments: pays, savings: 99_000_000, weddingDate: "2027-06-14", today: "2026-10-12" }).perMonth === 0);
+}
+
+console.log("\nKode QR check-in");
+check("URL QR dibaca", extractCode("https://monaplan.app/q/6trfa8maxd") === "6TRFA8MAXD");
+check("URL dengan garis miring dan query", extractCode("https://x.id/q/ABCDEFGH23/?utm=1") === "ABCDEFGH23");
+check("kode mentah", extractCode(" abcdefgh23 ") === "ABCDEFGH23");
+check("teks acak ditolak", extractCode("https://evil.com/login") === null && extractCode("DROP TABLE") === null);
+check("kode terlalu pendek ditolak", extractCode("ABC") === null);
 
 fs.rmSync(OUT, { recursive: true, force: true });
 console.log(`\n${pass} lulus, ${bad} gagal`);

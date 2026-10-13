@@ -22,6 +22,10 @@ export default async function BudgetPage({ params }: { params: Promise<{ project
       projectId={projectId}
       tz={project.timezone}
       totalBudget={project.total_budget_idr}
+      weddingDate={project.wedding_date}
+      splitPct={project.split_pria_pct ?? null}
+      savings={project.savings_idr ?? null}
+      savingsUpdatedAt={project.savings_updated_at ?? null}
       categories={categories ?? []}
       items={items ?? []}
       payments={payments ?? []}

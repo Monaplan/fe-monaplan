@@ -414,7 +414,7 @@ export const EN8: Record<string, string> = {
   "Tutup fase {name}": "Collapse phase {name}",
   "Prioritas {level}": "{level} priority",
   "Adat": "Tradition",
-  "Sidebar dibagi per grup: Menu utama, Persiapan, Bonus, dan Umum. Klik judul grup untuk membuka atau menutupnya. Angka merah menandai tugas terlambat, angka plum menandai RSVP baru.": "The sidebar is grouped into Main menu, Preparation, Bonus, and General. Click a group title to expand or collapse it. Red numbers mark overdue tasks, plum numbers mark new RSVPs.",
+  "Sidebar dibagi per grup: Menu utama, Persiapan, Hari H, Bonus, dan Umum. Klik judul grup untuk membuka atau menutupnya. Angka merah menandai tugas terlambat, angka plum menandai RSVP baru.": "The sidebar is grouped into Main menu, Preparation, Wedding Day, Bonus, and General. Click a group title to expand or collapse it. Red numbers mark overdue tasks, plum numbers mark new RSVPs.",
   "Beranda, Checklist, Budget, dan Tamu selalu dekat dengan jempol. Modul lainnya, akun, tema, dan bahasa ada di tombol Menu. Geser lembar menu ke bawah untuk menutupnya.": "Home, Checklist, Budget, and Guests are always within thumb reach. Other modules, your account, theme, and language live under Menu. Swipe the menu sheet down to close it.",
   "Tambah cepat dari mana saja": "Quick add from anywhere",
   "Tombol Tambah membuka form tugas, pembayaran, atau agenda tanpa pindah halaman. Sambungkan Google Calendar dulu agar pengingatnya muncul di HP.": "The Add button opens a task, payment, or event form without leaving the page. Connect Google Calendar first so reminders reach your phone.",

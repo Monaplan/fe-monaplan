@@ -78,6 +78,20 @@ export const RSVP_STATUS = [
   { key: "ragu", label: "Masih ragu" },
 ] as const;
 
+export const GIFT_RECEIPT_KIND = [
+  { key: "amplop", label: "Amplop" },
+  { key: "transfer", label: "Transfer" },
+  { key: "kado", label: "Kado" },
+] as const;
+
+// Teks bawaan ucapan terima kasih di Amplop & Kado; pengguna bisa mengubahnya (disimpan di perangkat)
+export const DEFAULT_THANKS = `Halo {nama_tamu},
+
+Terima kasih banyak atas kehadiran, doa, dan tanda kasihnya di hari bahagia kami. Semoga kebaikanmu dibalas berlipat.
+
+Salam hangat,
+{nama_pasangan}`;
+
 export const PURCHASE_STATUS = [
   { key: "rencana", label: "Rencana" },
   { key: "dipesan", label: "Dipesan" },

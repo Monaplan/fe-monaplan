@@ -10,22 +10,22 @@ import { useI18n } from "@/i18n/client";
 const ROLES = [
   {
     key: "owner", tab: "Kamu", badge: "Pemilik", title: "Kamu memegang kendali",
-    points: ["Mengisi data pernikahan, budget, dan acara", "Mengundang pasangan dan keluarga, sebanyak yang diizinkan paketmu", "Memilih tema undangan RSVP dan mencetak rundown PDF"],
+    points: ["Mengisi data pernikahan, budget, dan acara", "Mengundang pasangan dan keluarga, sebanyak yang diizinkan paketmu", "Memilih tema undangan RSVP dan mencetak rundown PDF", "Membuat tautan panitia untuk check-in tamu di hari H"],
     perms: [true, true, true, true],
   },
   {
     key: "editor", tab: "Pasangan", badge: "Editor", title: "Pasangan ikut mengerjakan",
-    points: ["Mencentang tugas dan mencatat pembayaran", "Mengelola vendor dan daftar tamu bersama", "Mendapat notifikasi saat tamu mengonfirmasi hadir"],
+    points: ["Mengerjakan tugas yang dibagi dan memantau progres masing-masing", "Mengelola vendor, daftar tamu, dan catatan amplop bersama", "Mendapat notifikasi di HP saat tamu mengonfirmasi hadir"],
     perms: [true, true, true, false],
   },
   {
     key: "viewer", tab: "Keluarga dan panitia", badge: "Viewer", title: "Keluarga cukup melihat",
-    points: ["Melihat rundown, jadwal, dan progres persiapan", "Tidak bisa mengubah data, jadi tidak ada yang tergeser tanpa sengaja", "Tidak perlu membayar untuk ikut melihat"],
+    points: ["Melihat rundown, jadwal, dan progres persiapan", "Tidak bisa mengubah data, jadi tidak ada yang tergeser tanpa sengaja", "Panitia hari H cukup memakai tautan panitia untuk check-in tamu, tanpa akun", "Tidak perlu membayar untuk ikut melihat"],
     perms: [true, false, false, false],
   },
   {
     key: "guest", tab: "Tamu", badge: "Tanpa akun", title: "Tamu cukup membuka satu tautan",
-    points: ["Menerima link RSVP pribadi lewat WhatsApp", "Memilih hadir, tidak hadir, atau ragu, plus jumlah orang dan ucapan", "Melihat acara, lokasi, dan dress code dalam tema undangan pilihanmu"],
+    points: ["Menerima link RSVP pribadi lewat WhatsApp", "Memilih hadir, tidak hadir, atau ragu, plus jumlah orang dan ucapan", "Melihat acara, lokasi, dan dress code dalam tema undangan pilihanmu", "Mendapat QR masuk setelah menjawab hadir, tinggal ditunjukkan di pintu"],
     perms: [false, false, false, false],
   },
 ] as const;

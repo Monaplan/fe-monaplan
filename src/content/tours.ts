@@ -4,7 +4,7 @@ import type { TourStep } from "@/components/app/product-tour";
 // Langkah yang elemennya tidak terlihat (misal sidebar di HP) otomatis dilewati.
 export const TOURS: Record<string, TourStep[]> = {
   dashboard: [
-    { target: "nav", title: "Semua modul ada di sini", body: "Sidebar dibagi per grup: Menu utama, Persiapan, Bonus, dan Umum. Klik judul grup untuk membuka atau menutupnya. Angka merah menandai tugas terlambat, angka plum menandai RSVP baru." },
+    { target: "nav", title: "Semua modul ada di sini", body: "Sidebar dibagi per grup: Menu utama, Persiapan, Hari H, Bonus, dan Umum. Klik judul grup untuk membuka atau menutupnya. Angka merah menandai tugas terlambat, angka plum menandai RSVP baru." },
     { target: "mobile-nav", title: "Menu utama di bawah", body: "Beranda, Checklist, Budget, dan Tamu selalu dekat dengan jempol. Modul lainnya, akun, tema, dan bahasa ada di tombol Menu. Geser lembar menu ke bawah untuk menutupnya." },
     { target: "quickadd", title: "Tambah cepat dari mana saja", body: "Tombol Tambah membuka form tugas, pembayaran, atau agenda tanpa pindah halaman. Sambungkan Google Calendar dulu agar pengingatnya muncul di HP." },
     { target: "countdown", title: "Hitung mundur hari H", body: "Cincin menunjukkan seberapa jauh perjalanan sejak ruang kerja dibuat sampai hari H, lengkap dengan sisa bulan, minggu, dan hari. Tanggal dan lokasi diambil dari Pengaturan." },
@@ -20,6 +20,7 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "checklist-header", title: "Semua tugas persiapan", body: "Checklist disusun dari template Umum ditambah tugas adat yang kamu pilih di Pengaturan. Tenggat dihitung mundur dari tanggal pernikahan." },
     { target: "checklist-add", title: "Tambah tugas sendiri", body: "Tambahkan tugas khusus kalian lengkap dengan fase, tenggat, prioritas, kategori, penanggung jawab, dan vendor terkait." },
     { target: "checklist-progress", title: "Progres keseluruhan", body: "Berapa tugas yang sudah selesai dari semuanya. Di bawahnya ada filter untuk mencari judul, memilih fase, status, penanggung jawab, atau hanya yang terlambat." },
+    { target: "checklist-share", title: "Bagi tugas berdua", body: "Progres setiap penanggung jawab terlihat di sini. Klik kartu seseorang untuk melihat tugasnya saja, klik lagi untuk menampilkan semua. Penanggung jawab dipilih di form tugas dan harus sudah bergabung sebagai kolaborator." },
     { target: "checklist-phase-head", title: "Dikelompokkan per fase", body: "Cincin menunjukkan persen selesai di fase ini, lengkap dengan rentang bulannya. Tombol panah di kanan membuka atau menutup fase." },
     { target: "checklist-rows", title: "Diurutkan per bulan", body: "Tugas tersusun menurut tanggal dan dikelompokkan per bulan. Kotak tanggal berwarna jingga bila tenggat tinggal seminggu, dan merah bila terlambat." },
     { target: "checklist-rows", title: "Centang, buka, atau atur", body: "Klik lingkaran untuk menandai selesai, klik judul untuk melihat dan mengubah detail. Menu titik tiga berisi tandai dikerjakan dan hapus." },
@@ -28,8 +29,9 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "budget-header", title: "Kelola uang pernikahan", body: "Semua anggaran, realisasi, dan jadwal pembayaran vendor ada di satu halaman." },
     { target: "budget-stats", title: "Ringkasan keuangan", body: "Total budget, realisasi, yang sudah dibayar, dan sisa tagihan. Semuanya terhitung otomatis dari item dan pembayaran." },
     { target: "budget-pay", title: "Catat setiap pembayaran", body: "DP, termin, dan pelunasan beserta jatuh temponya. Pembayaran yang jatuh tempo besok atau 7 hari lagi masuk ke email pagi dan Google Calendar." },
+    { target: "budget-savings", title: "Target tabungan", body: "Berapa yang perlu disisihkan per bulan agar semua tagihan lunas dua minggu sebelum hari H. Perbarui dana terkumpul kapan saja, dan pengingatnya muncul setiap tanggal 1." },
     { target: "budget-chart", title: "Estimasi dan realisasi", body: "Bandingkan rencana dan pengeluaran sebenarnya di setiap kategori, supaya tahu bagian mana yang membengkak." },
-    { target: "budget-tabs", title: "Kategori atau jadwal", body: "Lihat budget per kategori lengkap dengan peringatan bila melebihi alokasi, atau beralih ke daftar jadwal pembayaran." },
+    { target: "budget-tabs", title: "Kategori atau jadwal", body: "Lihat budget per kategori lengkap dengan peringatan bila melebihi alokasi, beralih ke daftar jadwal pembayaran, atau buka Per Pihak untuk melihat bagian pihak pria dan pihak wanita." },
     { target: "budget-category", title: "Isi setiap kategori", body: "Buka kategori untuk menambah item, mengisi estimasi dan realisasi, serta mengatur alokasinya. Kategori adat ikut tersedia sesuai gaya pernikahanmu." },
   ],
   vendor: [
@@ -48,7 +50,7 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "tamu-tabs", title: "Tamu dan ucapan", body: "Tab Daftar Tamu berisi semua undangan. Tab Ucapan mengumpulkan doa dan pesan yang ditulis tamu saat mengisi RSVP." },
     { target: "tamu-actions", title: "Impor, template, dan tambah", body: "Impor daftar tamu dari Excel atau CSV, atur template pesan WhatsApp, atau tambah tamu satu per satu." },
     { target: "tamu-filter", title: "Saring daftar tamu", body: "Persempit daftar berdasarkan grup, pihak, status RSVP, atau yang belum dikirimi undangan." },
-    { target: "tamu-send", title: "Kirim undangan via WhatsApp", body: "Pesan berisi tautan undangan pribadi dengan nama tamu langsung terisi. Setelah terkirim, tamu otomatis ditandai sudah dikirimi." },
+    { target: "tamu-send", title: "Kirim undangan via WhatsApp", body: "Pesan berisi tautan undangan pribadi dengan nama tamu langsung terisi. Setelah terkirim, tamu otomatis ditandai sudah dikirimi. Tamu yang menjawab Hadir mendapat QR masuk untuk check-in di hari H." },
   ],
   rundown: [
     { target: "rundown-header", title: "Rundown per acara", body: "Pilih acara di tab, lalu susun kegiatan berurutan lengkap dengan jam, PIC, dan lokasi. Acara adat seperti siraman ikut muncul di sini." },
@@ -60,6 +62,19 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "mahar-tabs", title: "Pisahkan mahar dan seserahan", body: "Pindah tab untuk mengelola mahar dan seserahan secara terpisah. Ringkasan di bawahnya ikut menyesuaikan." },
     { target: "mahar-actions", title: "Tambah item", body: "Isi nama, jenis, estimasi harga, dan tautan toko. Centang catat ke budget agar otomatis masuk kategori Mahar & Seserahan." },
     { target: "mahar-main", title: "Pantau statusnya", body: "Ubah status dari rencana sampai diterima. Total estimasi dan yang sudah dibeli dihitung otomatis." },
+  ],
+  harih: [
+    { target: "harih-header", title: "Mode Hari H", body: "Satu layar untuk hari pernikahan: rundown yang berjalan sesuai jam, kontak vendor, tugas hari H, dan kehadiran tamu. Layar dijaga tetap menyala selama halaman terbuka." },
+    { target: "harih-now", title: "Sekarang dan berikutnya", body: "Kegiatan yang sedang berlangsung dan yang akan datang, diambil dari Rundown Hari H. Data dimuat ulang otomatis setiap 30 detik." },
+    { target: "harih-attendance", title: "Check-in tamu", body: "Tekan Pindai QR untuk memindai QR masuk tamu, atau cari namanya. Tamu yang tidak terdaftar bisa langsung dimasukkan." },
+    { target: "harih-vendor", title: "Hubungi vendor sekali ketuk", body: "Vendor berstatus deal tampil di sini dengan tombol telepon dan WhatsApp." },
+    { target: "harih-timeline", title: "Rundown lengkap", body: "Kegiatan yang sudah lewat diredupkan, yang sedang berjalan disorot. Bagikan halaman ini ke panitia lewat Tautan Panitia di Pengaturan, tab Kolaborator." },
+  ],
+  amplop: [
+    { target: "amplop-header", title: "Amplop & Kado", body: "Catat amplop, transfer, dan kado dari tamu setelah acara. Semua tersimpan rapi untuk ucapan terima kasih dan sebagai catatan saat gantian kondangan nanti." },
+    { target: "amplop-actions", title: "Catat dengan cepat", body: "Ketik nama untuk memilih dari daftar tamu, isi nominal atau nama barang, lalu tekan Simpan & catat lagi untuk lanjut ke pemberi berikutnya. Teks ucapan terima kasih bisa diubah sesuai gaya kalian." },
+    { target: "amplop-stats", title: "Rekap otomatis", body: "Total amplop dan transfer, jumlah pemberi, jumlah kado, dan berapa yang sudah diberi ucapan." },
+    { target: "amplop-main", title: "Kirim ucapan terima kasih", body: "Tombol Kirim ucapan membuka WhatsApp dengan pesan yang sudah terisi nama pemberi, lalu menandainya sudah. Saring yang belum diberi ucapan agar tidak ada yang terlewat." },
   ],
   inspirasi: [
     { target: "inspirasi-header", title: "Rona Impian", body: "Kumpulkan ide dekorasi, busana, bunga, venue, dan warna. Tambah foto, tautan sumber, dan catatan di setiap ide." },
@@ -89,6 +104,7 @@ export const TOURS: Record<string, TourStep[]> = {
     { target: "pengaturan-main", title: "Pasangan dan alamat ruang kerja", body: "Ubah nama, panggilan, dan alamat ruang kerja. Alamat ini juga menjadi tautan undangan digital untuk tamu." },
     { target: "pengaturan-gaya", title: "Gaya pernikahan", body: "Pilih Umum atau adat Jawa, Sunda, Bali, Minang, dan Batak. Tugas, kategori budget, dan acara adat ditambahkan tanpa menghapus yang sudah ada." },
     { target: "pengaturan-cover", title: "Foto sampul undangan", body: "Foto ini tampil di halaman undangan digital yang dibuka tamu." },
+    { target: "settings-staff", title: "Tautan panitia", body: "Bagikan ke keluarga atau penerima tamu tanpa perlu akun. Mereka bisa melihat rundown, menghubungi vendor, dan check-in tamu. Buat ulang tautan bila tersebar ke orang yang tidak semestinya." },
   ],
   panduan: [
     { target: "panduan-header", title: "Panduan penggunaan", body: "Delapan langkah berurutan untuk memulai dari nol." },
@@ -102,6 +118,7 @@ export const TOURS: Record<string, TourStep[]> = {
   akun: [
     { target: "akun-profil", title: "Profil dan notifikasi", body: "Ubah nama dan nomor WhatsApp, serta atur apakah pengingat dikirim ke email." },
     { target: "akun-lisensi", title: "Lisensi dan upgrade", body: "Lihat status aksesmu. Upgrade ke paket yang lebih tinggi hanya membayar selisih dari yang sudah kamu bayar." },
+    { target: "akun-push", title: "Notifikasi di HP", body: "Nyalakan untuk menerima pengingat dan RSVP baru langsung di perangkat ini. Di iPhone, pasang Monaplan ke Layar Utama dulu." },
     { target: "akun-tampilan", title: "Tema dan bahasa", body: "Pilih tema terang, gelap, atau ikuti perangkat." },
   ],
   aktivasi: [
