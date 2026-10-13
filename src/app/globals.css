@@ -328,15 +328,15 @@ html, body { overflow-x: clip; }
 #mp-splash { display: none; }
 html.mp-splash body { overflow: hidden; }
 html.mp-splash #mp-splash {
-  position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
-  background: #FBF5F8; padding-bottom: env(safe-area-inset-bottom);
+  position: fixed; inset: 0; z-index: 300; display: block; background: #FBF5F8;
   transition: opacity 350ms ease 300ms, visibility 0s linear 650ms;
 }
 html.dark.mp-splash #mp-splash { background: #130E11; }
 html.mp-splash-done #mp-splash { opacity: 0; visibility: hidden; }
-.mp-splash-center { display: flex; flex-direction: column; align-items: center; }
+/* Pusat logo tepat di tengah layar, sama dengan public/buka.html dan gambar pembuka iPhone (app/pwa-splash) */
+.mp-splash-center { position: absolute; left: 0; right: 0; top: calc(50% - 44px); display: flex; flex-direction: column; align-items: center; }
 .mp-splash-logo { width: 88px; height: 88px; overflow: visible; filter: drop-shadow(0 12px 24px rgba(74, 29, 54, 0.22)); }
-.mp-splash-name { margin-top: 18px; font-family: var(--font-display), Georgia, serif; font-size: 30px; font-weight: 500; letter-spacing: 0.01em; color: #3E1A2D; }
+.mp-splash-name { margin: 18px 0 0; line-height: 1.2; font-family: var(--font-display), Georgia, serif; font-size: 30px; font-weight: 500; letter-spacing: 0.01em; color: #3E1A2D; }
 html.dark .mp-splash-name { color: #F6E8EF; }
 .mp-splash-bar { margin-top: 22px; width: 148px; height: 4px; border-radius: 999px; background: #EDD1DF; overflow: hidden; }
 html.dark .mp-splash-bar { background: #3E1A2D; }
@@ -348,6 +348,7 @@ html.dark .mp-splash-bar > span { background: #D9A3BE; }
 @keyframes mp-splash-beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.14); } 30% { transform: scale(0.98); } 45% { transform: scale(1.08); } }
 @keyframes mp-splash-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes mp-splash-load { from { transform: scaleX(0); } to { transform: scaleX(0.72); } }
+/* Bar loading: lambat dan melambat di ujung, selaras dengan public/buka.html */
 @keyframes mp-splash-finish { from { transform: scaleX(0.72); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: no-preference) {
   html.mp-splash .mp-splash-logo { animation: mp-splash-box 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -355,8 +356,14 @@ html.dark .mp-splash-bar > span { background: #D9A3BE; }
   html.mp-splash .mp-splash-heart { transform-box: fill-box; transform-origin: center; animation: mp-splash-heart 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 760ms both, mp-splash-beat 1.4s ease-in-out 1.3s infinite; }
   html.mp-splash .mp-splash-name { animation: mp-splash-rise 400ms ease 300ms both; }
   html.mp-splash .mp-splash-bar { animation: mp-splash-rise 400ms ease 380ms both; }
-  html.mp-splash .mp-splash-bar > span { animation: mp-splash-load 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) 400ms both; }
-  html.mp-splash-done .mp-splash-bar > span { animation: mp-splash-finish 280ms ease-out both; }
+  html.mp-splash .mp-splash-bar > span { animation: mp-splash-load 2600ms cubic-bezier(0.25, 0.6, 0.3, 1) 300ms both; }
+  html.mp-splash-done .mp-splash-bar > span { animation: mp-splash-finish 450ms ease-out both; }
+  /* Lanjutan dari halaman pembuka: logo, nama, dan bar sudah tampil; bar meneruskan posisinya */
+  html.mp-splash-cont .mp-splash-logo, html.mp-splash-cont .mp-splash-bar { animation: none; }
+  html.mp-splash-cont .mp-splash-name { animation: mp-splash-rise 400ms ease both; }
+  html.mp-splash-cont .mp-splash-m { animation: none; stroke-dasharray: none; }
+  html.mp-splash-cont .mp-splash-heart { animation: mp-splash-beat 1.4s ease-in-out infinite; }
+  html.mp-splash-cont:not(.mp-splash-done) .mp-splash-bar > span { animation: mp-splash-load 2600ms cubic-bezier(0.25, 0.6, 0.3, 1) calc(300ms + var(--mp-splash-skip, 0ms)) both; }
 }
 @media (prefers-reduced-motion: reduce) {
   html.mp-splash #mp-splash { transition: opacity 200ms ease, visibility 0s linear 200ms; }
