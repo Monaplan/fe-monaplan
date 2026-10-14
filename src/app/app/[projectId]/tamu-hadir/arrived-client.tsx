@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Download, PartyPopper, Search, Undo2, UserCheck } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, EmptyState, PageHeader, StatCard } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
 import { RowMenu } from "@/components/ui/menu";
@@ -47,10 +48,10 @@ export function ArrivedClient({ projectId, tz, canWrite, guests, expectedGuests,
       <PageHeader tour="tamuhadir" title={t("Tamu Hadir")} description={t("Semua tamu yang sudah check-in di hari H, lengkap dengan jam masuk.")}
         actions={<div data-tour="tamuhadir-actions" className="flex flex-wrap items-center gap-2">
           <ButtonLink href={`${base}/hari-h`} variant="outline" icon={<PartyPopper />}>{t("Mode Hari H")}</ButtonLink>
-          <ButtonLink href={`/api/export/${projectId}/tamu`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor CSV")}</ButtonLink>
-          <a href={`/api/export/${projectId}/tamu-hadir-pdf`} download className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-plum-900 px-4 text-[14px] font-semibold text-white transition-colors hover:bg-plum-800 [&_svg]:size-4">
-            <Download aria-hidden="true" />{t("Unduh PDF")}
-          </a>
+          <DownloadLink href={`/api/export/${projectId}/tamu`} variant="outline" icon={<Download />}>{t("Ekspor CSV")}</DownloadLink>
+          <DownloadLink unstyled href={`/api/export/${projectId}/tamu-hadir-pdf`} icon={<Download aria-hidden="true" />} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-plum-900 px-4 text-[14px] font-semibold text-white transition-colors hover:bg-plum-800 [&_svg]:size-4">
+            {t("Unduh PDF")}
+          </DownloadLink>
         </div>} />
 
       <div data-tour="tamuhadir-stats" className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">

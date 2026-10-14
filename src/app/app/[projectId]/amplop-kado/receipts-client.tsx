@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Check, Download, HandCoins, MessageSquareText, Pencil, Plus, Search, Trash2, Undo2 } from "lucide-react";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, EmptyState, PageHeader, StatCard } from "@/components/ui/card";
 import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
@@ -76,7 +77,7 @@ export function ReceiptsClient({ projectId, coupleName, tz, canWrite, receipts, 
         actions={<>
           {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")} className="md:order-last">{t("Catat")}</Button>}
           <Button variant="outline" icon={<MessageSquareText />} onClick={() => setEditThanks(true)}>{t("Teks ucapan")}</Button>
-          {receipts.length > 0 && <ButtonLink href={`/api/export/${projectId}/amplop`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor")}</ButtonLink>}
+          {receipts.length > 0 && <DownloadLink href={`/api/export/${projectId}/amplop`} variant="outline" icon={<Download />}>{t("Ekspor")}</DownloadLink>}
         </>} />
 
       <div data-tour="amplop-stats" className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">

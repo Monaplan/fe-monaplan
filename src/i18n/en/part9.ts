@@ -433,4 +433,5 @@ export const EN9: Record<string, string> = {
   "Batas operasi tulis, baca": "Write, read operation limit",
   "Transfer keluar R2 gratis. Jumlah operasi bulan ini hanya terlihat di dasbor Cloudflare.": "R2 outbound transfer is free. This month's operation count is only visible in the Cloudflare dashboard.",
   "Buka dasbor Cloudflare": "Open Cloudflare dashboard",
+  "Gagal mengunduh file. Coba lagi.": "Failed to download the file. Please try again.",
 };

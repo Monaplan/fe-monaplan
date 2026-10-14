@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ChevronDown, CircleAlert, CircleCheck, Download, Pencil, PiggyBank, Plus, ReceiptText, Trash2, Wallet } from "lucide-react";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, CardHeader, PageHeader, StatCard } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
@@ -67,7 +68,7 @@ export function BudgetClient({ projectId, tz, totalBudget, splitPct, categories,
         description={t("Alokasi, realisasi, dan jadwal pembayaran vendor.")}
         actions={
           <>
-            <ButtonLink href={`/api/export/${projectId}/budget`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor")}</ButtonLink>
+            <DownloadLink href={`/api/export/${projectId}/budget`} variant="outline" icon={<Download />}>{t("Ekspor")}</DownloadLink>
             {canWrite && <Button data-tour="budget-pay" variant="dark" icon={<Plus />} onClick={() => setPayForm({})}>{t("Catat Pembayaran")}</Button>}
           </>
         }

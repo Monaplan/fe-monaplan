@@ -6,7 +6,8 @@ import {
   CircleCheck, Copy, Download, FileUp, Link2, Mail, MessageSquareText, Pencil, Plus, Search, Send, Trash2, Undo2, Users, X
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { Checkbox, Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { PhoneInput } from "@/components/ui/inputs";
@@ -119,7 +120,7 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
         description={rsvpDeadline ? t("Kirim undangan lewat WhatsApp dan pantau konfirmasi kehadiran. Batas RSVP {date}.", { date: formatDateCompact(rsvpDeadline, undefined, lang) }) : t("Kirim undangan lewat WhatsApp dan pantau konfirmasi kehadiran.")}
         actions={
           <>
-            <ButtonLink href={`/api/export/${projectId}/tamu`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor")}</ButtonLink>
+            <DownloadLink href={`/api/export/${projectId}/tamu`} variant="outline" icon={<Download />}>{t("Ekspor")}</DownloadLink>
             {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Tambah Tamu")}</Button>}
           </>
         }

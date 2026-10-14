@@ -4,7 +4,8 @@ import { useState } from "react";
 import { DateField, TimeField } from "@/components/ui/date-field";
 import { useRouter } from "next/navigation";
 import { Archive, CalendarDays, Copy, Download, ImagePlus, MapPin, Pencil, Plus, Shirt, Trash2, UserMinus, UserPlus } from "lucide-react";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
 import { Checkbox, Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
@@ -293,7 +294,7 @@ export function SettingsClient({ initialTab, project, events, members, invitatio
             <CardHeader icon={<Download />} title={t("Ekspor Data")} subtitle={t("Unduh data per modul sebagai CSV.")} />
             <div className="flex flex-wrap gap-2">
               {[["tamu", "Tamu & RSVP"], ["budget", "Budget"], ["checklist", "Checklist"], ["vendor", "Vendor"], ["rundown", "Rundown"], ["mahar", "Mahar & Seserahan"]].map(([k, l]) => (
-                <ButtonLink key={k} href={`/api/export/${pid}/${k}`} prefetch={false} variant="outline" size="sm" icon={<Download />}>{t(l as string)}</ButtonLink>
+                <DownloadLink key={k} href={`/api/export/${pid}/${k}`} variant="outline" size="sm" icon={<Download />}>{t(l as string)}</DownloadLink>
               ))}
             </div>
           </Card>

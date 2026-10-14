@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { Download, PiggyBank, Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, CardHeader, EmptyState, PageHeader, StatCard } from "@/components/ui/card";
 import { Field, FormGrid, Input } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
@@ -55,7 +56,7 @@ export function SavingsClient({ projectId, tz, weddingDate, today, canWrite, dep
       <ProductTour id="tabungan" steps={TOURS["tabungan"]!} />
       <PageHeader tour="tabungan" title={t("Tabungan")} description={t("Catat setoran tabungan nikah dan pantau target per bulan sampai hari H.")}
         actions={<>
-          {deposits.length > 0 && <ButtonLink href={`/api/export/${projectId}/tabungan`} variant="outline" icon={<Download />} prefetch={false}>{t("Ekspor")}</ButtonLink>}
+          {deposits.length > 0 && <DownloadLink href={`/api/export/${projectId}/tabungan`} variant="outline" icon={<Download />}>{t("Ekspor")}</DownloadLink>}
           {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Catat Setoran")}</Button>}
         </>} />
 

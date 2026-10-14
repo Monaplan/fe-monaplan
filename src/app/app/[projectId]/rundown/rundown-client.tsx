@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { TimeField } from "@/components/ui/date-field";
 import { ArrowDown, ArrowUp, CalendarClock, CircleAlert, Download, MapPin, Pencil, Plus, Store, Trash2, UserRound } from "lucide-react";
-import { Button, buttonClass } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { Modal } from "@/components/ui/modal";
@@ -44,10 +45,10 @@ export function RundownClient({ projectId, tz, coupleName, events, active, items
           actions={
             <>
               {items.length > 0 && (
-                <a className={buttonClass("outline")} href={`/api/export/${projectId}/rundown-pdf?acara=${active.id}`} download><Download />{t("Unduh PDF")}</a>
+                <DownloadLink variant="outline" href={`/api/export/${projectId}/rundown-pdf?acara=${active.id}`} icon={<Download />}>{t("Unduh PDF")}</DownloadLink>
               )}
               {events.length > 1 && (
-                <a className={buttonClass("ghost")} href={`/api/export/${projectId}/rundown-pdf?acara=semua`} download>{t("PDF semua acara")}</a>
+                <DownloadLink variant="ghost" href={`/api/export/${projectId}/rundown-pdf?acara=semua`}>{t("PDF semua acara")}</DownloadLink>
               )}
               {canWrite && <Button variant="dark" icon={<Plus />} onClick={() => setForm("new")}>{t("Tambah Kegiatan")}</Button>}
             </>
