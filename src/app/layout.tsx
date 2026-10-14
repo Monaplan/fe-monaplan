@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { DialogProvider } from "@/components/ui/dialogs";
 import { ThemeSync } from "@/components/app/theme";
 import { SwRegister } from "@/components/app/sw-register";
+import { PullToRefresh } from "@/components/app/pull-to-refresh";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 import { SPLASH_END, SPLASH_HEAD } from "@/lib/splash-script";
 import { Splash } from "@/components/app/splash";
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <DialogProvider>{children}</DialogProvider>
             <ThemeSync />
             <SwRegister />
+            <PullToRefresh />
           </ToastProvider>
         </I18nProvider>
         {/* Statistik pengunjung dan kecepatan halaman milik Vercel; hanya aktif di situs yang di-deploy ke Vercel */}
