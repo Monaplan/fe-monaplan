@@ -4,14 +4,23 @@ import { getPaymentProvider } from "@/lib/payments/midtrans";
 import { applyProviderStatus } from "@/lib/payments/process";
 
 // PRD 7.2: validasi signature, cek ulang status, catat event (idempoten), cocokkan nominal, beri lisensi
+// Notifikasi Midtrans hanya berisi beberapa kilobita; body yang jauh lebih besar ditolak sebelum diurai
+const MAX_BODY_BYTES = 64 * 1024;
+
 export async function POST(request: Request) {
-  const payload = await request.json().catch(() => null);
-  if (!payload?.order_id) return NextResponse.json({ error: "INVALID_PAYLOAD" }, { status: 400 });
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+  const raw = await request.text().catch(() => "");
+  if (raw.length > MAX_BODY_BYTES) return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+  let payload: any = null;
+  try { payload = JSON.parse(raw); } catch { /* payload tetap null */ }
+  if (!payload || typeof payload !== "object" || typeof payload.order_id !== "string" || !payload.order_id) return NextResponse.json({ error: "INVALID_PAYLOAD" }, { status: 400 });
 
   const provider = getPaymentProvider();
   const admin = createAdminClient();
 
+  // Signature dicek sebelum apa pun disimpan, supaya pihak luar tidak bisa memenuhi tabel payment_events
   const n = await provider.verifyNotification(payload);
+  if (!n.signatureValid) return NextResponse.json({ error: "INVALID_SIGNATURE" }, { status: 403 });
   const { data: order } = await admin.from("orders").select("*").eq("order_number", n.orderNumber).maybeSingle();
 
   let { data: event, error: evErr } = await admin
@@ -38,7 +47,6 @@ export async function POST(request: Request) {
     if (!prev || prev.processed_at) return NextResponse.json({ ok: true, duplicate: true });
     event = { id: prev.id };
   }
-  if (!n.signatureValid) return NextResponse.json({ error: "INVALID_SIGNATURE" }, { status: 403 });
   if (!order) return NextResponse.json({ ok: true, unknownOrder: true });
 
   let status;
