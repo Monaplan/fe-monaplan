@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { CircleHelp, LifeBuoy, Play } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { startPageTour } from "./product-tour";
-import { supportWhatsappUrl } from "@/lib/support";
+import { useSupportWhatsapp } from "@/components/app/contact-provider";
 import { useT } from "@/i18n/client";
 
 // Tombol bantuan di header: tur halaman, pusat bantuan, dan WhatsApp admin
@@ -28,7 +28,8 @@ export function HelpMenu({ helpHref, context }: { helpHref: string; context: str
   }, [open]);
   useEffect(() => setOpen(false), [pathname]);
 
-  const wa = supportWhatsappUrl(`Halo admin Monaplan, saya butuh bantuan.\nAkun: ${context}\nHalaman: ${pathname}`);
+  const supportWa = useSupportWhatsapp();
+  const wa = supportWa(`Halo admin Monaplan, saya butuh bantuan.\nAkun: ${context}\nHalaman: ${pathname}`);
   const item = "flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[13px] text-neutral-700 hover:bg-neutral-100";
 
   return (

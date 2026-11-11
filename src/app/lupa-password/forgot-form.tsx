@@ -15,7 +15,7 @@ export function ForgotForm() {
   if (sent) {
     return (
       <div className="flex items-start gap-3 rounded-2xl border border-plum-100 bg-plum-50 p-4 text-[13px] leading-5 text-plum-800">
-        <MailCheck className="mt-0.5 size-5 shrink-0" />{sent}
+        <MailCheck className="mt-0.5 size-5 shrink-0" />{t(sent)}
       </div>
     );
   }

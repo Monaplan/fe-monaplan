@@ -1,5 +1,6 @@
 import "server-only";
 import { appUrl } from "@/lib/constants";
+import { getContact } from "@/lib/settings";
 import { renderEmail, type EmailData, type Lang } from "@/lib/email/templates";
 
 // Kirim email lewat Resend. Bila RESEND_API_KEY kosong, email dilewati tanpa error.
@@ -7,13 +8,14 @@ export async function sendEmail(to: string, subject: string, html: string, text?
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
   try {
+    const { email: replyTo } = await getContact();
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: process.env.EMAIL_FROM ?? "Monaplan <onboarding@resend.dev>",
         to, subject, html, ...(text && { text }),
-        ...(process.env.SUPPORT_EMAIL && { reply_to: process.env.SUPPORT_EMAIL }),
+        ...(replyTo && { reply_to: replyTo }),
       }),
     });
     return res.ok;

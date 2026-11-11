@@ -5,7 +5,6 @@ import { DateField, TimeField } from "@/components/ui/date-field";
 import { BedDouble, Bus, CircleAlert, MapPin, MoreHorizontal, Pencil, Plane, Plus, Ticket, Trash2, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, StatCard } from "@/components/ui/card";
-import { cn } from "@/components/ui/cn";
 import { Checkbox, Field, FormGrid, Input, Select, Textarea } from "@/components/ui/form";
 import { CurrencyInput } from "@/components/ui/inputs";
 import { Modal } from "@/components/ui/modal";

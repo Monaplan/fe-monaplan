@@ -549,5 +549,32 @@ await expectOk("kosongkan target kembali ke otomatis", async () => {
   if (!r.t || !r.d) throw new Error(JSON.stringify(r));
 });
 
+console.log("\nKeuangan: penjualan dan pengeluaran");
+const finSql = fs.readFileSync(path.join(ROOT, "20261111000001_sales_finance.sql"), "utf8");
+await db.exec(finSql);
+await db.exec(finSql);
+await expectOk("migrasi keuangan idempoten", async () => { const r = await one(`select count(*)::int c from sales`); if (r.c !== 0) throw new Error("count " + r.c); });
+const finCode = await one(`insert into access_codes (code, plan_id) values ('MNP-FJN0-0000-0001', $1) returning id`, [life.id]);
+const sale1 = await one(`insert into sales (buyer_name, channel, plan_id, gross_idr, fee_idr, reference, access_code_id) values ('Raka', 'lynk', $1, 100000, 5000, 'LYNK-001', $2) returning id, status, sold_on::text d`, [life.id, finCode.id]);
+await expectOk("penjualan tercatat: status paid dan tanggal WIB terisi", async () => { if (sale1.status !== "paid" || !/^\d{4}-\d{2}-\d{2}$/.test(sale1.d)) throw new Error(JSON.stringify(sale1)); });
+await expectErr("nomor pesanan ganda di saluran yang sama ditolak", "duplicate key", () => db.query(`insert into sales (buyer_name, channel, gross_idr, reference) values ('Nadia', 'lynk', 100000, 'LYNK-001')`));
+await expectOk("saluran lain boleh memakai nomor pesanan yang sama", () => db.query(`insert into sales (buyer_name, channel, gross_idr, reference) values ('Nadia', 'whatsapp', 100000, 'LYNK-001')`));
+await expectOk("dua penjualan tanpa nomor pesanan boleh", async () => { await db.query(`insert into sales (buyer_name, channel, gross_idr) values ('A', 'offline', 1000), ('B', 'offline', 1000)`); });
+await expectErr("potongan melebihi nominal ditolak", "check constraint", () => db.query(`insert into sales (buyer_name, channel, gross_idr, fee_idr) values ('C', 'lynk', 1000, 2000)`));
+await expectErr("saluran tidak dikenal ditolak", "check constraint", () => db.query(`insert into sales (buyer_name, channel, gross_idr) values ('D', 'tokopedia', 1000)`));
+await expectErr("status tidak dikenal ditolak", "check constraint", () => db.query(`insert into sales (buyer_name, channel, gross_idr, status) values ('E', 'lynk', 1000, 'hilang')`));
+await expectErr("nama pembeli kosong ditolak", "check constraint", () => db.query(`insert into sales (buyer_name, channel, gross_idr) values ('', 'lynk', 1000)`));
+await expectErr("pengeluaran nol ditolak", "check constraint", () => db.query(`insert into expenses (category, description, amount_idr) values ('hosting', 'Vercel', 0)`));
+await expectErr("kategori pengeluaran tidak dikenal ditolak", "check constraint", () => db.query(`insert into expenses (category, description, amount_idr) values ('judi', 'x', 1000)`));
+await expectOk("pengeluaran tercatat", () => db.query(`insert into expenses (category, description, amount_idr) values ('hosting', 'Vercel Pro', 300000)`));
+await expectOk("pengguna biasa tidak melihat penjualan (RLS)", async () => { const r = await as(A, "a@x.com", () => one(`select count(*)::int c from sales`)); if (r.c !== 0) throw new Error("terbaca " + r.c); });
+await expectOk("pengguna biasa tidak melihat pengeluaran (RLS)", async () => { const r = await as(A, "a@x.com", () => one(`select count(*)::int c from expenses`)); if (r.c !== 0) throw new Error("terbaca " + r.c); });
+await expectErr("pengguna biasa tidak bisa menulis penjualan (RLS)", "row-level security", () => as(A, "a@x.com", () => db.query(`insert into sales (buyer_name, channel, gross_idr) values ('X', 'lynk', 1000)`)));
+await expectOk("menghapus kode akses mengosongkan tautan di penjualan", async () => {
+  await db.query(`delete from access_codes where id = $1`, [finCode.id]);
+  const r = await one(`select access_code_id from sales where id = $1`, [sale1.id]);
+  if (r.access_code_id !== null) throw new Error(JSON.stringify(r));
+});
+
 console.log(`\n${pass} lulus, ${failN} gagal`);
 process.exit(failN ? 1 : 0);

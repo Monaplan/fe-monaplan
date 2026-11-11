@@ -7,10 +7,12 @@ import { getOwnedLifetime } from "@/lib/upgrade";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateCompact } from "@/lib/format";
 import { checkPromoCode, normalizeCode, promoState, upgradeQuote } from "@/lib/pricing";
-import { getPricingContext } from "@/lib/settings";
+import { getContact, getPricingContext, getSettings } from "@/lib/settings";
 import { ActivationClient } from "./activation-client";
+import { CodeActivation } from "./code-activation";
 import { NOINDEX } from "@/lib/seo";
 import { getI18n } from "@/i18n/server";
+import { whatsappLink } from "@/lib/support";
 import { getT } from "@/i18n/server";
 
 export async function generateMetadata() {
@@ -31,6 +33,7 @@ export default async function ActivationPage({ searchParams }: { searchParams: P
   const { t, lang } = await getI18n();
   const { user } = await requireUser();
   const access = await getMyAccess();
+  const [{ payment }, contact] = await Promise.all([getSettings(), getContact()]);
   const typedCode = normalizeCode((await searchParams).promo).slice(0, 40);
 
   const supabase = await createClient();
@@ -39,9 +42,12 @@ export default async function ActivationPage({ searchParams }: { searchParams: P
     getPricingContext(user.id),
     getOwnedLifetime(createAdminClient(), user.id),
   ]);
+  // Pembayaran di website mati: upgrade ikut lewat toko, jadi pemilik akses selamanya tidak punya urusan di halaman ini
+  if (!payment.enabled && owned) redirect("/akun");
   // Pemilik akses selamanya hanya melihat paket yang lebih tinggi, dengan harga selisih
   const quotes = new Map((allPlans ?? []).map((p) => [p.id, upgradeQuote({ id: p.id, price_idr: p.price_idr, tier: Number(p.tier ?? 1) }, owned, promos, promoEnabled, Date.now(), typedCode)]));
-  const plans = (allPlans ?? []).filter((p) => quotes.get(p.id));
+  // Tanpa pembayaran di website tidak ada paket, harga, atau promo yang ditampilkan; hanya kode akses
+  const plans = payment.enabled ? (allPlans ?? []).filter((p) => quotes.get(p.id)) : [];
   if (owned && !plans.length) redirect("/akun");
   const pricing = Object.fromEntries(
     plans.map((p) => {
@@ -52,7 +58,7 @@ export default async function ActivationPage({ searchParams }: { searchParams: P
 
   // Status kode yang diketik: berlaku untuk minimal satu paket yang ditampilkan, atau alasan gagalnya
   let promoStatus: { state: "none" | "applied" | "invalid"; message: string | null } = { state: "none", message: null };
-  if (typedCode) {
+  if (typedCode && payment.enabled) {
     const checks = plans.map((p) => checkPromoCode(typedCode, p.id, promos));
     if (!promoEnabled) promoStatus = { state: "invalid", message: t("Promo sedang tidak aktif.") };
     else if (checks.some((c) => c.ok)) promoStatus = { state: "applied", message: t("Kode {code} diterapkan.", { code: typedCode }) };
@@ -63,8 +69,8 @@ export default async function ActivationPage({ searchParams }: { searchParams: P
   }
 
   const trialLeft = access.state === "timed" && access.isTrial ? daysLeft(access.endsAt) : null;
-  let title = t("Pilih paket");
-  let subtitle = t("Bayar sekali untuk akses selamanya, atau masukkan kode akses.");
+  let title = payment.enabled ? t("Pilih paket") : t("Aktivasi akses");
+  let subtitle = payment.enabled ? t("Bayar sekali untuk akses selamanya, atau masukkan kode akses.") : t("Masukkan kode akses yang kamu terima setelah pembayaran di toko.");
   if (owned) {
     title = t("Upgrade paket");
     subtitle = owned.creditIdr > 0 ? t("Paket sekarang: {plan}. Kamu hanya membayar selisihnya.", { plan: owned.planName }) : t("Paket sekarang: {plan}.", { plan: owned.planName });
@@ -94,16 +100,24 @@ export default async function ActivationPage({ searchParams }: { searchParams: P
           <p className="mt-3 text-sm leading-6 text-neutral-600">{subtitle}</p>
         </div>
 
-        <ActivationClient
-          plans={plans}
-          pricing={pricing}
-          isUpgrade={!!owned}
-          showCode={!owned}
-          promoCode={typedCode}
-          promoStatus={promoStatus}
-          clientKey={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? ""}
-          isProduction={process.env.MIDTRANS_IS_PRODUCTION === "true"}
-        />
+        {payment.enabled ? (
+          <ActivationClient
+            plans={plans}
+            pricing={pricing}
+            isUpgrade={!!owned}
+            showCode={!owned}
+            promoCode={typedCode}
+            promoStatus={promoStatus}
+            clientKey={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? ""}
+            isProduction={process.env.MIDTRANS_IS_PRODUCTION === "true"}
+          />
+        ) : (
+          // Pembeli lewat WhatsApp: pesan terisi email akunnya, supaya kode bisa dicocokkan dan dikirim ke akun yang benar
+          <CodeActivation
+            storeUrl={payment.storeUrl}
+            whatsappUrl={whatsappLink(contact.whatsapp, `Halo, saya mau beli kode akses Monaplan. Email akun saya: ${user.email ?? "-"}`)}
+          />
+        )}
 
         <p className="mt-12 border-t border-neutral-200/80 pt-6 text-center text-xs text-neutral-500">{t("Butuh bantuan?")}{" "}<Link href="/akun/bantuan" className="underline">{t("Hubungi kami")}</Link> · <Link href="/privasi" className="underline">{t("Kebijakan privasi")}</Link>
         </p>

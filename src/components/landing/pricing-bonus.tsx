@@ -15,9 +15,11 @@ const COLORS = ["#8C3A63", "#D9A5B8", "#F1E4D0", "#6F8F72", "#3E1A2D"];
 
 // Harga dan bonus dalam satu bagian. Satu paket: isi paket dan dua tiket bonus di kiri, nota nilai dengan tombol bayar di kanan.
 // Lebih dari satu paket: kartu per paket ("Pilih paket ini"), lalu tiket bonus di bawahnya.
-export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { plans: PricedPlan[]; trialDays: number | null; loggedIn: boolean; buyHref: string }) {
+export async function PricingBonus({ plans, trialDays, loggedIn, buyHref, viaStore = false, paymentOff = false }: { plans: PricedPlan[]; trialDays: number | null; loggedIn: boolean; buyHref: string; viaStore?: boolean; paymentOff?: boolean }) {
   const { t, lang } = await getI18n();
   const single = plans.length === 1;
+  // Pembayaran di website mati: tombol beli membuka halaman toko di tab baru (tanpa tautan toko, menuju halaman Aktivasi)
+  const buyProps = viaStore ? { target: "_blank", rel: "noopener noreferrer" } : {};
 
   const points = (p: PricedPlan) => [
     { icon: <LayoutGrid />, text: t("14 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H") },
@@ -71,7 +73,7 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { pl
                 {features(p).map((x) => <li key={x} className="flex items-start gap-2.5"><Check className="mt-0.5 size-4 shrink-0 text-plum-600" aria-hidden="true" />{x}</li>)}
                 <li className="flex items-start gap-2.5"><Check className="mt-0.5 size-4 shrink-0 text-plum-600" aria-hidden="true" />{t("Bonus: Rona Impian dan Honeymoon Planner")}</li>
               </ul>
-              <ButtonLink href={buyHref} size="lg" className="btn-glow w-full">{loggedIn ? t("Aktifkan paket ini") : t("Pilih paket ini")}<ArrowRight className="ml-0.5" /></ButtonLink>
+              <ButtonLink href={buyHref} {...buyProps} size="lg" className="btn-glow w-full">{paymentOff ? t("Aktivasi Sekarang") : loggedIn ? t("Aktifkan paket ini") : t("Pilih paket ini")}<ArrowRight className="ml-0.5" /></ButtonLink>
               {trialDays && !loggedIn && <ButtonLink href="/login?mode=daftar" variant="ghost" className="mt-2 w-full">{t("Coba dulu {trialDays} hari gratis", { trialDays })}</ButtonLink>}
             </article>
           ))}
@@ -138,14 +140,14 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref }: { pl
               )}
             </div>
   
-            <ButtonLink href={buyHref} size="lg" className="btn-glow mt-5 w-full">{t("Dapatkan Sekarang")}<ArrowRight className="ml-0.5" /></ButtonLink>
+            <ButtonLink href={buyHref} {...buyProps} size="lg" className="btn-glow mt-5 w-full">{paymentOff ? t("Aktivasi Sekarang") : t("Dapatkan Sekarang")}<ArrowRight className="ml-0.5" /></ButtonLink>
             {trialDays && !loggedIn && <ButtonLink href="/login?mode=daftar" variant="ghost" className="mt-2 w-full">{t("Coba dulu {trialDays} hari gratis", { trialDays })}</ButtonLink>}
             <ul className="mt-4 space-y-1.5 text-[12.5px] text-neutral-600">
               {[t("Sekali bayar, akses selamanya, tanpa langganan"), t("Data tetap aman dan bisa dilihat bila akses berakhir")].map((x) => (
                 <li key={x} className="flex items-start gap-2"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-plum-600" aria-hidden="true" />{x}</li>
               ))}
             </ul>
-            <p className="mt-3 text-center text-[12px] text-neutral-500">{t("Pembayaran lewat QRIS, Virtual Account, GoPay, ShopeePay, dan kartu kredit.")}</p>
+            <p className="mt-3 text-center text-[12px] text-neutral-500">{viaStore ? t("Pembayaran diproses di halaman toko kami. Kode akses dikirim setelah pembayaran, lalu kamu aktifkan di Monaplan.") : paymentOff ? t("Aktifkan akunmu dengan kode akses yang kamu miliki.") : t("Pembayaran lewat QRIS, Virtual Account, GoPay, ShopeePay, dan kartu kredit.")}</p>
           </div>
         </aside>
         </div>

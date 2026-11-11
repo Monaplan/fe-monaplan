@@ -12,15 +12,16 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/kode", label: "Kode Akses", icon: "kode" },
       { href: "/admin/order", label: "Order", icon: "order" },
+      { href: "/admin/pembeli", label: "Pembeli", icon: "pembeli" },
+      { href: "/admin/keuangan", label: "Keuangan", icon: "keuangan" },
     ],
   },
   {
-    title: "Konfigurasi",
+    title: "Produk",
     items: [
       { href: "/admin/paket", label: "Paket", icon: "paket" },
       { href: "/admin/trial", label: "Trial", icon: "trial" },
       { href: "/admin/promo", label: "Promo", icon: "promo" },
-      { href: "/admin/email", label: "Email", icon: "email" },
     ],
   },
   {
@@ -28,6 +29,14 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/lisensi", label: "Lisensi", icon: "lisensi" },
       { href: "/admin/pengguna", label: "Pengguna", icon: "pengguna" },
+    ],
+  },
+  {
+    title: "Konfigurasi",
+    items: [
+      { href: "/admin/pembayaran", label: "Pembayaran", icon: "order" },
+      { href: "/admin/email", label: "Email", icon: "email" },
+      { href: "/admin/profil", label: "Profil Monaplan", icon: "user" },
     ],
   },
   { title: "Sistem", items: [{ href: "/admin/sistem", label: "Sistem", icon: "sistem" }, { href: "/admin/audit", label: "Log Audit", icon: "audit" }] },

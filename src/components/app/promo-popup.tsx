@@ -28,10 +28,12 @@ const DISMISS_MS = 24 * 3600 * 1000;
 const key = (id: string) => `mp-promo:v1:${id}`;
 
 // Kartu popup, dibuat sederhana: label, judul, harga, kode, satu tombol. Dipakai juga sebagai pratinjau di formulir admin.
-export function PromoPopupCard({ promo, onClose, preview }: { promo: PopupPromo; onClose?: () => void; preview?: boolean }) {
+// externalHref: pembayaran lewat toko. Tombol membuka halaman itu di tab baru, bukan /aktivasi.
+export function PromoPopupCard({ promo, onClose, preview, externalHref }: { promo: PopupPromo; onClose?: () => void; preview?: boolean; externalHref?: string | null }) {
   const { t, lang } = useI18n();
   const [copied, setCopied] = useState(false);
-  const href = promo.code ? `/aktivasi?promo=${encodeURIComponent(promo.code)}` : "/aktivasi";
+  const href = externalHref ?? (promo.code ? `/aktivasi?promo=${encodeURIComponent(promo.code)}` : "/aktivasi");
+  const ext = externalHref ? { target: "_blank", rel: "noopener noreferrer" } : {};
   const left = promo.daysLeft !== null && promo.daysLeft <= 7 ? (promo.daysLeft <= 1 ? t("Berakhir hari ini") : t("{n} hari lagi", { n: promo.daysLeft })) : null;
   const pct = promo.price && promo.price.final < promo.price.original ? Math.round((1 - promo.price.final / promo.price.original) * 100) : null;
   const until = promo.endsAt ? t("Promo berlaku sampai {date}", { date: formatDateCompact(promo.endsAt, undefined, lang) }) : null;
@@ -73,7 +75,7 @@ export function PromoPopupCard({ promo, onClose, preview }: { promo: PopupPromo;
           <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500">{copied ? <><Check className="size-3.5 text-plum-600" />{t("Tersalin")}</> : <><Copy className="size-3.5" />{t("Salin")}</>}</span>
         </button>
       )}
-      <Link href={href} onClick={onClose} aria-disabled={preview} tabIndex={preview ? -1 : undefined} className={cn(buttonClass("dark", "md", "mt-3 w-full"), preview && "pointer-events-none")}>
+      <Link href={href} {...ext} onClick={onClose} aria-disabled={preview} tabIndex={preview ? -1 : undefined} className={cn(buttonClass("dark", "md", "mt-3 w-full"), preview && "pointer-events-none")}>
         {promo.cta || t("Pakai promo")}
       </Link>
     </div>
@@ -82,10 +84,11 @@ export function PromoPopupCard({ promo, onClose, preview }: { promo: PopupPromo;
 
 
 // Versi ringkas untuk HP: kartu pendek di dasar layar. Judul, harga (asli dicoret dan persen hemat), masa berlaku, kode yang bisa disalin, dan satu tombol.
-export function PromoBar({ promo, onClose }: { promo: PopupPromo; onClose: () => void }) {
+export function PromoBar({ promo, onClose, externalHref }: { promo: PopupPromo; onClose: () => void; externalHref?: string | null }) {
   const { t, lang } = useI18n();
   const [copied, setCopied] = useState(false);
-  const href = promo.code ? `/aktivasi?promo=${encodeURIComponent(promo.code)}` : "/aktivasi";
+  const href = externalHref ?? (promo.code ? `/aktivasi?promo=${encodeURIComponent(promo.code)}` : "/aktivasi");
+  const ext = externalHref ? { target: "_blank", rel: "noopener noreferrer" } : {};
   const hasDiscount = !!promo.price && promo.price.final < promo.price.original;
   const pct = hasDiscount ? Math.round((1 - promo.price!.final / promo.price!.original) * 100) : null;
   const left = promo.daysLeft !== null && promo.daysLeft <= 7 ? (promo.daysLeft <= 1 ? t("Berakhir hari ini") : t("{n} hari lagi", { n: promo.daysLeft })) : null;
@@ -118,7 +121,7 @@ export function PromoBar({ promo, onClose }: { promo: PopupPromo; onClose: () =>
             <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-neutral-600">{copied ? <><Check className="size-3.5 text-plum-600" />{t("Tersalin")}</> : <><Copy className="size-3.5" />{t("Salin")}</>}</span>
           </button>
         )}
-        <Link href={href} onClick={onClose} className={buttonClass("dark", "md", cn("h-11 shrink-0 px-4 text-[13.5px] font-semibold", !promo.code && "flex-1"))}>
+        <Link href={href} {...ext} onClick={onClose} className={buttonClass("dark", "md", cn("h-11 shrink-0 px-4 text-[13.5px] font-semibold", !promo.code && "flex-1"))}>
           {promo.cta || t("Pakai promo")}<ArrowRight className="ml-0.5 size-4" />
         </Link>
       </div>
@@ -126,7 +129,7 @@ export function PromoBar({ promo, onClose }: { promo: PopupPromo; onClose: () =>
   );
 }
 
-export function PromoPopup({ promos }: { promos: PopupPromo[] }) {
+export function PromoPopup({ promos, externalHref }: { promos: PopupPromo[]; externalHref?: string | null }) {
   const pathname = usePathname();
   // ?popup=tes mengabaikan batas "sekali per sesi" dan "24 jam setelah ditutup", untuk menguji tampilan
   const force = useSearchParams().get("popup") === "tes";
@@ -175,12 +178,12 @@ export function PromoPopup({ promos }: { promos: PopupPromo[] }) {
     <>
       {/* HP: bar kecil di dasar layar */}
       <div className="no-print pointer-events-none fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-40 sm:hidden">
-        <div className="animate-promo-up"><PromoBar promo={shown} onClose={close} /></div>
+        <div className="animate-promo-up"><PromoBar promo={shown} onClose={close} externalHref={externalHref} /></div>
       </div>
       {/* Tablet dan desktop: kartu lengkap di pojok kanan bawah */}
       <div className="no-print pointer-events-none fixed right-5 bottom-5 z-40 hidden w-[380px] sm:block">
         <div className="animate-promo-up w-full">
-          <PromoPopupCard promo={shown} onClose={close} />
+          <PromoPopupCard promo={shown} onClose={close} externalHref={externalHref} />
         </div>
       </div>
     </>

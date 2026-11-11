@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, Copy } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Ban, Copy, Trash2 } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-form";
 import { Input } from "@/components/ui/form";
 import { StatusPill } from "@/components/ui/pill";
 import { useToast } from "@/components/ui/toast";
 import { formatDateCompact } from "@/lib/format";
-import { revokeBatch, revokeCode } from "@/features/admin/actions";
+import { deleteBatch, revokeBatch, revokeCode } from "@/features/admin/actions";
 import { useI18n } from "@/i18n/client";
 import { useT } from "@/i18n/client";
 
@@ -52,4 +53,10 @@ export function BatchCodes({ codes }: { codes: Code[] }) {
 export function RevokeBatchButton({ batchId }: { batchId: string }) {
   const t = useT();
   return <ActionButton variant="danger" size="md" icon={<Ban />} confirmText={t("Cabut semua kode yang belum terpakai di batch ini?")} action={() => revokeBatch(batchId)}>{t("Cabut Batch")}</ActionButton>;
+}
+
+export function DeleteBatchButton({ batchId }: { batchId: string }) {
+  const t = useT();
+  const router = useRouter();
+  return <ActionButton variant="danger" size="md" icon={<Trash2 />} onSuccess={() => router.push("/admin/kode")} confirmText={t("Hapus batch ini beserta semua kodenya? Tindakan ini tidak bisa dibatalkan.")} action={() => deleteBatch(batchId)}>{t("Hapus Batch")}</ActionButton>;
 }

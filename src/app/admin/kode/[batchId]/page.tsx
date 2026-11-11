@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { formatDateCompact } from "@/lib/format";
-import { BatchCodes, RevokeBatchButton } from "./batch-codes";
+import { BatchCodes, DeleteBatchButton, RevokeBatchButton } from "./batch-codes";
 import { getI18n } from "@/i18n/server";
 import { getT } from "@/i18n/server";
 
@@ -38,7 +38,7 @@ export default async function BatchPage({ params }: { params: Promise<{ batchId:
         actions={
           <>
             <ButtonLink href={`/api/admin/batches/${batchId}/csv`} prefetch={false} variant="outline" icon={<Download />}>{t("Ekspor CSV")}</ButtonLink>
-            {!batch.revoked_at && <RevokeBatchButton batchId={batchId} />}
+            {batch.revoked_at ? <DeleteBatchButton batchId={batchId} /> : <RevokeBatchButton batchId={batchId} />}
           </>
         }
       />

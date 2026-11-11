@@ -11,7 +11,7 @@ const ts = require("typescript");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "mp-lib-"));
 
-for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts"]) {
+for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts", "src/lib/support.ts", "src/lib/finance.ts"]) {
   // "server-only" hanya berlaku di bundel Next, jadi dilepas untuk uji ini
   const src = fs.readFileSync(path.join(ROOT, rel), "utf8").replace('import "server-only";', "");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
@@ -28,6 +28,8 @@ const { fundingSplit, savingsPlan, depositsByMonth, depositTotal } = await load(
 const { extractCode } = await load("src/lib/checkin.mjs");
 const { evaluateIdle, parseSeen, makeSeen, IDLE_MS, TOUCH_MS, SB_COOKIE_RE, IDLE_COOKIE_MAX_AGE } = await load("src/lib/idle.mjs");
 const { parseTerms, cleanQuery } = await load("src/lib/search-terms.mjs");
+const { normalizeWhatsapp, whatsappLink, normalizeInstagram, instagramUrl } = await load("src/lib/support.mjs");
+const { isMonthKey, monthKeyOf, shiftMonth, monthRange, wibDate, buildLedger, summarize, deltaPct, csvCell, ledgerCsv, buyerMessage } = await load("src/lib/finance.mjs");
 const { buildDesiredEvents, eventIdFor, planSync } = await load("src/lib/google/events.mjs");
 process.env.TOKEN_ENCRYPTION_KEY = "kunci-uji";
 const { encryptToken, decryptToken, signState, verifyState } = await load("src/lib/google/crypto.mjs");
@@ -321,6 +323,71 @@ check("kode mentah", extractCode(" abcdefgh23 ") === "ABCDEFGH23");
 check("teks acak ditolak", extractCode("https://evil.com/login") === null && extractCode("DROP TABLE") === null);
 check("kode terlalu pendek ditolak", extractCode("ABC") === null);
 
+console.log("Kontak Monaplan");
+check("WhatsApp 08xx dinormalkan", normalizeWhatsapp("0812 3456 7890") === "6281234567890");
+check("WhatsApp +62 dengan strip", normalizeWhatsapp("+62 812-3456-7890") === "6281234567890");
+check("WhatsApp 62xx tetap", normalizeWhatsapp("6281234567890") === "6281234567890");
+check("WhatsApp tanpa awalan 0", normalizeWhatsapp("81234567890") === "6281234567890");
+check("WhatsApp terlalu pendek ditolak", normalizeWhatsapp("123") === null);
+check("WhatsApp terlalu panjang ditolak", normalizeWhatsapp("08123456789012345678") === null);
+check("WhatsApp kosong atau null", normalizeWhatsapp("") === null && normalizeWhatsapp(null) === null && normalizeWhatsapp(undefined) === null);
+check("tautan WhatsApp tanpa nomor adalah null", whatsappLink(null, "halo") === null);
+check("tautan WhatsApp memuat pesan yang di-encode", whatsappLink("6281234567890", "Halo a&b") === "https://wa.me/6281234567890?text=Halo%20a%26b");
+check("tautan WhatsApp tanpa pesan", whatsappLink("6281234567890") === "https://wa.me/6281234567890");
+check("Instagram @nama", normalizeInstagram("@monaplan.id") === "monaplan.id");
+check("Instagram nama saja", normalizeInstagram("monaplan.id") === "monaplan.id");
+check("Instagram dari tautan https", normalizeInstagram("https://instagram.com/monaplan.id/") === "monaplan.id");
+check("Instagram dari tautan dengan www dan query", normalizeInstagram("https://www.instagram.com/monaplan.id?igsh=abc") === "monaplan.id");
+check("Instagram dari tautan tanpa https", normalizeInstagram("instagram.com/monaplan.id") === "monaplan.id");
+check("Instagram dengan spasi ditolak", normalizeInstagram("nama saya") === null);
+check("Instagram terlalu panjang ditolak", normalizeInstagram("a".repeat(31)) === null);
+check("Instagram kosong atau null", normalizeInstagram("") === null && normalizeInstagram(null) === null);
+check("tautan Instagram", instagramUrl("monaplan.id") === "https://instagram.com/monaplan.id");
+
+console.log("Keuangan");
+check("bulan valid", isMonthKey("2026-11") && isMonthKey("2026-01") && isMonthKey("2026-12"));
+check("bulan tidak valid", !isMonthKey("2026-13") && !isMonthKey("2026-00") && !isMonthKey("26-11") && !isMonthKey("2026-1") && !isMonthKey(null) && !isMonthKey("2026-11-01"));
+check("bulan WIB: 30 Nov 17.00 UTC sudah Desember", monthKeyOf(new Date("2026-11-30T17:00:00Z")) === "2026-12");
+check("bulan WIB: 30 Nov 16.59 UTC masih November", monthKeyOf(new Date("2026-11-30T16:59:00Z")) === "2026-11");
+check("geser bulan mundur melewati tahun", shiftMonth("2026-01", -1) === "2025-12");
+check("geser bulan maju melewati tahun", shiftMonth("2026-12", 1) === "2027-01");
+{
+  const r = monthRange("2026-11");
+  check("rentang bulan dalam tanggal", r.fromDate === "2026-11-01" && r.toDate === "2026-12-01");
+  check("rentang bulan dalam waktu WIB", r.fromIso === "2026-10-31T17:00:00.000Z" && r.toIso === "2026-11-30T17:00:00.000Z", JSON.stringify(r));
+}
+check("tanggal WIB dari waktu UTC malam hari", wibDate("2026-11-30T17:30:00Z") === "2026-12-01");
+check("persen perubahan", deltaPct(150, 100) === 50 && deltaPct(50, 100) === -50 && deltaPct(10, 0) === null);
+{
+  const orders = [{ id: "1", order_number: "MNP-1", amount_idr: "100000", paid_at: "2026-11-05T03:00:00Z", payment_method: "qris", plans: { name: "Lifetime" }, profiles: { email: "a@x.com" } }];
+  const sales = [
+    { id: "a", sold_on: "2026-11-10", buyer_name: "Raka", channel: "lynk", gross_idr: 100000, fee_idr: 5000, status: "paid", reference: "L-1", plans: { name: "Lifetime" } },
+    { id: "b", sold_on: "2026-11-11", buyer_name: "Nadia", channel: "whatsapp", gross_idr: "80000", fee_idr: 0, status: "paid" },
+    { id: "c", sold_on: "2026-11-12", buyer_name: "Dina", channel: "lynk", gross_idr: 100000, fee_idr: 5000, status: "refunded" },
+  ];
+  const expenses = [{ id: "x", spent_on: "2026-11-08", category: "hosting", description: "Vercel Pro", amount_idr: 40000 }];
+  const rows = buildLedger({ orders, sales, expenses });
+  check("buku kas: penjualan refund tidak dihitung", rows.length === 4 && !rows.some((r) => r.title === "Dina"));
+  check("buku kas terurut dari yang terbaru", eq(rows.map((r) => r.date), ["2026-11-11", "2026-11-10", "2026-11-08", "2026-11-05"]), JSON.stringify(rows.map((r) => r.date)));
+  check("pesanan website bersaluran website dan tanpa biaya", rows.find((r) => r.id === "o:1").source === "website" && rows.find((r) => r.id === "o:1").net === 100000);
+  check("bersih penjualan = kotor - biaya", rows.find((r) => r.id === "s:a").net === 95000);
+  const sm = summarize(rows);
+  check("ringkasan: kotor, biaya, pengeluaran, laba", sm.gross === 280000 && sm.fees === 5000 && sm.expenses === 40000 && sm.profit === 235000 && sm.count === 3, JSON.stringify(sm));
+  check("ringkasan per saluran terurut menurut kotor", eq(sm.bySource.map((b) => b.source), ["website", "lynk", "whatsapp"]) || eq(sm.bySource.map((b) => b.source), ["lynk", "website", "whatsapp"]), JSON.stringify(sm.bySource));
+  check("ringkasan kosong", eq(summarize([]), { count: 0, gross: 0, fees: 0, expenses: 0, profit: 0, bySource: [] }));
+  const csv = ledgerCsv(rows, (kind, source) => ({ kind: kind === "income" ? "Pemasukan" : "Pengeluaran", source }));
+  check("CSV memakai BOM dan header", csv.startsWith("\uFEFFTanggal,Jenis,"));
+  check("CSV: pengeluaran bernilai negatif", csv.split("\r\n").some((l) => l.includes("Pengeluaran") && l.endsWith(",-40000,0,-40000")), csv);
+}
+check("sel CSV memberi kutip pada koma", csvCell("a,b") === '"a,b"');
+check("sel CSV menggandakan tanda kutip", csvCell('say "hi"') === '"say ""hi"""');
+check("sel CSV menetralkan awalan rumus", csvCell("=SUM(A1)") === "'=SUM(A1)" && csvCell("+62812") === "'+62812" && csvCell("@x") === "'@x");
+check("sel CSV angka negatif tidak diberi awalan", csvCell(-500) === "-500");
+check("sel CSV kosong", csvCell(null) === "" && csvCell(undefined) === "");
+{
+  const m = buyerMessage({ name: "Raka", code: "MNP-AAAA-BBBB-CCCC", appUrl: "https://monaplan.test" });
+  check("pesan pembeli memuat nama, kode, dan tautan aktivasi", m.includes("Halo Raka") && m.includes("MNP-AAAA-BBBB-CCCC") && m.includes("https://monaplan.test/aktivasi"));
+}
 fs.rmSync(OUT, { recursive: true, force: true });
 console.log(`\n${pass} lulus, ${bad} gagal`);
 process.exit(bad ? 1 : 0);

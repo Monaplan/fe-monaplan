@@ -33,8 +33,10 @@ export default async function AdminHome() {
   const soon = new Date(now + 14 * DAY).toISOString();
   const activeLic = (q: any) => q.eq("status", "active").lte("starts_at", nowIso).or(`ends_at.is.null,ends_at.gt.${nowIso}`);
 
-  const [paid, signups, { count: usersTotal }, orders, bySource, trials, recentOrders, recentUsers, { count: review }, { count: expiring }, { data: batches }] = await Promise.all([
+  const [paid, manualSales, signups, { count: usersTotal }, orders, bySource, trials, recentOrders, recentUsers, { count: review }, { count: expiring }, { data: batches }] = await Promise.all([
     admin.from("orders").select("amount_idr, paid_at").eq("status", "paid").gte("paid_at", start12).limit(10000),
+    // Penjualan manual (Lynk.id, WhatsApp, offline). Bila migrasi keuangan belum dijalankan, hasilnya kosong tanpa mengganggu halaman.
+    admin.from("sales").select("gross_idr, sold_on").eq("status", "paid").gte("sold_on", start12.slice(0, 10)).limit(10000),
     admin.from("profiles").select("created_at").gte("created_at", since30).limit(10000),
     admin.from("profiles").select("*", { count: "exact", head: true }),
     admin.from("orders").select("status").limit(20000),
@@ -54,6 +56,11 @@ export default async function AdminHome() {
     const p = new Date(o.paid_at as string);
     const m = months.find((x) => x.key === `${p.getFullYear()}-${p.getMonth()}`);
     if (m) m.value += Number(o.amount_idr);
+  }
+  for (const sl of manualSales.data ?? []) {
+    const [y, mo] = String(sl.sold_on).split("-").map(Number) as [number, number];
+    const m = months.find((x) => x.key === `${y}-${mo - 1}`);
+    if (m) m.value += Number(sl.gross_idr);
   }
   const revenue12 = months.reduce((s, m) => s + m.value, 0);
   const revThis = months[11]!.value, revPrev = months[10]!.value;

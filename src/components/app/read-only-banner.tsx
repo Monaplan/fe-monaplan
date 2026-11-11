@@ -14,7 +14,7 @@ export async function ReadOnlyBanner({ access, isOwner, role, archived }: { acce
     text = "Proyek ini diarsipkan. Data hanya bisa dilihat dan diekspor.";
   } else if (access.state === "revoked") {
     text = "Akses ruang kerja ini sedang tidak aktif. Data tetap aman dan bisa diekspor. Hubungi kami bila menurutmu ini keliru.";
-    if (isOwner) actions = <a href="/akun/bantuan" className={buttonClass("primary", "sm")}>{t("Hubungi Bantuan")}</a>;
+    if (isOwner) actions = <Link href="/akun/bantuan" className={buttonClass("primary", "sm")}>{t("Hubungi Bantuan")}</Link>;
   } else if (access.state === "expired" || access.state === "none") {
     if (isOwner) {
       text = access.isTrial

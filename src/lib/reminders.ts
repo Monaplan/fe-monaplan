@@ -7,7 +7,7 @@ import { addDaysISO, diffDays, formatDateCompact, formatDateLong, formatIDR, for
 import { projectPath } from "@/lib/paths";
 import { savingsPlan } from "@/lib/budget";
 import { sendPush } from "@/lib/push";
-import { getPricingContext } from "@/lib/settings";
+import { getPricingContext, getSettings } from "@/lib/settings";
 import { priceFor, promoExhausted, promoState } from "@/lib/pricing";
 
 // Pengingat terjadwal (dipanggil berkala oleh /api/cron/reminders).
@@ -198,11 +198,14 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
     .eq("status", "active").eq("source", "trial").not("ends_at", "is", null)
     .gte("ends_at", new Date(now.getTime() - 3 * 86_400_000).toISOString()).lte("ends_at", now.toISOString());
   if (trials?.length) {
-    const [{ promoEnabled, promos }, { data: plans }] = await Promise.all([
+    const [{ promoEnabled, promos }, { payment }, { data: plans }] = await Promise.all([
       getPricingContext(),
+      getSettings(),
       admin.from("plans").select("id, name, price_idr").eq("type", "lifetime").eq("is_active", true).eq("is_public", true).order("tier").order("sort_order").limit(1),
     ]);
     const plan = plans?.[0];
+    // Pembayaran di website mati: tombol di email membuka halaman toko, bukan Aktivasi
+    const buyUrl = (path: string) => (!payment.enabled && payment.storeUrl ? payment.storeUrl : url(path));
     for (const l of trials) {
       const { count } = await admin.from("licenses").select("*", { count: "exact", head: true }).eq("user_id", l.user_id).eq("status", "active").is("ends_at", null);
       if (count) continue; // sudah punya akses selamanya
@@ -210,7 +213,7 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
       mail.push({
         userId: l.user_id, linkPath: "/aktivasi", type: "trial_ended", key: `trial_ended:${l.id}`, inApp: true,
         build: (lang, name) => {
-          if (!plan) return { kind: "trial_ended", name, couple: proj?.title ?? null, plan: "Lifetime Access", price: "-", url: url("/aktivasi") };
+          if (!plan) return { kind: "trial_ended", name, couple: proj?.title ?? null, plan: "Lifetime Access", price: "-", url: buyUrl("/aktivasi") };
           // Harga tanpa kode (promo otomatis) lalu promo berkode yang sedang berjalan dan lebih murah
           const auto = priceFor(plan, promos, promoEnabled, now.getTime());
           const coded = promos
@@ -225,7 +228,7 @@ export async function runReminders(admin: SupabaseClient, now = new Date()) {
             kind: "trial_ended", name, couple: proj?.title ?? null, plan: plan.name, price: formatIDR(best.final),
             original: best.final < best.original ? formatIDR(best.original) : null,
             promo: promo && coded ? { name: promo.name, code: promo.code ?? null, saving: `${formatIDR(best.discount)} (${pct}%)`, until: promo.ends_at ? formatDateCompact(promo.ends_at, WIB, lang) : null } : null,
-            url: url(coded?.x.code ? `/aktivasi?promo=${encodeURIComponent(coded.x.code)}` : "/aktivasi"),
+            url: buyUrl(coded?.x.code ? `/aktivasi?promo=${encodeURIComponent(coded.x.code)}` : "/aktivasi"),
           };
         },
       });

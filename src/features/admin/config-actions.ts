@@ -5,12 +5,14 @@ import { bustPublicCache } from "@/lib/ttl-cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, okm, type ActionResult } from "@/lib/result";
 import { parseIDR } from "@/lib/format";
+import { cleanStoreUrl } from "@/lib/settings";
+import { normalizeInstagram, normalizeWhatsapp } from "@/lib/support";
 import { adminContext as ctx } from "./context";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
 // ---------- Konfigurasi: trial dan promo ----------
-async function writeSetting(key: "trial" | "promo", value: Record<string, unknown>, adminId: string) {
+async function writeSetting(key: "trial" | "promo" | "payment" | "profile", value: Record<string, unknown>, adminId: string) {
   return createAdminClient().from("app_settings").upsert({ key, value, updated_by: adminId, updated_at: new Date().toISOString() }, { onConflict: "key" });
 }
 
@@ -46,6 +48,45 @@ export async function setFeatureEnabled(key: "trial" | "promo", enabled: boolean
   bustPublicCache();
   revalidatePath("/", "layout");
   return { ok: true, message: `${key === "trial" ? "Trial" : "Promo"} ${enabled ? "diaktifkan" : "dimatikan"}.` };
+}
+
+// Pembayaran lewat website (Midtrans) atau lewat toko + kode akses. Tautan toko opsional: kosong berarti tombol beli menuju halaman Aktivasi. Satu baris app_settings: { enabled, store_url }.
+export async function savePaymentSettings(fd: FormData): Promise<ActionResult> {
+  const { audit, adminId } = await ctx();
+  const enabled = fd.get("enabled") === "on";
+  const raw = str(fd.get("store_url"));
+  const storeUrl = raw ? cleanStoreUrl(raw) : null;
+  if (raw && !storeUrl) return fail("Tautan toko harus diawali https:// dan berupa alamat yang valid.");
+  const value = { enabled, store_url: storeUrl };
+  const { error } = await writeSetting("payment", value, adminId);
+  if (error) return missingTable(error) ?? dbError(error);
+  await audit("settings.payment", "app_settings", "payment", value);
+  bustPublicCache();
+  revalidatePath("/", "layout");
+  return { ok: true, message: enabled ? "Pembayaran lewat website aktif." : "Pembayaran lewat website dimatikan. Penjualan lewat toko." };
+}
+
+// Profil Monaplan: kontak yang tampil ke pengguna. Semua isian opsional; kosong berarti memakai env lama.
+export async function saveProfileSettings(fd: FormData): Promise<ActionResult> {
+  const { audit, adminId } = await ctx();
+  const rawWa = str(fd.get("whatsapp"));
+  const whatsapp = rawWa ? normalizeWhatsapp(rawWa) : null;
+  if (rawWa && !whatsapp) return fail("Nomor WhatsApp tidak valid. Contoh: 0812 3456 7890.");
+  const email = str(fd.get("email"));
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("Alamat email tidak valid.");
+  if ((email?.length ?? 0) > 120) return fail("Alamat email terlalu panjang.");
+  const rawIg = str(fd.get("instagram"));
+  const instagram = rawIg ? normalizeInstagram(rawIg) : null;
+  if (rawIg && !instagram) return fail("Akun Instagram tidak valid. Tulis namanya saja, contoh: monaplan.id");
+  const hours = str(fd.get("hours"));
+  if ((hours?.length ?? 0) > 80) return fail("Jam layanan maksimal 80 karakter.");
+  const value = { whatsapp, email, instagram, hours };
+  const { error } = await writeSetting("profile", value, adminId);
+  if (error) return missingTable(error) ?? dbError(error);
+  await audit("settings.profile", "app_settings", "profile", value);
+  bustPublicCache();
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Profil Monaplan tersimpan." };
 }
 
 export async function savePromo(fd: FormData): Promise<ActionResult> {

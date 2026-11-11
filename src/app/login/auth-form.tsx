@@ -52,7 +52,7 @@ export function AuthForm({ mode: initial, next, notice, noticeTone = "error", tr
       <div className="rounded-2xl border border-neutral-200 bg-surface p-6 text-center shadow-card">
         <span className="mx-auto inline-flex size-12 items-center justify-center rounded-2xl bg-plum-50 text-plum-600 ring-1 ring-plum-100"><MailCheck className="size-6" /></span>
         <h2 className="mt-4 text-lg font-semibold">{t("Cek email kamu")}</h2>
-        <p className="mt-1 text-[13px] leading-5 text-neutral-600">{sentTo}</p>
+        <p className="mt-1 text-[13px] leading-5 text-neutral-600">{t(sentTo)}</p>
         <button onClick={() => { setSentTo(null); setMode("masuk"); }} className="mt-5 text-[13px] font-semibold text-plum-600 hover:underline">{t("Kembali ke halaman masuk")}</button>
       </div>
     );

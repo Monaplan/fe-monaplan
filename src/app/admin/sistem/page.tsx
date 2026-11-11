@@ -5,6 +5,7 @@ import { Card, CardHeader, PageHeader } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { StatusPill } from "@/components/ui/pill";
 import { listAllObjects, storageDriver } from "@/lib/storage";
+import { getContact } from "@/lib/settings";
 import { getI18n } from "@/i18n/server";
 import { PurgeButton } from "../order/purge-button";
 import { OrphanFiles } from "../order/orphan-files";
@@ -66,6 +67,7 @@ async function storageStats(admin: ReturnType<typeof createAdminClient>) {
 export default async function SystemPage() {
   const { t } = await getI18n();
   await requireAdmin();
+  const contact = await getContact();
   const admin = createAdminClient();
   const count = (table: string, f?: (q: any) => any) => {
     const q = admin.from(table).select("*", { count: "exact", head: true });
@@ -94,7 +96,7 @@ export default async function SystemPage() {
     ["Google Calendar", !!process.env.GOOGLE_CLIENT_ID],
     [t("Pengingat terjadwal (cron)"), !!process.env.CRON_SECRET, t("Email dan notifikasi pengingat")],
     [t("Notifikasi HP (push)"), !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && !!process.env.VAPID_PRIVATE_KEY, !process.env.VAPID_PRIVATE_KEY ? t("Kunci VAPID belum diisi") : undefined],
-    [t("WhatsApp bantuan"), !!process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP],
+    [t("WhatsApp bantuan"), !!contact.whatsapp, t("Diatur di Profil Monaplan")],
   ];
   const content: [string, number][] = [
     [t("Dokumen terunggah"), documents], [t("Tugas"), tasks], [t("Notifikasi tersimpan"), notifications], [t("Setoran tabungan"), deposits], [t("Catatan amplop dan kado"), receipts],

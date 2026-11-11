@@ -80,8 +80,9 @@ export function FormActions({ children }: { children: ReactNode }) {
 }
 
 // Tombol untuk satu aksi server dengan konfirmasi opsional
-export function ActionButton({ action, confirmText, children, variant = "ghost", size = "sm", icon, className, successMessage, title }: {
+export function ActionButton({ action, confirmText, children, variant = "ghost", size = "sm", icon, className, successMessage, title, onSuccess }: {
   action: () => Promise<ActionResult>;
+  onSuccess?: (res: ActionResult) => void;
   confirmText?: string;
   children?: ReactNode;
   variant?: ButtonVariant;
@@ -111,6 +112,7 @@ export function ActionButton({ action, confirmText, children, variant = "ghost",
           if (res.ok) {
             const msg = res.message ?? successMessage;
             if (msg) toast(msg);
+            onSuccess?.(res);
           } else toast(res.error, "danger");
         });
       }}

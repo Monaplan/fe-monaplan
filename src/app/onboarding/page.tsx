@@ -14,7 +14,7 @@ export async function generateMetadata() {
 
 export default async function OnboardingPage() {
   const { t } = await getI18n();
-  const { profile } = await requireUser();
+  await requireUser();
   if (!isActive(await getMyAccess())) redirect("/aktivasi");
   const own = (await getMyProjects()).filter((p) => p.role === "owner" && !p.archived_at);
   if (own.length) redirect(projectPath(own[0]!));

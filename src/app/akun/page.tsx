@@ -3,6 +3,7 @@ import { daysLeft, getMyAccess, getMyLicenses, requireUser } from "@/lib/access"
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getOwnedLifetime } from "@/lib/upgrade";
+import { getSettings } from "@/lib/settings";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/pill";
@@ -27,13 +28,15 @@ const SOURCE: Record<string, string> = { payment: "Dibayar", access_code: "Kode 
 export default async function AccountPage() {
   const { t, lang } = await getI18n();
   const { profile, user } = await requireUser();
-  const [access, licenses, owned, { data: plans }] = await Promise.all([
+  const [access, licenses, owned, { data: plans }, { payment }] = await Promise.all([
     getMyAccess(),
     getMyLicenses(),
     getOwnedLifetime(createAdminClient(), user.id),
     createClient().then((s) => s.from("plans").select("id, tier").eq("type", "lifetime")),
+    getSettings(),
   ]);
-  const canUpgrade = !!owned && (plans ?? []).some((p) => Number(p.tier ?? 1) > owned.tier);
+  // Upgrade berbayar hanya lewat website; bila pembayaran di website mati, halaman Aktivasi tidak punya apa-apa untuk pemilik akses selamanya
+  const canUpgrade = payment.enabled && !!owned && (plans ?? []).some((p) => Number(p.tier ?? 1) > owned.tier);
   const current = licenses.find((l) => l.status === "active" && (!l.ends_at || Date.parse(l.ends_at) > Date.now()));
   const left = daysLeft(access.endsAt);
 

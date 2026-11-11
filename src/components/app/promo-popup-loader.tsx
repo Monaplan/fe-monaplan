@@ -7,7 +7,7 @@ import { PromoPopup, type PopupPromo } from "./promo-popup";
 
 // Memuat promo berpopup yang sedang berjalan dan cocok dengan penonton. Tanpa promo berpopup, tidak ada pekerjaan lain:
 // getPricingContext() sudah di-cache per permintaan, jadi tidak menambah query.
-export async function PromoPopupLoader({ plans = [] }: { plans?: { id: string; name: string; price_idr: number }[] }) {
+export async function PromoPopupLoader({ plans = [], externalHref = null }: { plans?: { id: string; name: string; price_idr: number }[]; externalHref?: string | null }) {
   const user = await getAuthUser();
   const { promoEnabled, promos } = await getPricingContext(user?.id);
   if (!promoEnabled) return null;
@@ -45,5 +45,5 @@ export async function PromoPopupLoader({ plans = [] }: { plans?: { id: string; n
     };
     });
   if (!list.length) return null;
-  return <PromoPopup promos={list} />;
+  return <PromoPopup promos={list} externalHref={externalHref} />;
 }

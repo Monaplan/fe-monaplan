@@ -41,7 +41,7 @@ export function LicenseRow({ license: l }: { license: any }) {
   const prompt = usePrompt();
   const [, start] = useTransition();
   const ended = l.ends_at && Date.parse(l.ends_at) < Date.now();
-  const run = (fn: () => Promise<any>) => start(async () => { const r = await fn(); r.ok ? toast(r.message) : toast(r.error, "danger"); });
+  const run = (fn: () => Promise<any>) => start(async () => { const r = await fn(); if (r.ok) toast(r.message); else toast(r.error, "danger"); });
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 px-5 py-3 last:border-0">
       <div className="min-w-0 flex-1">

@@ -8,7 +8,7 @@ import { checkPromoCode, upgradeQuote } from "@/lib/pricing";
 import { rateLimited } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/codes";
 import { getOwnedLifetime } from "@/lib/upgrade";
-import { getPricingContext } from "@/lib/settings";
+import { getPricingContext, getSettings } from "@/lib/settings";
 import { supersedePending } from "@/lib/order-cleanup";
 
 const Body = z.object({ plan_id: z.string().uuid(), promo_code: z.string().trim().max(40).optional() });
@@ -27,6 +27,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
+
+  // Penjualan lewat toko: checkout di website ditutup, aktivasi hanya dengan kode akses
+  if (!(await getSettings()).payment.enabled) return NextResponse.json({ error: "PAYMENT_DISABLED", message: "Pembayaran di website sedang ditutup. Beli lewat halaman toko, lalu aktifkan dengan kode akses." }, { status: 403 });
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 });

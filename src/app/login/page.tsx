@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthLayout } from "@/components/app/auth-layout";
 import { getSession } from "@/lib/access";
@@ -27,7 +28,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <AuthLayout
-      footer={<>{t("Dengan melanjutkan, kamu menyetujui")}{" "}<a className="underline hover:text-plum-700" href="/privasi">{t("Kebijakan Privasi")}</a>{" "}{t("dan Syarat Layanan Monaplan, termasuk pengolahan data sesuai UU No. 27 Tahun 2022.")}</>}
+      footer={<>{t("Dengan melanjutkan, kamu menyetujui")}{" "}<Link className="underline hover:text-plum-700" href="/privasi">{t("Kebijakan Privasi")}</Link>{" "}{t("dan Syarat Layanan Monaplan, termasuk pengolahan data sesuai UU No. 27 Tahun 2022.")}</>}
     >
       <AuthForm
         mode={signup ? "daftar" : "masuk"}

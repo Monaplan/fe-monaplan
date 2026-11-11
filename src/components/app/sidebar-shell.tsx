@@ -1,12 +1,13 @@
 "use client";
 
 import { SignOutForm } from "./signout-button";
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useSheetSwipe } from "@/components/ui/use-sheet-swipe";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
-  ArrowLeftRight, BadgeCheck, Bell, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock, FileText, Gift, HandCoins, Hourglass, PiggyBank, UserCheck, PartyPopper, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield, ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X
+  Banknote, ShoppingBag,
+  ArrowLeftRight, BadgeCheck, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock, FileText, Gift, HandCoins, Hourglass, PiggyBank, UserCheck, PartyPopper, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield, ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X
 } from "lucide-react";
 import { LogoMark } from "./logo-mark";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -15,7 +16,7 @@ import { initials } from "@/lib/format";
 import { NotificationBell, type Notif } from "./notification-bell";
 import { HelpMenu } from "./help-menu";
 import { SearchBox } from "./search-box";
-import { supportWhatsappUrl } from "@/lib/support";
+import { useSupportWhatsapp } from "@/components/app/contact-provider";
 import { ThemeSwitcher, ThemeToggle } from "./theme";
 import { LanguageSwitcher } from "./language-switcher";
 import { useT } from "@/i18n/client";
@@ -25,7 +26,7 @@ const ICONS = {
   dashboard: LayoutGrid, checklist: ListChecks, budget: Wallet, vendor: Store, tamu: Mail, rundown: Clock, gift: Gift,
   dokumen: FileText, kalender: CalendarDays, pengaturan: SlidersHorizontal, panduan: BookOpen, bantuan: CircleHelp,
   home: House, user: UserRound, tagihan: ReceiptText, admin: Shield, paket: Package, kode: KeyRound, order: ReceiptText,
-  palette: Palette, plane: Plane, harih: PartyPopper, amplop: HandCoins, tabungan: PiggyBank, hadir: UserCheck, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail,
+  palette: Palette, plane: Plane, harih: PartyPopper, amplop: HandCoins, tabungan: PiggyBank, hadir: UserCheck, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail, pembeli: ShoppingBag, keuangan: Banknote,
 } as const;
 export type IconKey = keyof typeof ICONS;
 
@@ -56,7 +57,6 @@ export function SidebarShell({
 }) {
   const t = useT();
   const pathname = usePathname();
-  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [sheet, setSheet] = useState(false);
   // Judul grup yang ditutup pengguna; tersimpan di peramban. Grup berisi halaman aktif selalu terbuka.
@@ -257,6 +257,7 @@ function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle
 }) {
   const t = useT();
   const pathname = usePathname();
+  const supportWa = useSupportWhatsapp();
   const sheetRef = useRef<HTMLDivElement>(null);
   useSheetSwipe(sheetRef, onClose);
   const links: { href: string; icon: IconKey; label: string }[] = [
@@ -337,8 +338,8 @@ function MobileSheet({ groups, user, footer, isActive, onClose, closed, onToggle
 
           <div className="flex flex-col">
             {links.map((l) => <MenuLink key={l.href} href={l.href} icon={l.icon} label={t(l.label)} onClick={onClose} />)}
-            {supportWhatsappUrl("Halo admin Monaplan, saya butuh bantuan.") && (
-              <a href={supportWhatsappUrl(`Halo admin Monaplan, saya butuh bantuan.
+            {supportWa("Halo admin Monaplan, saya butuh bantuan.") && (
+              <a href={supportWa(`Halo admin Monaplan, saya butuh bantuan.
 Halaman: ${pathname}`)!} target="_blank" rel="noopener noreferrer" onClick={onClose}
                 className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] text-neutral-700 hover:bg-neutral-100"><WhatsAppIcon className="size-4 text-[#1FA855]" />{t("Chat WhatsApp admin")}</a>
             )}

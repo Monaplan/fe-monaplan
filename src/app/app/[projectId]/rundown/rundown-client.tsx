@@ -22,7 +22,7 @@ import { useI18n } from "@/i18n/client";
 type Item = { id: string; start_time: string; end_time: string | null; title: string; description: string | null; pic_name: string | null; location: string | null; vendor_id: string | null; vendors: { name: string } | null };
 type Event = { id: string; name: string; type: string; starts_at: string | null; venue_name: string | null };
 
-export function RundownClient({ projectId, tz, coupleName, events, active, items, vendors, canWrite }: {
+export function RundownClient({ projectId, tz, events, active, items, vendors, canWrite }: {
   projectId: string; tz: string; coupleName?: string; events: Event[]; active: Event; items: Item[]; vendors: { id: string; name: string }[]; canWrite: boolean;
 }) {
   const { t, lang } = useI18n();

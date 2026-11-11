@@ -1,0 +1,265 @@
+<!--
+  Monaplan - halaman produk untuk toko online (HTML kustom)
+
+  Cara pakai
+  1. Ganti tiga tanda berikut di seluruh berkas (Ctrl+H):
+       {{ORDER_LINK}}   tautan tombol order / checkout di toko (mis. Lynk.id)
+       {{APP_URL}}      alamat Monaplan, contoh https://monaplan.vercel.app
+       {{WA_NUMBER}}    nomor WhatsApp bantuan tanpa tanda +, contoh 6281234567890
+  2. Tempel seluruh isi berkas ini ke blok HTML kustom di editor toko. Bila toko tidak menerima HTML kustom
+     (umumnya halaman produk Lynk.id hanya teks, gambar, dan tombol), pakai berkas ini sebagai bahan salinan teks.
+  3. Harga dan promo sengaja TIDAK ditulis di sini. Atur harga, coret harga, dan promo langsung di toko
+     supaya tidak ada dua angka berbeda.
+
+  Semua gaya dibatasi di dalam .mp supaya tidak bentrok dengan tema toko. Tanpa skrip.
+  Font Google bersifat opsional: bila diblokir, tampilan jatuh ke font sistem.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+.mp, .mp * { box-sizing: border-box; }
+.mp {
+  --p50:#FBF5F8; --p100:#F6E8EF; --p200:#EDD1DF; --p300:#DFADC5; --p600:#8C3A63; --p700:#722E51; --p800:#5A2541; --p900:#3E1A2D;
+  --n50:#FAF8F9; --n200:#E7E1E4; --n600:#5F5359; --n700:#4A4045; --n900:#1C1619;
+  --sage:#6F8F72;
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--n900); background: var(--p50); line-height: 1.6; font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+.mp a { color: inherit; }
+.mp h1, .mp h2, .mp h3, .mp p, .mp ul, .mp ol { margin: 0; padding: 0; }
+.mp ul, .mp ol { list-style: none; }
+.mp .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+.mp .display { font-family: Cormorant, Georgia, "Times New Roman", serif; font-weight: 500; }
+.mp .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--p600); }
+
+/* Tombol */
+.mp .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 52px; padding: 14px 28px; border-radius: 14px; border: 0; cursor: pointer;
+  background: var(--p600); color: #fff !important; text-decoration: none; font-weight: 700; font-size: 16px;
+  box-shadow: 0 8px 24px rgba(140,58,99,.28); transition: background .15s, transform .15s;
+}
+.mp .btn:hover { background: var(--p700); transform: translateY(-1px); }
+.mp .btn:focus-visible { outline: 3px solid var(--p300); outline-offset: 3px; }
+.mp .btn.light { background: #fff; color: var(--p800) !important; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+.mp .btn.light:hover { background: var(--p100); }
+.mp .btn.block { width: 100%; }
+
+/* Hero */
+.mp .hero { background: linear-gradient(160deg, var(--p900), var(--p700)); color: #fff; padding: 56px 0 64px; text-align: center; position: relative; overflow: hidden; }
+.mp .hero::before, .mp .hero::after { content: ""; position: absolute; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; pointer-events: none; }
+.mp .hero::before { width: 320px; height: 320px; top: -110px; right: -90px; }
+.mp .hero::after { width: 180px; height: 180px; top: -30px; right: 0; }
+.mp .brand { font-size: 28px; letter-spacing: .01em; }
+.mp .pill { display: inline-block; margin-top: 20px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.15); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.mp .hero h1 { margin: 16px auto 0; max-width: 680px; font-size: clamp(36px, 8vw, 58px); line-height: 1.08; }
+.mp .hero .sub { margin: 16px auto 0; max-width: 560px; color: rgba(255,255,255,.82); font-size: 16px; }
+.mp .hero .cta { margin-top: 28px; }
+.mp .hero .note { margin-top: 12px; font-size: 13px; color: rgba(255,255,255,.7); }
+
+/* Bagian */
+.mp section { padding: 56px 0; }
+.mp .head { text-align: center; max-width: 620px; margin: 0 auto 32px; }
+.mp .head h2 { margin-top: 8px; font-size: clamp(30px, 6vw, 42px); line-height: 1.12; }
+.mp .head p { margin-top: 10px; color: var(--n600); }
+
+/* Fitur */
+.mp .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+.mp .card { background: #fff; border: 1px solid var(--n200); border-radius: 18px; padding: 20px; }
+.mp .card .ic { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 12px; background: var(--p100); color: var(--p700); font-size: 20px; }
+.mp .card h3 { margin-top: 12px; font-size: 16px; font-weight: 700; line-height: 1.35; }
+.mp .card p { margin-top: 4px; font-size: 14px; color: var(--n600); }
+
+/* Bonus */
+.mp .bonus { background: #fff; border-block: 1px solid var(--n200); }
+.mp .ticket { position: relative; display: flex; gap: 14px; align-items: flex-start; background: var(--p50); border: 1px dashed var(--p300); border-radius: 18px; padding: 20px; }
+.mp .ticket .tag { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--p600); }
+.mp .ticket h3 { font-size: 18px; font-weight: 700; margin-top: 2px; }
+.mp .ticket p { margin-top: 4px; font-size: 14px; color: var(--n600); }
+.mp .ticket .ic { flex: none; display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 12px; background: var(--p600); color: #fff; font-size: 22px; }
+
+/* Langkah */
+.mp .steps { counter-reset: s; display: grid; gap: 14px; }
+.mp .steps li { counter-increment: s; position: relative; background: #fff; border: 1px solid var(--n200); border-radius: 18px; padding: 20px 20px 20px 72px; }
+.mp .steps li::before { content: counter(s); position: absolute; left: 20px; top: 20px; width: 36px; height: 36px; border-radius: 50%; background: var(--p600); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.mp .steps h3 { font-size: 16px; font-weight: 700; }
+.mp .steps p { margin-top: 4px; font-size: 14px; color: var(--n600); }
+.mp .code { display: inline-block; margin-top: 8px; padding: 6px 12px; border-radius: 10px; background: var(--p100); color: var(--p800); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 700; letter-spacing: .04em; }
+
+/* Jaminan */
+.mp .assure { display: grid; gap: 12px; }
+.mp .assure li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; color: var(--n700); }
+.mp .assure li::before { content: "✓"; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--p100); color: var(--p700); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+/* FAQ (tanpa skrip: details) */
+.mp details { background: #fff; border: 1px solid var(--n200); border-radius: 14px; padding: 0 18px; }
+.mp details + details { margin-top: 10px; }
+.mp summary { cursor: pointer; list-style: none; padding: 16px 0; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; gap: 12px; }
+.mp summary::-webkit-details-marker { display: none; }
+.mp summary::after { content: "+"; flex: none; color: var(--p600); font-size: 20px; line-height: 1; }
+.mp details[open] summary::after { content: "−"; }
+.mp details p { padding: 0 0 16px; font-size: 14.5px; color: var(--n600); }
+
+/* Penutup */
+.mp .final { background: linear-gradient(160deg, var(--p900), var(--p700)); color: #fff; text-align: center; padding: 56px 0; }
+.mp .final h2 { font-size: clamp(30px, 6vw, 42px); line-height: 1.12; max-width: 560px; margin: 0 auto; }
+.mp .final p { margin: 12px auto 0; max-width: 480px; color: rgba(255,255,255,.82); }
+.mp .final .cta { margin-top: 24px; }
+.mp footer { padding: 24px 0 32px; text-align: center; font-size: 13px; color: var(--n600); }
+.mp footer a { color: var(--p700); }
+
+@media (min-width: 680px) {
+  .mp .grid { grid-template-columns: repeat(2, 1fr); }
+  .mp .grid.three { grid-template-columns: repeat(3, 1fr); }
+  .mp .hero { padding: 80px 0 88px; }
+  .mp section { padding: 72px 0; }
+  .mp .btn.block { width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .mp .btn { transition: none; } .mp .btn:hover { transform: none; } }
+</style>
+
+<div class="mp">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <p class="brand display">Monaplan</p>
+      <span class="pill">Akses selamanya</span>
+      <h1 class="display">Persiapan pernikahan, rapi dalam satu tempat</h1>
+      <p class="sub">Checklist, budget, vendor, daftar tamu, undangan WhatsApp, sampai check-in di hari H. Dikerjakan berdua, tanpa spreadsheet berantakan.</p>
+      <div class="cta"><a class="btn light" href="{{ORDER_LINK}}">Aktivasi Sekarang &rarr;</a></div>
+      <p class="note">Sekali bayar, akses selamanya, tanpa langganan.</p>
+    </div>
+  </header>
+
+  <!-- FITUR -->
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Yang kamu dapatkan</p>
+        <h2 class="display">Semua kebutuhan persiapan, satu paket</h2>
+        <p>14 modul lengkap untuk menyiapkan pernikahan dari awal sampai hari H.</p>
+      </div>
+      <ul class="grid three">
+        <li class="card"><span class="ic" aria-hidden="true">✔</span><h3>Checklist &amp; kalender</h3><p>Tugas per tahap dengan tenggat, jadi tidak ada yang terlewat.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">💰</span><h3>Budget &amp; tabungan</h3><p>Pantau anggaran, DP, pelunasan, dan target tabungan pernikahan.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">🤝</span><h3>Vendor</h3><p>Catat vendor, kesepakatan, dan jadwal pembayaran di satu tempat.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">💌</span><h3>Undangan WhatsApp</h3><p>Undangan digital dengan 5 tema, dibagikan langsung lewat WhatsApp.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">👥</span><h3>Daftar tamu &amp; RSVP</h3><p>Kelola tamu dan lihat siapa yang sudah mengonfirmasi hadir.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">🔔</span><h3>Pengingat otomatis</h3><p>Pengingat DP dan pelunasan masuk ke email dan Google Calendar.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">📱</span><h3>Notifikasi di HP</h3><p>Langsung tahu saat tamu mengonfirmasi hadir.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">🎟</span><h3>Check-in hari H</h3><p>Check-in tamu dengan QR, tautan panitia, dan catatan amplop.</p></li>
+        <li class="card"><span class="ic" aria-hidden="true">🖨</span><h3>Rundown siap cetak</h3><p>Rundown hari H dalam PDF yang rapi untuk keluarga dan panitia.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- BONUS -->
+  <section class="bonus">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Bonus untukmu</p>
+        <h2 class="display">Dua bonus, tanpa biaya tambahan</h2>
+      </div>
+      <div class="grid">
+        <div class="ticket"><span class="ic" aria-hidden="true">🎨</span><div><p class="tag">Bonus 1</p><h3>Rona Impian</h3><p>Kumpulkan ide dekorasi, busana, dan bunga. Palet warnamu terbentuk sendiri.</p></div></div>
+        <div class="ticket"><span class="ic" aria-hidden="true">✈</span><div><p class="tag">Bonus 2</p><h3>Honeymoon Planner</h3><p>Susun tujuan, anggaran, dan rencana per hari untuk perjalanan setelah hari H.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGKAH -->
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Cara aktivasi</p>
+        <h2 class="display">Tiga langkah, selesai dalam beberapa menit</h2>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Bayar di halaman ini</h3>
+          <p>Selesaikan pesanan dan pembayaran di toko dengan metode yang tersedia.</p>
+        </li>
+        <li>
+          <h3>Terima kode akses</h3>
+          <p>Kode akses dikirim setelah pembayaran terkonfirmasi. Bentuknya seperti ini:</p>
+          <span class="code">MNP-XXXX-XXXX-XXXX</span>
+        </li>
+        <li>
+          <h3>Aktifkan di Monaplan</h3>
+          <p>Daftar atau masuk di <a href="{{APP_URL}}/aktivasi" rel="noopener">{{APP_URL}}/aktivasi</a>, masukkan kode akses, dan akunmu langsung aktif.</p>
+        </li>
+      </ol>
+      <p style="text-align:center;margin-top:28px"><a class="btn block" href="{{ORDER_LINK}}">Aktivasi Sekarang &rarr;</a></p>
+    </div>
+  </section>
+
+  <!-- JAMINAN -->
+  <section class="bonus">
+    <div class="wrap" style="max-width:640px">
+      <div class="head">
+        <p class="eyebrow">Tenang bersama Monaplan</p>
+        <h2 class="display">Data kamu tetap aman</h2>
+      </div>
+      <ul class="assure">
+        <li>Sekali bayar, akses selamanya, tanpa langganan bulanan.</li>
+        <li>Data tetap aman dan bisa dilihat bila suatu saat akses berakhir.</li>
+        <li>Undang pasangan dan keluarga ikut mengerjakan tanpa biaya tambahan.</li>
+        <li>Bisa dipakai di HP maupun komputer, tanpa perlu memasang aplikasi dari toko aplikasi.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section>
+    <div class="wrap" style="max-width:720px">
+      <div class="head">
+        <p class="eyebrow">Pertanyaan umum</p>
+        <h2 class="display">Masih ragu? Cek dulu di sini</h2>
+      </div>
+      <details>
+        <summary>Setelah bayar, kapan kode akses saya terima?</summary>
+        <p>Kode dikirim setelah pembayaran terkonfirmasi, lewat kontak yang kamu isi saat memesan. Bila belum masuk, hubungi kami lewat WhatsApp dan sertakan nomor pesananmu.</p>
+      </details>
+      <details>
+        <summary>Apakah saya harus punya akun Monaplan dulu?</summary>
+        <p>Tidak perlu sebelum membayar. Setelah menerima kode, kamu cukup daftar atau masuk di halaman aktivasi lalu memasukkan kodenya.</p>
+      </details>
+      <details>
+        <summary>Satu kode bisa dipakai untuk berapa akun?</summary>
+        <p>Satu kode untuk satu kali aktivasi. Pasangan dan keluarga bisa kamu undang ke proyekmu tanpa kode tambahan, sesuai batas pada paketmu.</p>
+      </details>
+      <details>
+        <summary>Apakah ini langganan?</summary>
+        <p>Bukan. Kamu membayar sekali dan akses berlaku selamanya.</p>
+      </details>
+      <details>
+        <summary>Kode saya tidak bisa dipakai, bagaimana?</summary>
+        <p>Periksa kembali penulisan kode (huruf besar, tanda strip, tanpa spasi). Bila tetap gagal, hubungi kami lewat WhatsApp dan kami bantu secepatnya.</p>
+      </details>
+      <details>
+        <summary>Bagaimana kalau saya ingin mencoba dulu?</summary>
+        <p>Buka <a href="{{APP_URL}}" rel="noopener">{{APP_URL}}</a> untuk melihat contoh dan, bila tersedia, mencoba gratis sebelum mengaktifkan akses penuh.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- PENUTUP -->
+  <section class="final">
+    <div class="wrap">
+      <h2 class="display">Mulai rapikan persiapan pernikahanmu hari ini</h2>
+      <p>Sekali bayar, akses selamanya, dengan dua bonus di dalamnya.</p>
+      <div class="cta"><a class="btn light" href="{{ORDER_LINK}}">Aktivasi Sekarang &rarr;</a></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      Butuh bantuan? <a href="https://wa.me/{{WA_NUMBER}}" rel="noopener">Hubungi kami lewat WhatsApp</a>
+    </div>
+  </footer>
+
+</div>

@@ -3,14 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, Gift, KeyRound, LayoutGrid, Printer, ScanLine, ShieldCheck, Tag, Users, X } from "lucide-react";
+import { ArrowRight, BellRing, Briefcase, Check, CircleAlert, CircleCheck, KeyRound, LayoutGrid, Printer, ScanLine, ShieldCheck, Tag, Users, X } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { BONUSES, BONUS_TOTAL } from "@/content/bonus";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/dialogs";
 import { AccessCodeInput } from "@/components/ui/inputs";
 import { Input } from "@/components/ui/form";
-import { StatusPill } from "@/components/ui/pill";
 import { cn } from "@/components/ui/cn";
 import { formatDateCompact, formatIDR } from "@/lib/format";
 import { ProductTour } from "@/components/app/product-tour";
@@ -139,7 +138,6 @@ export function ActivationClient({ plans, pricing, isUpgrade, showCode, promoCod
           const lifetime = p.type === "lifetime";
           const price = pricing[p.id] ?? { original: p.price_idr, final: p.price_idr, credit: 0, promoName: null, promoEndsAt: null, promoDaysLeft: null };
           const promo = price.final < price.original - price.credit;
-          const base = price.original - price.credit;
           const points = [
             { icon: <LayoutGrid />, text: t("14 modul lengkap, dari checklist dan budget sampai check-in tamu di hari H") },
             { icon: <WhatsAppIcon />, text: t("Undangan digital lewat WhatsApp dengan 5 tema") },

@@ -10,7 +10,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/components/ui/cn";
-import { supportWhatsappUrl } from "@/lib/support";
+import { useSupportWhatsapp } from "@/components/app/contact-provider";
 import { HELP_CATEGORIES, HELP_FAQ, HELP_TOURS } from "@/content/help";
 import { ProductTour } from "@/components/app/product-tour";
 import { TOURS } from "@/content/tours";
@@ -29,7 +29,8 @@ export function HelpCenter({ base }: { base: string | null }) {
     return HELP_FAQ.filter((f) => (!cat || f.cat === cat) && (!needle || `${f.q[lang]} ${f.a[lang]}`.toLowerCase().includes(needle)));
   }, [q, cat, lang]);
 
-  const wa = supportWhatsappUrl(`Halo admin Monaplan, saya butuh bantuan.\nHalaman: ${pathname}`);
+  const supportWa = useSupportWhatsapp();
+  const wa = supportWa(`Halo admin Monaplan, saya butuh bantuan.\nHalaman: ${pathname}`);
   const tours = HELP_TOURS.filter((x) => (x.scope === "app" ? !!base : true));
   const goTour = (id: string, path: string, scope: "app" | "akun") => {
     try { localStorage.removeItem(`mp-tour:v1:${id}`); } catch {}

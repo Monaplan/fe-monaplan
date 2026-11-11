@@ -111,6 +111,25 @@ export async function revokeBatch(batchId: string): Promise<ActionResult> {
   return { ok: true, message: "Semua kode yang belum terpakai di batch ini dicabut." };
 }
 
+// Hapus batch yang sudah dicabut. Batch yang pernah ditebus tetap disimpan: lisensi pembeli masih merujuk ke kodenya.
+export async function deleteBatch(batchId: string): Promise<ActionResult> {
+  const { admin, audit } = await ctx();
+  const { data: batch } = await admin.from("access_code_batches").select("id, name, revoked_at").eq("id", batchId).maybeSingle();
+  if (!batch) return fail("Batch tidak ditemukan.");
+  if (!batch.revoked_at) return fail("Cabut batch ini dulu sebelum menghapusnya.");
+  const { data: codes, error: readError } = await admin.from("access_codes").select("redemption_count, status").eq("batch_id", batchId).limit(10000);
+  if (readError) return dbError(readError);
+  if ((codes ?? []).some((c) => c.redemption_count > 0 || c.status === "redeemed")) {
+    return fail("Batch ini sudah punya kode yang ditebus, jadi tidak bisa dihapus. Riwayat penebusan perlu tetap tersimpan.");
+  }
+  const { error } = await admin.from("access_code_batches").delete().eq("id", batchId);
+  if (error) return dbError(error);
+  await audit("batch.delete", "access_code_batch", batchId, { name: batch.name, codes: codes?.length ?? 0 });
+  bustPublicCache();
+  revalidatePath("/admin/kode", "layout");
+  return { ok: true, message: "Batch dihapus." };
+}
+
 // ---------- Order (ADM-04) ----------
 export async function recheckOrder(orderId: string): Promise<ActionResult> {
   const { admin, audit } = await ctx();

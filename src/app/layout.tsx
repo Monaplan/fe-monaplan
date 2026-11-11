@@ -12,6 +12,8 @@ import { SPLASH_END, SPLASH_HEAD } from "@/lib/splash-script";
 import { Splash } from "@/components/app/splash";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
+import { ContactProvider } from "@/components/app/contact-provider";
+import { getContact } from "@/lib/settings";
 import { EN } from "@/i18n/en";
 import { SITE } from "@/lib/seo";
 import { startupImages } from "@/lib/pwa-splash";
@@ -55,7 +57,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const lang = await getLang();
+  const [lang, contact] = await Promise.all([getLang(), getContact()]);
   return (
     <html lang={lang} className={`${jakarta.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <head>
@@ -65,12 +67,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <Splash />
         <I18nProvider lang={lang} dict={lang === "en" ? EN : undefined}>
-          <ToastProvider>
-            <DialogProvider>{children}</DialogProvider>
-            <ThemeSync />
-            <SwRegister />
-            <PullToRefresh />
-          </ToastProvider>
+          <ContactProvider value={contact}>
+            <ToastProvider>
+              <DialogProvider>{children}</DialogProvider>
+              <ThemeSync />
+              <SwRegister />
+              <PullToRefresh />
+            </ToastProvider>
+          </ContactProvider>
         </I18nProvider>
         {/* Statistik pengunjung dan kecepatan halaman milik Vercel; hanya aktif di situs yang di-deploy ke Vercel */}
         <Analytics />

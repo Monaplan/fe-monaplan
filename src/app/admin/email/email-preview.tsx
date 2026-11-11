@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { CircleAlert, Monitor, Send, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, PageHeader } from "@/components/ui/card";
+import { Card, PageHeader } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/components/ui/cn";

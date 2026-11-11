@@ -4,7 +4,7 @@ import { BackToTop } from "@/components/landing/back-to-top";
 import { PromoPopupLoader } from "@/components/app/promo-popup-loader";
 import Link from "next/link";
 import {
-  ArrowRight, BellRing, BookOpen, CalendarDays, Check, CircleCheck, Clock, FileText, Gift, HandCoins, LayoutGrid, ListChecks, Mail, Palette, PartyPopper, PiggyBank, Plane, ScanLine, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
+  ArrowRight, BellRing, BookOpen, CalendarDays, CircleCheck, Clock, FileText, Gift, HandCoins, LayoutGrid, ListChecks, Mail, Palette, PartyPopper, PiggyBank, Plane, ScanLine, ShieldCheck, SlidersHorizontal, Store, Users, Wallet
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { Logo } from "@/components/app/logo";
@@ -20,10 +20,10 @@ import { getSession } from "@/lib/access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatIDR } from "@/lib/format";
 import { priceFor } from "@/lib/pricing";
-import { getPricingContext, getSettings } from "@/lib/settings";
+import { getPricingContext, getSettings, getContact } from "@/lib/settings";
 import { ttl } from "@/lib/ttl-cache";
 import { jsonLd, pageMetadata, SITE } from "@/lib/seo";
-import { supportWhatsappUrl } from "@/lib/support";
+import { whatsappLink } from "@/lib/support";
 import { getT } from "@/i18n/server";
 import { ThemeToggle } from "@/components/app/theme";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -128,6 +128,7 @@ export default async function LandingPage() {
   let plans: any[] = [];
   let loggedIn = false;
   let trialDays: number | null = null;
+  let payment: { enabled: boolean; storeUrl: string | null } = { enabled: true, storeUrl: null };
   let priced: Record<string, ReturnType<typeof priceFor>> = {};
   let counts: RoadmapPhase[] = [];
   try {
@@ -141,6 +142,7 @@ export default async function LandingPage() {
     plans = data ?? [];
     counts = c;
     trialDays = settings.trial.enabled ? settings.trial.days : null;
+    payment = settings.payment;
     priced = Object.fromEntries(plans.map((p) => [p.id, priceFor(p, ctx.promos, ctx.promoEnabled)]));
     loggedIn = !!session;
   } catch {
@@ -149,8 +151,12 @@ export default async function LandingPage() {
 
   const trialLabel = trialDays ? t("Coba Gratis {days} Hari", { days: trialDays }) : null;
   const startHref = loggedIn ? "/mulai" : "/login?mode=daftar";
-  const buyHref = loggedIn ? "/aktivasi" : `/login?mode=daftar&next=${encodeURIComponent("/aktivasi")}`;
-  const wa = supportWhatsappUrl("Halo, saya mau tanya soal Monaplan.");
+  const paymentOff = !payment.enabled;
+  const viaStore = paymentOff && !!payment.storeUrl;
+  // Pembayaran di website mati: tombol beli menuju toko (tab baru). Tanpa tautan toko, tetap ke Aktivasi agar tidak ada tombol mati.
+  const buyHref = viaStore ? payment.storeUrl! : loggedIn ? "/aktivasi" : `/login?mode=daftar&next=${encodeURIComponent("/aktivasi")}`;
+  const contact = await getContact();
+  const wa = whatsappLink(contact.whatsapp, "Halo, saya mau tanya soal Monaplan.");
 
   const pricedPlans: PricedPlan[] = plans.map((p) => {
     const r = priced[p.id] ?? priceFor(p, [], false);
@@ -451,7 +457,7 @@ export default async function LandingPage() {
               <SectionHead id="harga-title" label={t("Mulai hari ini")} sub={t("Bayar sekali, akses tetap milikmu, dan dua bonus ikut aktif tanpa biaya tambahan.")}>
                 {t("Bayar sekali,")} <em className={em}>{t("pakai selamanya.")}</em>
               </SectionHead>
-              <PricingBonus plans={pricedPlans} trialDays={trialDays} loggedIn={loggedIn} buyHref={buyHref} />
+              <PricingBonus plans={pricedPlans} trialDays={trialDays} loggedIn={loggedIn} buyHref={buyHref} viaStore={viaStore} paymentOff={paymentOff} />
             </div>
           </section>
         )}
@@ -464,6 +470,7 @@ export default async function LandingPage() {
               <h2 id="faq-title" className="[font-variant-numeric:lining-nums] mt-3 font-display text-[34px] leading-[1.1] font-medium text-neutral-900 md:text-[44px]">{t("Pertanyaan yang sering")} <em className={em}>{t("muncul.")}</em></h2>
               <p className="mt-4 max-w-sm text-[15px] leading-7 text-neutral-600">{t("Belum menemukan jawabannya? Tanyakan langsung, kami balas secepatnya.")}</p>
               {wa && <ButtonLink href={wa} variant="outline" className="mt-5" target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="text-[#1FA855]" />{t("Chat WhatsApp admin")}</ButtonLink>}
+              {wa && contact.hours && <p className="mt-2.5 text-[12.5px] text-neutral-500">{t("Jam layanan: {hours}", { hours: contact.hours })}</p>}
             </div>
             <div className="flex flex-col gap-3">
               {FAQ.map((f) => (
@@ -501,7 +508,7 @@ export default async function LandingPage() {
       </footer>
       <AnimationGate />
       <BackToTop />
-      <Suspense fallback={null}><PromoPopupLoader plans={plans} /></Suspense>
+      <Suspense fallback={null}><PromoPopupLoader plans={plans} externalHref={viaStore ? payment.storeUrl : null} /></Suspense>
     </div>
   );
 }

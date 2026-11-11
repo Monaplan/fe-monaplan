@@ -11,7 +11,6 @@ import { useConfirm } from "@/components/ui/dialogs";
 import { formatDateCompact, formatTime } from "@/lib/format";
 import { disconnectGoogle, enableProjectSync, setGoogleAutoSync, stopProjectSync, syncGoogleNow } from "@/features/google/actions";
 import { useI18n } from "@/i18n/client";
-import { useT } from "@/i18n/client";
 
 export type GoogleUiStatus = {
   configured: boolean;

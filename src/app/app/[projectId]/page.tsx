@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  ArrowDown, ArrowRight, ArrowUp, BookOpen, CalendarDays, FileText, Heart, ListChecks, MapPin, PartyPopper, PiggyBank, Target, Timer, Users, Wallet,
+  ArrowDown, ArrowRight, ArrowUp, BookOpen, CalendarDays, FileText, Heart, ListChecks, PartyPopper, PiggyBank, Target, Users, Wallet,
 } from "lucide-react";
 import { withProjectData } from "@/lib/access";
 import { guideFrom } from "@/lib/guide";
@@ -54,7 +54,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
     ]);
     return { today, in14, tasks: tasks.data, items: items.data, payments: payments.data, guests: guests.data, docs: docs.data, events: events.data, feed: feed.data, vendors: vendors.data, allocated: allocated.count ?? 0, templates: templates.data ?? [], rundown: rundown.count ?? 0, manual: (manual.data ?? []).map((m) => m.step_key as string), push: push.count ?? 0 };
   });
-  const { today, in14, tasks, items, payments, guests, docs, events, feed, vendors } = d;
+  const { today, tasks, items, payments, guests, docs, events, feed, vendors } = d;
   const tz = project.timezone;
   const guide = guideFrom(project, {
     events: (events ?? []).length, allocated: d.allocated, tasksDone: (tasks ?? []).filter((x) => x.status === "done").length, vendors: (vendors ?? []).length,
