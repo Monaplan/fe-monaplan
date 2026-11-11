@@ -11,7 +11,7 @@ const ts = require("typescript");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "mp-lib-"));
 
-for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts", "src/lib/support.ts", "src/lib/finance.ts"]) {
+for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts", "src/lib/support.ts", "src/lib/finance.ts", "src/lib/links.ts"]) {
   // "server-only" hanya berlaku di bundel Next, jadi dilepas untuk uji ini
   const src = fs.readFileSync(path.join(ROOT, rel), "utf8").replace('import "server-only";', "");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
@@ -22,13 +22,14 @@ for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format
 }
 const load = (rel) => import(pathToFileURL(path.join(OUT, rel)).href);
 const { priceFor, discountOf, promoIsLive, MIN_CHARGE_IDR, upgradeQuote, creditOf, promoState, checkPromoCode, normalizeCode, promoExhausted } = await load("src/lib/pricing.mjs");
-const { safeNextPath } = await load("src/lib/paths.mjs");
+const { safeNextPath, RESERVED_SLUGS } = await load("src/lib/paths.mjs");
 const { parseSort } = await load("src/lib/sort.mjs");
 const { fundingSplit, savingsPlan, depositsByMonth, depositTotal } = await load("src/lib/budget.mjs");
 const { extractCode } = await load("src/lib/checkin.mjs");
 const { evaluateIdle, parseSeen, makeSeen, IDLE_MS, TOUCH_MS, SB_COOKIE_RE, IDLE_COOKIE_MAX_AGE } = await load("src/lib/idle.mjs");
 const { parseTerms, cleanQuery } = await load("src/lib/search-terms.mjs");
 const { normalizeWhatsapp, whatsappLink, normalizeInstagram, instagramUrl } = await load("src/lib/support.mjs");
+const { normalizeSlug, isValidSlug, randomSlug, cleanTargetUrl, isBot, linkState, shortUrl, moveId, BIO_ICONS, buildBioTree, dedicatedHost, routeByHost } = await load("src/lib/links.mjs");
 const { isMonthKey, monthKeyOf, shiftMonth, monthRange, wibDate, buildLedger, summarize, deltaPct, csvCell, ledgerCsv, buyerMessage } = await load("src/lib/finance.mjs");
 const { buildDesiredEvents, eventIdFor, planSync } = await load("src/lib/google/events.mjs");
 process.env.TOKEN_ENCRYPTION_KEY = "kunci-uji";
@@ -387,6 +388,90 @@ check("sel CSV kosong", csvCell(null) === "" && csvCell(undefined) === "");
 {
   const m = buyerMessage({ name: "Raka", code: "MNP-AAAA-BBBB-CCCC", appUrl: "https://monaplan.test" });
   check("pesan pembeli memuat nama, kode, dan tautan aktivasi", m.includes("Halo Raka") && m.includes("MNP-AAAA-BBBB-CCCC") && m.includes("https://monaplan.test/aktivasi"));
+}
+console.log("Shortlink dan bio link");
+check("slug: huruf besar dan spasi dinormalkan", normalizeSlug("  Promo Akhir Tahun ") === "promo-akhir-tahun");
+check("slug: garis bawah jadi tanda hubung", normalizeSlug("promo_2026") === "promo-2026");
+check("slug: karakter aneh dibuang", normalizeSlug("pro!mo#/a") === "promoa");
+check("slug: tanda hubung ganda dan tepi dirapikan", normalizeSlug("--a---b--") === "a-b");
+check("slug: dipotong 40 karakter tanpa berakhir tanda hubung", normalizeSlug("a".repeat(39) + "-bcd").length <= 40 && !normalizeSlug("a".repeat(39) + "-bcd").endsWith("-"));
+check("slug: kosong tetap kosong", normalizeSlug("") === "" && normalizeSlug(null) === "" && normalizeSlug("!!!") === "");
+check("slug valid", isValidSlug("promo") && isValidSlug("a1") && isValidSlug("promo-2026"));
+check("slug tidak valid", !isValidSlug("a") && !isValidSlug("-a") && !isValidSlug("a-") && !isValidSlug("a--b") && !isValidSlug("Ab") && !isValidSlug("a".repeat(41)) && !isValidSlug("a b"));
+{
+  const s = randomSlug(8);
+  check("slug acak: panjang dan karakter sesuai", s.length === 8 && isValidSlug(s) && !/[01ilo]/.test(s), s);
+  check("slug acak: tidak selalu sama", new Set(Array.from({ length: 20 }, () => randomSlug())).size > 15);
+}
+check("tujuan https dipertahankan", cleanTargetUrl("https://lynk.id/monaplan") === "https://lynk.id/monaplan");
+check("tujuan tanpa skema diberi https", cleanTargetUrl("wa.me/628123456789") === "https://wa.me/628123456789");
+check("tujuan http diizinkan", cleanTargetUrl("http://contoh.id/a?b=1") === "http://contoh.id/a?b=1");
+check("tujuan javascript ditolak", cleanTargetUrl("javascript:alert(1)") === null);
+check("tujuan data dan file ditolak", cleanTargetUrl("data:text/html,x") === null && cleanTargetUrl("file:///etc/passwd") === null && cleanTargetUrl("ftp://x.com/a") === null);
+check("tujuan dengan spasi atau kontrol ditolak", cleanTargetUrl("https://a.com/a b") === null && cleanTargetUrl("https://a.com/\u0000") === null);
+check("tujuan dengan kredensial ditolak", cleanTargetUrl("https://user:pass@a.com") === null);
+check("tujuan tanpa titik (bukan domain) ditolak", cleanTargetUrl("https://abc") === null && cleanTargetUrl("abc") === null);
+check("tujuan localhost diizinkan", cleanTargetUrl("http://localhost:3000/x") === "http://localhost:3000/x");
+check("tujuan terlalu panjang ditolak", cleanTargetUrl("https://a.com/" + "x".repeat(2000)) === null);
+check("tujuan kosong ditolak", cleanTargetUrl("") === null && cleanTargetUrl(null) === null);
+check("bot pratinjau dikenali", isBot("WhatsApp/2.23.20 A") && isBot("facebookexternalhit/1.1") && isBot("Mozilla/5.0 (compatible; Googlebot/2.1)") && isBot("TelegramBot (like TwitterBot)") && isBot("Slackbot-LinkExpanding 1.0"));
+check("tanpa user-agent dianggap bot", isBot("") && isBot(null) && isBot(undefined));
+check("peramban biasa bukan bot", !isBot("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1") && !isBot("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"));
+{
+  const now = Date.parse("2026-11-12T00:00:00Z");
+  check("status tautan aktif", linkState({ is_active: true, expires_at: null }, now) === "active" && linkState({ is_active: true, expires_at: "2026-11-13T00:00:00Z" }, now) === "active");
+  check("status tautan nonaktif", linkState({ is_active: false, expires_at: null }, now) === "inactive");
+  check("status tautan kedaluwarsa", linkState({ is_active: true, expires_at: "2026-11-11T23:59:59Z" }, now) === "expired" && linkState({ is_active: true, expires_at: "2026-11-12T00:00:00Z" }, now) === "expired");
+  check("nonaktif mengalahkan kedaluwarsa", linkState({ is_active: false, expires_at: "2020-01-01T00:00:00Z" }, now) === "inactive");
+}
+check("alamat shortlink: domain khusus dan satu domain", shortUrl("https://s.monaplan.id", "promo") === "https://s.monaplan.id/promo" && shortUrl("https://monaplan.test/s/", "a1") === "https://monaplan.test/s/a1");
+{
+  const APP = "https://monaplan.rajistha.my.id";
+  check("domain khusus dikenali", dedicatedHost("https://s.monaplan.id", APP) === "s.monaplan.id" && dedicatedHost("https://BIO.monaplan.id/", APP) === "bio.monaplan.id");
+  check("domain khusus: kosong, sama dengan situs utama, atau memuat path berarti satu domain", dedicatedHost("", APP) === null && dedicatedHost(undefined, APP) === null && dedicatedHost(APP, APP) === null && dedicatedHost(APP + "/s", APP) === null && dedicatedHost("https://s.monaplan.id/promo", APP) === null);
+  check("domain khusus: alamat rusak diabaikan", dedicatedHost("bukan url", APP) === null && dedicatedHost("https://s.monaplan.id", "rusak") === null);
+  const cfg = { shortHost: "s.monaplan.id", bioHost: "bio.monaplan.id" };
+  check("tanpa domain khusus tidak ada yang berubah", routeByHost("monaplan.rajistha.my.id", "/s/promo", { shortHost: null, bioHost: null }) === null && routeByHost("s.monaplan.id", "/promo", { shortHost: null, bioHost: null }) === null);
+  check("situs utama tidak tersentuh walau domain khusus aktif", routeByHost("monaplan.rajistha.my.id", "/login", cfg) === null && routeByHost("monaplan.rajistha.my.id", "/", cfg) === null && routeByHost("monaplan.rajistha.my.id", "/bio", cfg) === null);
+  check("s.<domain>/<slug> dialihkan ke rute /s/<slug>", eq(routeByHost("s.monaplan.id", "/promo", cfg), { kind: "rewrite", path: "/s/promo" }));
+  check("s.<domain>: hanya segmen pertama dipakai", eq(routeByHost("s.monaplan.id", "/promo/lain/lagi", cfg), { kind: "rewrite", path: "/s/promo" }));
+  check("s.<domain>/ kembali ke situs utama", eq(routeByHost("s.monaplan.id", "/", cfg), { kind: "redirect-main" }));
+  check("s.<domain>/s/<slug> dan aset dilayani apa adanya", routeByHost("s.monaplan.id", "/s/promo", cfg) === null && routeByHost("s.monaplan.id", "/_next/static/x.js", cfg) === null);
+  check("nama host tidak peka huruf besar", eq(routeByHost("S.Monaplan.ID", "/promo", cfg), { kind: "rewrite", path: "/s/promo" }));
+  check("bio.<domain>/ menampilkan halaman bio", eq(routeByHost("bio.monaplan.id", "/", cfg), { kind: "rewrite", path: "/bio" }));
+  check("bio.<domain>: klik tombol dan berkas pendukung dilayani", routeByHost("bio.monaplan.id", "/b/5f1c2b9e-1111-2222-3333-444455556666", cfg) === null && routeByHost("bio.monaplan.id", "/icon", cfg) === null && routeByHost("bio.monaplan.id", "/manifest.webmanifest", cfg) === null && routeByHost("bio.monaplan.id", "/_next/static/a.css", cfg) === null && routeByHost("bio.monaplan.id", "/bio", cfg) === null);
+  check("bio.<domain>: halaman lain dialihkan ke situs utama", eq(routeByHost("bio.monaplan.id", "/login", cfg), { kind: "redirect-main" }) && eq(routeByHost("bio.monaplan.id", "/admin/bio", cfg), { kind: "redirect-main" }) && eq(routeByHost("bio.monaplan.id", "/b/a/b", cfg), { kind: "redirect-main" }));
+}
+check("tukar urutan ke atas", eq(moveId(["a", "b", "c"], "b", "up"), ["b", "a", "c"]));
+check("tukar urutan ke bawah", eq(moveId(["a", "b", "c"], "b", "down"), ["a", "c", "b"]));
+check("tukar urutan di ujung tidak berubah", moveId(["a", "b"], "a", "up") === null && moveId(["a", "b"], "b", "down") === null && moveId(["a"], "x", "up") === null);
+{
+  const L = (id, order, extra = {}) => ({ id, label: id, url: "https://a.com", icon: "link", sort_order: order, is_active: true, click_count: 0, section_id: null, is_featured: false, badge: null, description: null, cta_label: null, ...extra });
+  const S = (id, order, extra = {}) => ({ id, title: id, kind: "normal", sort_order: order, is_active: true, ...extra });
+  const ids = (nodes) => nodes.map((n) => (n.type === "link" ? n.link.id : `${n.section.id}[${n.links.map((l) => l.id).join(",")}]`));
+  check("pohon bio: tautan dan section berbagi urutan atas", eq(ids(buildBioTree([S("s1", 2)], [L("a", 1), L("b", 3)])), ["a", "s1[]", "b"]));
+  check("pohon bio: isi section berurutan di dalamnya", eq(ids(buildBioTree([S("s1", 1)], [L("x", 2, { section_id: "s1" }), L("y", 1, { section_id: "s1" })])), ["s1[y,x]"]));
+  check("pohon bio: tautan di section tidak muncul di tingkat atas", eq(ids(buildBioTree([S("s1", 1)], [L("x", 1, { section_id: "s1" }), L("z", 2)])), ["s1[x]", "z"]));
+  check("pohon bio: section yang sudah tidak ada dianggap tanpa section", eq(ids(buildBioTree([], [L("x", 1, { section_id: "hilang" })])), ["x"]));
+  check("pohon bio publik: tautan tersembunyi dibuang", eq(ids(buildBioTree([S("s1", 2)], [L("a", 1, { is_active: false }), L("b", 3), L("c", 1, { section_id: "s1", is_active: false })], true)), ["s1[]", "b"]));
+  check("pohon bio publik: section tersembunyi membuang seluruh isinya", eq(ids(buildBioTree([S("s1", 1, { is_active: false })], [L("x", 1, { section_id: "s1" }), L("z", 2)], true)), ["z"]));
+  check("pohon bio admin: yang tersembunyi tetap tampil", eq(ids(buildBioTree([S("s1", 1, { is_active: false })], [L("x", 1, { section_id: "s1", is_active: false })], false)), ["s1[x]"]));
+  check("pohon bio: urutan sama jatuh ke urutan stabil (tautan dulu, lalu id)", eq(ids(buildBioTree([S("s1", 1)], [L("b", 1), L("a", 1)])), ["a", "b", "s1[]"]));
+  check("pohon bio kosong", eq(buildBioTree([], []), []));
+}
+check("pilihan ikon tombol tersedia", BIO_ICONS.includes("link") && BIO_ICONS.includes("whatsapp") && BIO_ICONS.length >= 8);
+{
+  // Daftar slug yang dicadangkan di TypeScript harus sama dengan fungsi reserved_slug() terakhir di migrasi
+  const dir = path.join(ROOT, "supabase/migrations");
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+  let list = null;
+  for (const f of files) {
+    const m = fs.readFileSync(path.join(dir, f), "utf8").match(/function public\.reserved_slug[\s\S]*?array\[([\s\S]*?)\]/);
+    if (m) list = new Set([...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]));
+  }
+  const ts = new Set(RESERVED_SLUGS);
+  const onlyTs = [...ts].filter((x) => !list.has(x)), onlySql = [...list].filter((x) => !ts.has(x));
+  check("slug dicadangkan: TypeScript dan SQL sama", onlyTs.length === 0 && onlySql.length === 0, `hanya di TS: ${onlyTs} | hanya di SQL: ${onlySql}`);
 }
 fs.rmSync(OUT, { recursive: true, force: true });
 console.log(`\n${pass} lulus, ${bad} gagal`);

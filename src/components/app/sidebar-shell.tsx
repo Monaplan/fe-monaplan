@@ -6,7 +6,7 @@ import { useSheetSwipe } from "@/components/ui/use-sheet-swipe";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Banknote, ShoppingBag,
+  Banknote, Link2, Share2, ShoppingBag,
   ArrowLeftRight, BadgeCheck, BookOpen, CalendarDays, ChevronDown, ChevronsLeft, ChevronsUpDown, CircleHelp, Clock, FileText, Gift, HandCoins, Hourglass, PiggyBank, UserCheck, PartyPopper, Palette, Plane, House, KeyRound, LayoutGrid, ListChecks, LogOut, Mail, Menu, Package, ReceiptText, Search, Shield, ScrollText, Server, SlidersHorizontal, Store, Tag, UserRound, Users, Wallet, X
 } from "lucide-react";
 import { LogoMark } from "./logo-mark";
@@ -26,7 +26,7 @@ const ICONS = {
   dashboard: LayoutGrid, checklist: ListChecks, budget: Wallet, vendor: Store, tamu: Mail, rundown: Clock, gift: Gift,
   dokumen: FileText, kalender: CalendarDays, pengaturan: SlidersHorizontal, panduan: BookOpen, bantuan: CircleHelp,
   home: House, user: UserRound, tagihan: ReceiptText, admin: Shield, paket: Package, kode: KeyRound, order: ReceiptText,
-  palette: Palette, plane: Plane, harih: PartyPopper, amplop: HandCoins, tabungan: PiggyBank, hadir: UserCheck, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail, pembeli: ShoppingBag, keuangan: Banknote,
+  palette: Palette, plane: Plane, harih: PartyPopper, amplop: HandCoins, tabungan: PiggyBank, hadir: UserCheck, lisensi: BadgeCheck, pengguna: Users, audit: ScrollText, sistem: Server, switch: ArrowLeftRight, trial: Hourglass, promo: Tag, email: Mail, pembeli: ShoppingBag, keuangan: Banknote, shortlink: Link2, bio: Share2,
 } as const;
 export type IconKey = keyof typeof ICONS;
 
@@ -129,7 +129,7 @@ export function SidebarShell({
             )}
             <div className={cn("mx-auto h-px bg-neutral-200 transition-[width,opacity,margin] duration-300 ease-[var(--ease-out-soft)]", rail ? "mb-2 w-6 opacity-100" : "mb-0 w-0 opacity-0")} />
             <div id={`nav-${gkey(g)}`} inert={!open} className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-[var(--ease-out-soft)]", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
-            <div className="-mx-3 min-h-0 overflow-hidden px-3">
+            <div className="-mx-3 -my-0.5 min-h-0 overflow-hidden px-3 py-0.5">
             <ul className="flex flex-col gap-0.5">
               {g.items.map((item) => {
                 const active = isActive(item);

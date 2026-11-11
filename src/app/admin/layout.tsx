@@ -25,6 +25,13 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "Pemasaran",
+    items: [
+      { href: "/admin/shortlink", label: "Shortlink", icon: "shortlink" },
+      { href: "/admin/bio", label: "Bio Link", icon: "bio" },
+    ],
+  },
+  {
     title: "Pelanggan",
     items: [
       { href: "/admin/lisensi", label: "Lisensi", icon: "lisensi" },

@@ -576,5 +576,94 @@ await expectOk("menghapus kode akses mengosongkan tautan di penjualan", async ()
   if (r.access_code_id !== null) throw new Error(JSON.stringify(r));
 });
 
+console.log("\nShortlink dan bio link");
+const linksSql = fs.readFileSync(path.join(ROOT, "20261112000001_links.sql"), "utf8");
+await db.exec(linksSql);
+await db.exec(linksSql);
+await expectOk("migrasi link idempoten", async () => { const r = await one(`select count(*)::int c from short_links`); if (r.c !== 0) throw new Error("count " + r.c); });
+await expectOk("slug terima-kasih, s, b, bio dicadangkan; slug biasa tidak", async () => {
+  const r = await one(`select reserved_slug('terima-kasih') a, reserved_slug('s') b, reserved_slug('b') c, reserved_slug('bio') d, reserved_slug('raka-nadia') e`);
+  if (!r.a || !r.b || !r.c || !r.d || r.e) throw new Error(JSON.stringify(r));
+});
+await db.query(`insert into short_links (slug, target_url, title) values ('promo', 'https://lynk.id/monaplan', 'Promo')`);
+await expectOk("shortlink aktif: klik dihitung dan tujuan dikembalikan", async () => {
+  const r = await one(`select hit_short_link('promo') u`);
+  const c = await one(`select click_count::int n, last_clicked_at is not null t from short_links where slug = 'promo'`);
+  if (r.u !== "https://lynk.id/monaplan" || c.n !== 1 || !c.t) throw new Error(JSON.stringify({ r, c }));
+});
+await expectOk("slug dicari tanpa membedakan huruf besar", async () => { const r = await one(`select hit_short_link('PROMO') u`); if (r.u !== "https://lynk.id/monaplan") throw new Error(JSON.stringify(r)); });
+await expectOk("klik berturut-turut bertambah satu per satu", async () => {
+  await db.query(`select hit_short_link('promo')`); await db.query(`select hit_short_link('promo')`);
+  const c = await one(`select click_count::int n from short_links where slug = 'promo'`);
+  if (c.n !== 4) throw new Error("klik " + c.n);
+});
+await expectOk("slug tidak ada: null dan tidak error", async () => { const r = await one(`select hit_short_link('tidak-ada') u`); if (r.u !== null) throw new Error(JSON.stringify(r)); });
+await db.query(`insert into short_links (slug, target_url, is_active) values ('mati', 'https://a.com', false)`);
+await expectOk("shortlink nonaktif tidak dialihkan dan tidak dihitung", async () => {
+  const r = await one(`select hit_short_link('mati') u`);
+  const c = await one(`select click_count::int n from short_links where slug = 'mati'`);
+  if (r.u !== null || c.n !== 0) throw new Error(JSON.stringify({ r, c }));
+});
+await db.query(`insert into short_links (slug, target_url, expires_at) values ('lawas', 'https://a.com', now() - interval '1 day'), ('baru', 'https://b.com', now() + interval '1 day')`);
+await expectOk("shortlink kedaluwarsa tidak dialihkan; yang belum kedaluwarsa tetap jalan", async () => {
+  const a = await one(`select hit_short_link('lawas') u`), b = await one(`select hit_short_link('baru') u`);
+  if (a.u !== null || b.u !== "https://b.com") throw new Error(JSON.stringify({ a, b }));
+});
+await expectErr("slug ganda ditolak", "duplicate key", () => db.query(`insert into short_links (slug, target_url) values ('promo', 'https://c.com')`));
+await expectErr("slug berhuruf besar ditolak", "check constraint", () => db.query(`insert into short_links (slug, target_url) values ('Promo2', 'https://c.com')`));
+await expectErr("slug satu karakter ditolak", "check constraint", () => db.query(`insert into short_links (slug, target_url) values ('a', 'https://c.com')`));
+await expectErr("slug dengan tanda hubung di tepi ditolak", "check constraint", () => db.query(`insert into short_links (slug, target_url) values ('-ab', 'https://c.com')`));
+await expectErr("tujuan javascript ditolak", "check constraint", () => db.query(`insert into short_links (slug, target_url) values ('xss', 'javascript:alert(1)')`));
+await expectErr("tujuan tanpa skema ditolak", "check constraint", () => db.query(`insert into short_links (slug, target_url) values ('noscheme', 'lynk.id/a')`));
+const bl = await one(`insert into bio_links (label, url, icon, sort_order) values ('Beli sekarang', 'https://lynk.id/monaplan', 'shop', 1) returning id`);
+await expectOk("bio link aktif: klik dihitung", async () => {
+  const r = await one(`select hit_bio_link($1) u`, [bl.id]);
+  const c = await one(`select click_count::int n from bio_links where id = $1`, [bl.id]);
+  if (r.u !== "https://lynk.id/monaplan" || c.n !== 1) throw new Error(JSON.stringify({ r, c }));
+});
+await expectOk("bio link nonaktif tidak dialihkan", async () => {
+  await db.query(`update bio_links set is_active = false where id = $1`, [bl.id]);
+  const r = await one(`select hit_bio_link($1) u`, [bl.id]);
+  if (r.u !== null) throw new Error(JSON.stringify(r));
+});
+await expectErr("bio link berlabel kosong ditolak", "check constraint", () => db.query(`insert into bio_links (label, url) values ('', 'https://a.com')`));
+await expectErr("bio link dengan tujuan mailto ditolak", "check constraint", () => db.query(`insert into bio_links (label, url) values ('Email', 'mailto:a@b.com')`));
+await expectOk("bump_stat menambah dan membuat baris baru", async () => {
+  await db.query(`select bump_stat('bio:views')`); await db.query(`select bump_stat('bio:views')`); await db.query(`select bump_stat('bio:views')`);
+  const r = await one(`select count::int n from link_stats where key = 'bio:views'`);
+  if (r.n !== 3) throw new Error(JSON.stringify(r));
+});
+await expectErr("pengguna biasa tidak bisa memanggil penghitung klik", "permission denied", () => as(A, "a@x.com", () => db.query(`select hit_short_link('promo')`)));
+await expectErr("pengguna biasa tidak bisa memanggil bump_stat", "permission denied", () => as(A, "a@x.com", () => db.query(`select bump_stat('x')`)));
+await expectOk("pengguna biasa tidak melihat shortlink, bio link, maupun statistik (RLS)", async () => {
+  const r = await as(A, "a@x.com", async () => ({ s: await one(`select count(*)::int c from short_links`), b: await one(`select count(*)::int c from bio_links`), t: await one(`select count(*)::int c from link_stats`) }));
+  if (r.s.c !== 0 || r.b.c !== 0 || r.t.c !== 0) throw new Error(JSON.stringify(r));
+});
+await expectErr("pengguna biasa tidak bisa menulis shortlink (RLS)", "row-level security", () => as(A, "a@x.com", () => db.query(`insert into short_links (slug, target_url) values ('retas', 'https://jahat.com')`)));
+
+console.log("\nBio link: section, unggulan, label, ajakan");
+const secSql = fs.readFileSync(path.join(ROOT, "20261112000002_bio_sections.sql"), "utf8");
+await db.exec(secSql);
+await db.exec(secSql);
+await expectOk("migrasi section idempoten; tautan lama tetap ada tanpa section", async () => {
+  const r = await one(`select count(*)::int n, count(section_id)::int s, count(*) filter (where is_featured)::int f from bio_links`);
+  if (r.s !== 0 || r.f !== 0) throw new Error(JSON.stringify(r));
+});
+const sec = await one(`insert into bio_sections (title, kind, sort_order) values ('Tentang Kami', 'dropdown', 2) returning id`);
+const sl = await one(`insert into bio_links (label, url, section_id, is_featured, badge, description, cta_label) values ('Website', 'https://a.com', $1, true, 'HOTLINE', 'Laman portofolio', 'Hubungi WA') returning id, section_id, is_featured, badge, description, cta_label`, [sec.id]);
+await expectOk("tautan menyimpan section, unggulan, label, deskripsi, dan tombol ajakan", async () => { if (sl.section_id !== sec.id || !sl.is_featured || sl.badge !== "HOTLINE" || sl.description !== "Laman portofolio" || sl.cta_label !== "Hubungi WA") throw new Error(JSON.stringify(sl)); });
+await expectErr("jenis section tidak dikenal ditolak", "check constraint", () => db.query(`insert into bio_sections (title, kind) values ('X', 'akordeon')`));
+await expectErr("judul section kosong ditolak", "check constraint", () => db.query(`insert into bio_sections (title) values ('')`));
+await expectErr("label tautan lebih dari 20 karakter ditolak", "check constraint", () => db.query(`insert into bio_links (label, url, badge) values ('A', 'https://a.com', $1)`, ["x".repeat(21)]));
+await expectErr("deskripsi lebih dari 80 karakter ditolak", "check constraint", () => db.query(`insert into bio_links (label, url, description) values ('A', 'https://a.com', $1)`, ["x".repeat(81)]));
+await expectErr("teks tombol ajakan lebih dari 24 karakter ditolak", "check constraint", () => db.query(`insert into bio_links (label, url, cta_label) values ('A', 'https://a.com', $1)`, ["x".repeat(25)]));
+await expectOk("menghapus section membuat tautannya tanpa section (tidak ikut terhapus)", async () => {
+  await db.query(`delete from bio_sections where id = $1`, [sec.id]);
+  const r = await one(`select count(*)::int n, count(section_id)::int s from bio_links where id = $1`, [sl.id]);
+  if (r.n !== 1 || r.s !== 0) throw new Error(JSON.stringify(r));
+});
+await expectOk("pengguna biasa tidak melihat section (RLS)", async () => { const r = await as(A, "a@x.com", () => one(`select count(*)::int c from bio_sections`)); if (r.c !== 0) throw new Error("terbaca " + r.c); });
+await expectErr("pengguna biasa tidak bisa menulis section (RLS)", "row-level security", () => as(A, "a@x.com", () => db.query(`insert into bio_sections (title) values ('retas')`)));
+
 console.log(`\n${pass} lulus, ${failN} gagal`);
 process.exit(failN ? 1 : 0);

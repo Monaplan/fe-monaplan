@@ -39,7 +39,7 @@ export function PageHeader({ title, description, actions, eyebrow, children, tou
         {description && <p className="mt-1.5 max-w-2xl text-[14px] leading-[22px] text-neutral-600">{description}</p>}
         {children}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2" data-tour={tour ? `${tour}-actions` : undefined}>{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 md:max-w-[70%] md:shrink-0 md:justify-end" data-tour={tour ? `${tour}-actions` : undefined}>{actions}</div>}
     </div>
   );
 }

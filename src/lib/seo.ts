@@ -24,7 +24,7 @@ export const NOINDEX: Metadata["robots"] = { index: false, follow: false, nocach
 
 // Path yang tidak boleh dirayapi (robots.txt) dan diberi header X-Robots-Tag: noindex
 export const PRIVATE_PATHS = [
-  "/app/", "/w/", "/admin", "/akun", "/aktivasi", "/onboarding", "/checkout", "/gabung/", "/rsvp/", "/mulai", "/terima-kasih",
+  "/app/", "/w/", "/admin", "/akun", "/aktivasi", "/onboarding", "/checkout", "/gabung/", "/rsvp/", "/mulai", "/terima-kasih", "/s/", "/b/",
   "/reset-password", "/lupa-password", "/auth/", "/api/", "/panitia/", "/q/", "/offline",
 ];
 

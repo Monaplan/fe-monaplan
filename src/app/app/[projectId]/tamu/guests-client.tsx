@@ -223,10 +223,9 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
             <span className="text-[15px] font-semibold text-neutral-900 md:text-sm">{t("{size} dipilih", { size: selected.size })}</span>
             <button type="button" aria-label={t("Batal pilih")} onClick={() => setSelected(new Set())} className="-mr-1 inline-flex size-10 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 md:order-last md:mr-0 md:size-8"><X className="size-4" /></button>
           </div>
-          <Select className="col-span-2 h-11 rounded-xl text-[13px] md:h-8 md:w-auto md:flex-1 md:rounded-full" defaultValue="" onChange={(e) => {
+          <Select className="col-span-2 h-11 rounded-xl text-[13px] md:h-8 md:w-auto md:flex-1 md:rounded-full" value="" onChange={(e) => {
             if (e.target.value === "") return;
             bulk(() => setGuestsGroup(projectId, [...selected], e.target.value === "none" ? null : e.target.value));
-            e.target.value = "";
           }} aria-label={t("Ubah grup")}>
             <option value="">{t("Ubah grup…")}</option>
             <option value="none">{t("Tanpa grup")}</option>

@@ -138,3 +138,15 @@ export function labelOf<T extends { key: string; label: string }>(list: readonly
 export function appUrl() {
   return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 }
+
+// Alamat dasar shortlink: domain khusus bila NEXT_PUBLIC_SHORT_URL diisi (mis. https://s.monaplan.id), kalau tidak {situs}/s
+export function shortBaseUrl() {
+  const v = process.env.NEXT_PUBLIC_SHORT_URL?.trim();
+  return (v || `${appUrl()}/s`).replace(/\/$/, "");
+}
+
+// Alamat halaman bio: domain khusus bila NEXT_PUBLIC_BIO_URL diisi (mis. https://bio.monaplan.id), kalau tidak {situs}/bio
+export function bioPageUrl() {
+  const v = process.env.NEXT_PUBLIC_BIO_URL?.trim();
+  return (v || `${appUrl()}/bio`).replace(/\/$/, "");
+}

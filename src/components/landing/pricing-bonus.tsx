@@ -109,7 +109,7 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref, viaSto
         </article>
 
     {/* Nota nilai: sekaligus kartu pembayaran */}
-          <aside aria-label={t("Rincian nilai")} className="reveal relative flex min-w-0 flex-col">
+          <div role="group" aria-label={t("Rincian nilai")} className="reveal relative flex min-w-0 flex-col">
           <div className="receipt flex flex-1 flex-col bg-surface px-6 pt-6 pb-10 shadow-modal">
             <p className="text-center text-[11px] font-semibold tracking-[0.2em] text-neutral-500 uppercase">{t("Rincian nilai")}</p>
             <p className="mt-1 text-center font-display text-[26px] leading-7 font-medium text-neutral-900">{t("Yang kamu dapatkan")}</p>
@@ -149,7 +149,7 @@ export async function PricingBonus({ plans, trialDays, loggedIn, buyHref, viaSto
             </ul>
             <p className="mt-3 text-center text-[12px] text-neutral-500">{viaStore ? t("Pembayaran diproses di halaman toko kami. Kode akses dikirim setelah pembayaran, lalu kamu aktifkan di Monaplan.") : paymentOff ? t("Aktifkan akunmu dengan kode akses yang kamu miliki.") : t("Pembayaran lewat QRIS, Virtual Account, GoPay, ShopeePay, dan kartu kredit.")}</p>
           </div>
-        </aside>
+        </div>
         </div>
 
       <div>

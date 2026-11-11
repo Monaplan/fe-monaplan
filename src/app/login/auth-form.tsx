@@ -82,7 +82,7 @@ export function AuthForm({ mode: initial, next, notice, noticeTone = "error", tr
         <ActionForm key="masuk" action={signInWithPassword} onSuccess={go}>
           <input type="hidden" name="next" value={next ?? ""} />
           <Field label={t("Email")} htmlFor="li-email"><IconInput icon={<Mail />} id="li-email" name="email" type="email" required autoComplete="email" placeholder="nama@email.com" /></Field>
-          <Field label={<span className="flex items-center justify-between">{t("Password")}<Link href="/lupa-password" className="text-[12.5px] font-medium text-plum-600 hover:underline">{t("Lupa password?")}</Link></span>} htmlFor="li-pass">
+          <Field label={<span className="flex items-center justify-between">{t("Password")}<Link href="/lupa-password" className="-my-1.5 inline-flex min-h-9 items-center text-[12.5px] font-medium text-plum-600 hover:underline">{t("Lupa password?")}</Link></span>} htmlFor="li-pass">
             <PasswordInput id="li-pass" name="password" autoComplete="current-password" />
           </Field>
           <Turnstile />
@@ -109,9 +109,9 @@ export function AuthForm({ mode: initial, next, notice, noticeTone = "error", tr
       </div>
       <GoogleButton next={next} own={ownGoogle} />
 
-      <p className="mt-6 text-center text-[13px] text-neutral-600">
-        {mode === "masuk" ? t("Belum punya akun?") : t("Sudah punya akun?")}
-        <button type="button" className="font-semibold text-plum-600 hover:underline" onClick={() => setMode(mode === "masuk" ? "daftar" : "masuk")}>
+      <p className="mt-4 flex flex-wrap items-center justify-center gap-x-1.5 text-center text-[13px] text-neutral-600">
+        <span>{mode === "masuk" ? t("Belum punya akun?") : t("Sudah punya akun?")}</span>
+        <button type="button" className="inline-flex min-h-10 items-center px-1 font-semibold text-plum-600 hover:underline" onClick={() => setMode(mode === "masuk" ? "daftar" : "masuk")}>
           {mode === "masuk" ? t("Daftar gratis") : t("Masuk")}
         </button>
       </p>

@@ -23,6 +23,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orderNu
 
   if (data.status === "pending" && process.env.MIDTRANS_SERVER_KEY && Date.now() - (lastCheck.get(orderNumber) ?? 0) > CHECK_EVERY_MS) {
     lastCheck.set(orderNumber, Date.now());
+    // Buang catatan lama supaya peta ini tidak membesar seiring banyaknya order yang pernah dicek
+    if (lastCheck.size > 500) for (const [k, at] of lastCheck) if (Date.now() - at > 60_000) lastCheck.delete(k);
     try {
       const status = await getPaymentProvider().getStatus(orderNumber);
       if (status.transactionStatus && status.transactionStatus !== "pending") {
