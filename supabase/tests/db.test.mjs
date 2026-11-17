@@ -665,5 +665,41 @@ await expectOk("menghapus section membuat tautannya tanpa section (tidak ikut te
 await expectOk("pengguna biasa tidak melihat section (RLS)", async () => { const r = await as(A, "a@x.com", () => one(`select count(*)::int c from bio_sections`)); if (r.c !== 0) throw new Error("terbaca " + r.c); });
 await expectErr("pengguna biasa tidak bisa menulis section (RLS)", "row-level security", () => as(A, "a@x.com", () => db.query(`insert into bio_sections (title) values ('retas')`)));
 
+console.log("\nPengerasan: tautan http(s) dan fungsi pembantu lisensi");
+await expectErr("tautan Maps javascript: ditolak (check constraint)", "check constraint", () => db.query(`insert into wedding_events (project_id, type, name, maps_url) values ($1, 'lainnya', 'X', 'javascript:alert(1)')`, [P]));
+await expectOk("tautan Maps https diterima", () => db.query(`insert into wedding_events (project_id, type, name, maps_url) values ($1, 'lainnya', 'Y', 'https://maps.app.goo.gl/abc')`, [P]));
+await expectErr("situs vendor javascript: ditolak (check constraint)", "check constraint", () => db.query(`insert into vendors (project_id, name, category, website) values ($1, 'V', 'lainnya', 'javascript:alert(1)')`, [P]));
+await expectErr("pengguna anonim tidak bisa memanggil has_active_license", "permission denied", async () => {
+  await db.exec("set role anon");
+  try { await db.query("select has_active_license($1)", [A]); } finally { await db.exec("reset role"); }
+});
+await expectOk("pengguna login tetap bisa memanggil has_active_license", () => as(A, "a@x.com", () => db.query("select has_active_license($1)", [A])));
+
+console.log("\nKonteks ruang kerja dalam satu panggilan (workspace_context)");
+const WC_C = "44444444-4444-4444-4444-444444444444";
+await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'wc@x.com', '{}')", [WC_C]);
+await db.query("insert into tasks (project_id, title, status, due_date) values ($1, 'Terlambat uji', 'todo', current_date - 40)", [P]);
+const wc = await as(A, "a@x.com", () => one("select public.workspace_context($1) as w", [P]));
+await expectOk("anggota mendapat proyek, anggota, status akses, dan lencana", async () => {
+  const w = wc.w;
+  if (!w.project || w.project.id !== P) throw new Error("project " + JSON.stringify(w.project)?.slice(0, 80));
+  if (!Array.isArray(w.members) || w.members.length < 2 || !w.members.every((m) => m.user_id && m.role)) throw new Error("members " + JSON.stringify(w.members));
+  if (!w.access || typeof w.access.state !== "string") throw new Error("access " + JSON.stringify(w.access));
+  if (typeof w.overdue !== "number" || w.overdue < 1) throw new Error("overdue " + w.overdue);
+  if (typeof w.rsvp_new !== "number" || typeof w.pending_inv !== "number" || !Array.isArray(w.notifications)) throw new Error("lencana " + JSON.stringify(w));
+});
+await expectOk("anggota membawa profil (nama, email, avatar) seperti embed lama", async () => {
+  const m = wc.w.members.find((x) => x.user_id === A);
+  if (!m || !m.profiles || m.profiles.email !== "a@x.com") throw new Error(JSON.stringify(m));
+});
+await expectOk("bukan anggota: proyek null dan anggota kosong (RLS tetap berlaku)", async () => {
+  const r = await as(WC_C, "wc@x.com", () => one("select public.workspace_context($1) as w", [P]));
+  if (r.w.project !== null || r.w.members.length !== 0) throw new Error(JSON.stringify(r.w).slice(0, 200));
+});
+await expectErr("pengguna anonim tidak bisa memanggil workspace_context", "permission denied", async () => {
+  await db.exec("set role anon");
+  try { await db.query("select public.workspace_context($1)", [P]); } finally { await db.exec("reset role"); }
+});
+
 console.log(`\n${pass} lulus, ${failN} gagal`);
 process.exit(failN ? 1 : 0);

@@ -1,5 +1,6 @@
 import { CircleAlert } from "lucide-react";
 import { withProjectData } from "@/lib/access";
+import { fetchAll } from "@/lib/paginate";
 import { getI18n } from "@/i18n/server";
 import { listArrivedGuests } from "@/lib/checkin";
 import { ArrivedClient } from "./arrived-client";
@@ -15,7 +16,7 @@ export default async function ArrivedPage({ params }: { params: Promise<{ projec
   const [{ project, projectId, canWrite }, [arrived, expected]] = await withProjectData(ref, async (pid, supabase) => Promise.all([
     listArrivedGuests(supabase, pid),
     // Pembanding: tamu yang konfirmasi hadir dan jumlah orangnya
-    supabase.from("guests").select("pax_confirmed").eq("project_id", pid).eq("rsvp_status", "hadir").limit(5000),
+    fetchAll((a, b) => supabase.from("guests").select("pax_confirmed").eq("project_id", pid).eq("rsvp_status", "hadir").order("id").range(a, b)),
   ]));
 
   // Migrasi check-in belum dijalankan: tampilkan petunjuk, bukan galat kosong

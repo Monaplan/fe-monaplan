@@ -60,8 +60,8 @@ export function DatePopover({ value, min, max, onChange, onClose, onClear, stand
   }
 
   return (
-    <div ref={root} role="dialog" aria-label={t("Pilih tanggal pernikahan")} className={cn("animate-pop-in w-[308px] max-w-[calc(100vw-2rem)] rounded-2xl border border-neutral-200 bg-surface p-4 shadow-modal", className)}>
-      <div className="mb-3 flex items-center justify-between">
+    <div ref={root} role="dialog" aria-label={t("Pilih tanggal pernikahan")} className={cn("animate-pop-in w-[308px] max-w-[calc(100vw-1rem)] rounded-2xl border border-neutral-200 bg-surface p-3 shadow-modal sm:p-4 [@media(max-height:640px)]:p-3", className)}>
+      <div className="mb-2 flex items-center justify-between sm:mb-3">
         <div className="flex">
           <button type="button" onClick={() => move(-12)} aria-label={t("Tahun sebelumnya")} className={nav}><ChevronsLeft className="size-4" /></button>
           <button type="button" onClick={() => move(-1)} aria-label={t("Bulan sebelumnya")} className={nav}><ChevronLeft className="size-4" /></button>
@@ -84,7 +84,7 @@ export function DatePopover({ value, min, max, onChange, onClose, onClear, stand
             <button key={iso} type="button" data-date={iso} disabled={off} tabIndex={c === tabStop ? 0 : -1} aria-pressed={isSel}
               aria-label={new Intl.DateTimeFormat(loc, { dateStyle: "full", timeZone: "UTC" }).format(new Date(Date.UTC(view.y, view.m, c)))}
               onClick={() => { onChange(iso); onClose(); }} onKeyDown={(e) => onKey(e, iso)}
-              className={cn("mx-auto inline-flex size-10 items-center justify-center rounded-full text-[14px] transition-colors focus-visible:ring-2 focus-visible:ring-plum-300 focus-visible:outline-none",
+              className={cn("mx-auto inline-flex size-9 items-center justify-center rounded-full text-[14px] sm:size-10 [@media(max-height:640px)]:size-8 transition-colors focus-visible:ring-2 focus-visible:ring-plum-300 focus-visible:outline-none",
                 isSel ? "bg-plum-600 font-semibold text-white shadow-btn" : off ? "cursor-not-allowed text-neutral-300" : "text-neutral-800 hover:bg-plum-50 hover:text-plum-700",
                 isToday && !isSel && "font-semibold text-plum-700 ring-1 ring-plum-300")}>
               {c}

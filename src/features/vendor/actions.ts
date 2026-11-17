@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getProjectContext } from "@/lib/access";
 import { dbError, fail, type ActionResult } from "@/lib/result";
 import { normalizePhone, parseIDR, todayISO } from "@/lib/format";
+import { cleanHttpUrl, URL_ERROR } from "@/lib/url";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const STATUSES = ["prospek", "survei", "negosiasi", "deal", "batal"] as const;
@@ -25,6 +26,9 @@ export async function saveVendor(projectId: string, fd: FormData): Promise<Actio
   if (phoneRaw && !phone) return fail("Nomor WhatsApp belum valid.");
   const status = z.enum(STATUSES).catch("prospek").parse(str(fd.get("status")));
   const rating = Number(fd.get("rating") ?? 0);
+  const websiteRaw = str(fd.get("website"));
+  const website = websiteRaw ? cleanHttpUrl(websiteRaw) : null;
+  if (websiteRaw && !website) return fail(URL_ERROR);
   const row = {
     project_id: projectId,
     name,
@@ -33,7 +37,7 @@ export async function saveVendor(projectId: string, fd: FormData): Promise<Actio
     phone_e164: phone,
     email: str(fd.get("email")),
     instagram: str(fd.get("instagram"))?.replace(/^@/, "") ?? null,
-    website: str(fd.get("website")),
+    website,
     address: str(fd.get("address")),
     notes: str(fd.get("notes")),
     status,

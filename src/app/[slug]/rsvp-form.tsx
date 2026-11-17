@@ -17,7 +17,7 @@ const btnPrimary = "inline-flex h-12 w-full items-center justify-center gap-2 ro
 const btnGhost = "mt-4 inline-flex h-10 items-center justify-center rounded-full border border-[var(--rv-card-border)] bg-[var(--rv-soft)] px-4 text-sm font-medium transition-transform active:scale-[0.97]";
 
 // Formulir memakai variabel tema (--rv-*) dari pembungkus halaman. preview = tidak mengirim apa pun (halaman contoh).
-export function RsvpForm({ slug, defaultName, paxMax, initial, preview, initialCode }: { slug: string; defaultName: string; paxMax: number; initial: { status: string; pax: number; message: string } | null; preview?: boolean; initialCode?: string | null }) {
+export function RsvpForm({ slug, defaultName, paxMax, initial, preview, initialCode, guestKey }: { guestKey?: string; slug: string; defaultName: string; paxMax: number; initial: { status: string; pax: number; message: string } | null; preview?: boolean; initialCode?: string | null }) {
   // Kode check-in tamu ini (QR Masuk); diisi server bila tamu sudah Hadir, atau dari jawaban API setelah mengirim Hadir
   const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [name, setName] = useState(defaultName);
@@ -40,7 +40,7 @@ export function RsvpForm({ slug, defaultName, paxMax, initial, preview, initialC
     const res = await fetch("/api/rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, name: name.trim(), status, pax: status === "hadir" ? pax : 0, message, captcha }),
+      body: JSON.stringify({ slug, name: name.trim(), status, pax: status === "hadir" ? pax : 0, message, captcha, key: guestKey }),
     });
     const j = await res.json().catch(() => ({}));
     setLoading(false);
@@ -60,6 +60,7 @@ export function RsvpForm({ slug, defaultName, paxMax, initial, preview, initialC
           {status === "hadir" ? `Kami menantikan kehadiran ${pax} orang.` : status === "tidak_hadir" ? "Terima kasih atas doa dan restunya." : "Kabari kami lagi bila sudah pasti, ya."}
         </p>
         {status === "hadir" && code && <QrCard code={code} name={name.trim()} pax={pax} />}
+        {status === "hadir" && !code && !preview && <p className="mt-3 text-[13px] leading-5 text-[var(--rv-muted)]">QR masuk ada di tautan undangan pribadimu. Minta tautan itu ke pengantin bila belum menerimanya.</p>}
         <button className={btnGhost} onClick={() => setDone(false)}>Ubah jawaban</button>
       </div>
     );

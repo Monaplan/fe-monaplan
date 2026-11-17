@@ -90,7 +90,8 @@ export function GuestsClient({ projectId, tz, coupleName, rsvpDeadline, guests, 
     (!fGroup || g.group_id === fGroup) && (!fSide || g.side === fSide) && (!fStatus || (fStatus === CHECKED_IN ? !!g.checked_in_at : g.rsvp_status === fStatus)) &&
     (!fSent || (fSent === "sudah" ? !!g.invitation_sent_at : !g.invitation_sent_at)));
 
-  const link = (g: Guest) => `${baseUrl}/${slug}?to=${encodeURIComponent(g.name)}`;
+  // Kunci tamu (kode check-in) ikut di tautan pribadi: hanya pemegang tautan ini yang melihat jawaban dan QR-nya
+  const link = (g: Guest) => `${baseUrl}/${slug}?to=${encodeURIComponent(g.name)}${g.checkin_code ? `&k=${g.checkin_code}` : ""}`;
   const messageFor = (g: Guest) => {
     const ids = invitesByGuest.get(g.id);
     const evs = ids?.length ? events.filter((e) => ids.includes(e.id)) : events;

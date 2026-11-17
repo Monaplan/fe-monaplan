@@ -31,7 +31,7 @@ export function PaymentClient({ enabled: saved, storeUrl }: { enabled: boolean; 
           </div>
           <ActionForm action={savePaymentSettings} onSuccess={() => router.refresh()}>
             {enabled && <input type="hidden" name="enabled" value="on" />}
-            <Field label={t("Tautan halaman toko (mis. Lynk.id)")} htmlFor="pay-store" help={t("Tujuan tombol Aktivasi Sekarang di landing page. Boleh dikosongkan: tombol akan membuka halaman Aktivasi.")}>
+            <Field label={t("Tautan halaman toko (mis. Lynk.id)")} htmlFor="pay-store" help={t("Ditampilkan sebagai tombol beli di halaman Aktivasi. Boleh dikosongkan.")}>
               <Input id="pay-store" name="store_url" type="url" inputMode="url" placeholder="https://" defaultValue={storeUrl ?? ""} maxLength={500} />
             </Field>
             <div className="flex flex-wrap items-center gap-3">
@@ -48,7 +48,7 @@ export function PaymentClient({ enabled: saved, storeUrl }: { enabled: boolean; 
         <Card>
           <CardHeader title={t("Saat dimatikan")} />
           <ul className="list-disc space-y-2 pl-5 text-[13px] leading-5 text-neutral-600">
-            <li>{t("Tombol di landing page berubah menjadi Aktivasi Sekarang dan membuka halaman toko.")}</li>
+            <li>{t("Tombol di landing page berubah menjadi Aktivasi Sekarang dan membuka halaman Aktivasi, yang berisi tautan ke toko.")}</li>
             <li>{t("Halaman Aktivasi hanya menampilkan kolom kode akses. Kode dibuat di menu Kode Akses dan dikirim ke pembeli setelah bayar di toko.")}</li>
             <li>{t("Kode promo di website tidak bisa dipakai. Diskon yang benar-benar berlaku diatur di toko. Promo di menu Promo hanya menjadi tampilan di landing page, jadi samakan nilainya.")}</li>
             <li>{t("Pesanan Midtrans yang sudah berjalan tetap diproses. Penjualan lewat toko tidak muncul di menu Order.")}</li>

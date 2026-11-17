@@ -31,7 +31,8 @@ function ago(iso: string, lang: "id" | "en", t: (s: string, v?: Record<string, s
   return new Intl.DateTimeFormat(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-// Lonceng notifikasi: masuk langsung lewat Realtime, polling 45 detik sebagai cadangan (hanya saat tab terlihat)
+// Lonceng notifikasi: masuk langsung lewat Realtime. Polling hanya cadangan: 45 detik bila Realtime belum tersambung,
+// dan jarang (tiap 6 menit) bila sudah tersambung, karena setiap polling adalah satu panggilan server dan satu kueri.
 export function NotificationBell({ initial, userId }: { initial: Notif[]; userId: string }) {
   const { t, lang } = useI18n();
   const router = useRouter();
@@ -42,6 +43,8 @@ export function NotificationBell({ initial, userId }: { initial: Notif[]; userId
   const [, start] = useTransition();
   const seen = useRef(new Set(initial.map((n) => n.id)));
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const live = useRef(false);
+  const tick = useRef(0);
   const unread = list.filter((n) => !n.read_at).length;
 
   // Sinkronkan bila server mengirim daftar baru (navigasi)
@@ -76,18 +79,19 @@ export function NotificationBell({ initial, userId }: { initial: Notif[]; userId
             if (n.channel && n.channel !== "in_app") return;
             incoming([n]);
           })
-          .subscribe();
+          .subscribe((status) => { live.current = status === "SUBSCRIBED"; });
         cleanup = () => { supabase.removeChannel(channel); };
       }).catch(() => {});
     };
     const idle = (window as any).requestIdleCallback as undefined | ((cb: () => void, o?: { timeout: number }) => number);
     const handle = idle ? idle(start, { timeout: 3000 }) : window.setTimeout(start, 1500);
-    const poll = async () => {
+    const poll = async (force = false) => {
       if (document.visibilityState !== "visible") return;
+      if (!force && live.current && ++tick.current % 8 !== 0) return;
       try { incoming((await fetchNotifications()) as Notif[]); } catch {}
     };
-    const timer = setInterval(poll, POLL_MS);
-    const onVisible = () => { if (document.visibilityState === "visible") poll(); };
+    const timer = setInterval(() => poll(), POLL_MS);
+    const onVisible = () => { if (document.visibilityState === "visible") poll(true); };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearInterval(timer);

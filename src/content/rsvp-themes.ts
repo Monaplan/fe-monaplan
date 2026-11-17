@@ -12,6 +12,8 @@ export type RsvpTheme = {
   name: string;
   description: string;
   ornament: RsvpOrnament;
+  // Hiasan melayang di atas halaman: kelopak/daun yang jatuh pelan, atau debu emas yang naik berkilau
+  particles: "petal" | "dust";
   // Salam pembuka dan penutup beraksara (hanya tema Bali). Teks Latin selalu ikut tampil di bawahnya.
   greeting?: { open: { script: string; latin: string }; close: { script: string; latin: string } };
   vars: Record<`--rv-${string}`, string>;
@@ -34,12 +36,20 @@ const decoTile = svgUrl(
   `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40' fill='none' stroke='#1D1C20' stroke-width='1'><path d='M0 40L40 0M-10 10L10 -10M30 50L50 30'/></svg>`,
 );
 
+// Bentuk kelopak sebagai topeng (mask) agar warnanya bisa diatur lewat variabel tema
+const PARTICLE = {
+  petal: svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M10 1C16 5 17.5 12 10 19 2.5 12 4 5 10 1z'/></svg>`),
+  frangipani: svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'>${[0, 72, 144, 216, 288].map((r) => `<path transform='rotate(${r})' d='M0 0C2 -3 6 -6 3.5 -10.5 1 -12 -2 -10 -1.5 -6.5z'/>`).join("")}</svg>`),
+  leaf: svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M3 17C3 8 9 3 18 2 17 11 12 17 3 17z'/></svg>`),
+};
+
 export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
   elegan_minimalis: {
     id: "elegan_minimalis",
     name: "Elegan Minimalis",
     description: "Putih gading, huruf kapital berjarak, dan garis tipis. Tenang dan bersih.",
     ornament: "hairline",
+    particles: "petal",
     swatch: ["#FAF8F4", "#1F1B16", "#CFC7B8"],
     vars: {
       "--rv-outer": "#E9E5DC",
@@ -63,6 +73,9 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
       "--rv-name-size": "40px",
       "--rv-font": "var(--font-cormorant), Georgia, serif",
       "--rv-name-font": "var(--font-cormorant), Georgia, serif",
+      "--rv-shine": "#A89A82",
+      "--rv-p-color": "#CFC2AC",
+      "--rv-p-shape": PARTICLE.petal,
     },
   },
   klasik_emas: {
@@ -70,6 +83,7 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
     name: "Klasik Emas",
     description: "Krem hangat, foto berbingkai lengkung, dan tulisan tangan berwarna emas.",
     ornament: "frame",
+    particles: "petal",
     swatch: ["#FBF5E6", "#7A5C14", "#3B2F1E"],
     vars: {
       "--rv-outer": "#E8DCC0",
@@ -93,6 +107,9 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
       "--rv-name-size": "58px",
       "--rv-font": "var(--font-cormorant), Georgia, serif",
       "--rv-name-font": "var(--font-script), 'Brush Script MT', cursive",
+      "--rv-shine": "#E3C77A",
+      "--rv-p-color": "#C9A24A",
+      "--rv-p-shape": PARTICLE.petal,
     },
   },
   bali: {
@@ -100,6 +117,7 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
     name: "Bali",
     description: "Hijau tua dan emas dengan ukiran halus, salam Om Swastyastu dalam aksara Bali.",
     ornament: "bali",
+    particles: "petal",
     greeting: {
       open: { script: OM_SWASTYASTU, latin: "Om Swastyastu" },
       close: { script: OM_SANTI, latin: "Om Shanti Shanti Shanti Om" },
@@ -127,6 +145,9 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
       "--rv-name-size": "50px",
       "--rv-font": "var(--font-cormorant), Georgia, serif",
       "--rv-name-font": "var(--font-cormorant), Georgia, serif",
+      "--rv-shine": "#FFF1C4",
+      "--rv-p-color": "#F4E6C4",
+      "--rv-p-shape": PARTICLE.frangipani,
     },
   },
   noir_luxury: {
@@ -134,6 +155,7 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
     name: "Noir Luxury",
     description: "Hitam arang dengan emas sampanye dan garis art deco. Berkelas dan dramatis.",
     ornament: "deco",
+    particles: "dust",
     swatch: ["#0C0C0E", "#C9A96E", "#F2EDE4"],
     vars: {
       "--rv-outer": "#050506",
@@ -157,6 +179,9 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
       "--rv-name-size": "38px",
       "--rv-font": "var(--font-playfair), Georgia, serif",
       "--rv-name-font": "var(--font-playfair), Georgia, serif",
+      "--rv-shine": "#FFF0CC",
+      "--rv-p-color": "#E2C68C",
+      "--rv-p-shape": "none",
     },
   },
   botanical_soft: {
@@ -164,6 +189,7 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
     name: "Botanical Soft",
     description: "Hijau sage dan putih dengan ranting garis halus. Segar, lembut, tidak ramai.",
     ornament: "leaf",
+    particles: "petal",
     swatch: ["#F2F5EE", "#5E7F63", "#25332A"],
     vars: {
       "--rv-outer": "#DCE5D5",
@@ -184,9 +210,12 @@ export const RSVP_THEMES: Record<RsvpThemeId, RsvpTheme> = {
       "--rv-photo-radius": "50% / 42%",
       "--rv-title-case": "none",
       "--rv-title-track": "0",
-      "--rv-name-size": "52px",
+      "--rv-name-size": "60px",
       "--rv-font": "var(--font-cormorant), Georgia, serif",
-      "--rv-name-font": "var(--font-cormorant), Georgia, serif",
+      "--rv-name-font": "var(--font-script), 'Brush Script MT', cursive",
+      "--rv-shine": "#9DBC9F",
+      "--rv-p-color": "#86A88A",
+      "--rv-p-shape": PARTICLE.leaf,
     },
   },
 };

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { RESERVED_SLUGS, SLUG_RE } from "@/lib/paths";
 import { scheduleCalendarSync } from "@/lib/google/schedule";
 import { z } from "zod";
-import { getMyAccess, getProjectContext, isActive, requireUser } from "@/lib/access";
+import { bustProfile, getMyAccess, getProjectContext, isActive, requireUser } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, type ActionResult } from "@/lib/result";
@@ -13,6 +13,7 @@ import { addDaysISO, diffDays, formatDateLong, localToISO, parseIDR } from "@/li
 import { appUrl, EVENT_TYPES } from "@/lib/constants";
 import { sendTemplated } from "@/lib/email";
 import { RSVP_THEME_IDS } from "@/content/rsvp-themes";
+import { cleanHttpUrl, URL_ERROR } from "@/lib/url";
 import { WEDDING_STYLES, WEDDING_STYLE_IDS, type WeddingStyleId } from "@/content/wedding-styles";
 import { deleteObjects, deletePrefix, isProjectKey, storagePrefix } from "@/lib/storage";
 
@@ -69,9 +70,13 @@ export async function createProject(fd: FormData): Promise<ActionResult> {
   const id = randomUUID();
   const n1 = d.partner_one_nickname ?? d.partner_one_name.split(" ")[0];
   const n2 = d.partner_two_nickname ?? d.partner_two_name.split(" ")[0];
+  // Alamat undangan dicari dengan klien admin. Fungsi slug di database berjalan dengan hak pengguna sehingga tidak
+  // melihat proyek akun lain (RLS); pasangan bernama sama lalu mendapat slug yang sudah dipakai dan gagal disimpan.
+  const { data: freeSlug } = await createAdminClient().rpc("unique_project_slug", { p_base: `${n1}-${n2}` });
   const { error } = await supabase.from("wedding_projects").insert({
     id,
     owner_id: user.id,
+    ...(typeof freeSlug === "string" && freeSlug && { slug: freeSlug }),
     title: `${n1} & ${n2}`,
     ...rest,
     // Kolom baru hanya dikirim bila bukan Umum, jadi pembuatan proyek biasa tetap jalan walau migrasi belum dijalankan
@@ -93,6 +98,7 @@ export async function createProject(fd: FormData): Promise<ActionResult> {
   const { error: seedErr } = await supabase.rpc("seed_project_defaults", { p_project_id: id });
   if (seedErr) return dbError(seedErr);
   await supabase.from("profiles").update({ last_active_project_id: id }).eq("id", user.id);
+  bustProfile(user.id);
   const { data: created } = await supabase.from("wedding_projects").select("*").eq("id", id).maybeSingle();
   return { ok: true, data: { id, slug: (created as { slug?: string } | null)?.slug ?? null } };
 }
@@ -186,6 +192,9 @@ export async function saveEvent(projectId: string, fd: FormData): Promise<Action
   const type = str(fd.get("type")) ?? "lainnya";
   const date = str(fd.get("date"));
   const tz = project.timezone;
+  const mapsRaw = str(fd.get("maps_url"));
+  const mapsUrl = mapsRaw ? cleanHttpUrl(mapsRaw) : null;
+  if (mapsRaw && !mapsUrl) return fail(URL_ERROR);
   const row = {
     project_id: projectId,
     type,
@@ -194,7 +203,7 @@ export async function saveEvent(projectId: string, fd: FormData): Promise<Action
     ends_at: date && str(fd.get("end_time")) ? localToISO(date, str(fd.get("end_time")), tz) : null,
     venue_name: str(fd.get("venue_name")),
     venue_address: str(fd.get("venue_address")),
-    maps_url: str(fd.get("maps_url")),
+    maps_url: mapsUrl,
     dress_code: str(fd.get("dress_code")),
     notes: str(fd.get("notes")),
     sort_order: Number(fd.get("sort_order") ?? 0) || 0,
@@ -323,5 +332,6 @@ export async function setLastActiveProject(projectId: string) {
   const { session, supabase } = await getProjectContext(projectId);
   if (session.profile?.last_active_project_id !== projectId) {
     await supabase.from("profiles").update({ last_active_project_id: projectId }).eq("id", session.user.id);
+    bustProfile(session.user.id);
   }
 }

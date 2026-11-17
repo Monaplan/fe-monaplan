@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getProjectContext } from "@/lib/access";
 import { dbError, fail, type ActionResult } from "@/lib/result";
+import { cleanHttpUrl, URL_ERROR } from "@/lib/url";
 import { deleteObjects, isProjectKey } from "@/lib/storage";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -26,8 +27,9 @@ export async function saveInspiration(projectId: string, fd: FormData): Promise<
   if (!(INSPIRATION_CATEGORIES as readonly string[]).includes(category)) return fail("Kategori tidak dikenal.");
   const note = str(fd.get("note"));
   if (note && note.length > 500) return fail("Catatan maksimal 500 karakter.");
-  const link = str(fd.get("link_url"));
-  if (link && (!/^https?:\/\//i.test(link) || link.length > 500)) return fail("Tautan harus diawali http:// atau https://.");
+  const linkRaw = str(fd.get("link_url"));
+  const link = linkRaw ? cleanHttpUrl(linkRaw) : null;
+  if (linkRaw && !link) return fail(URL_ERROR);
   const colorRaw = str(fd.get("color"));
   const color = colorRaw && /^#[0-9A-Fa-f]{6}$/.test(colorRaw) ? colorRaw.toUpperCase() : null;
   if (colorRaw && !color) return fail("Warna tidak valid.");

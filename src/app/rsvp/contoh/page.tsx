@@ -18,7 +18,7 @@ export default async function RsvpExamplePage({ searchParams }: { searchParams: 
       <RsvpView themeId={theme.id} partners={[partnerOf("Raka Pratama", "Raka"), partnerOf("Nadia Safira", "Nadia")]} guestName="Bapak Hendra" cover={null} coverAlt="" events={DEMO_EVENTS} tz="Asia/Jakarta">
         <RsvpForm slug="contoh" defaultName="Bapak Hendra" paxMax={3} initial={null} preview />
       </RsvpView>
-      <nav aria-label="Pilih tema contoh" className="fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit max-w-[calc(100vw-1.5rem)] gap-1 overflow-x-auto rounded-full border border-black/10 bg-white/95 p-1 shadow-lg backdrop-blur">
+      <nav aria-label="Pilih tema contoh" className="fixed inset-x-0 bottom-3 z-[60] mx-auto flex w-fit max-w-[calc(100vw-1.5rem)] gap-1 overflow-x-auto rounded-full border border-black/10 bg-white/95 p-1 shadow-lg backdrop-blur">
         {RSVP_THEME_IDS.map((id) => (
           <Link key={id} href={`/rsvp/contoh?tema=${id}`} replace aria-current={id === theme.id ? "page" : undefined}
             className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3 text-[13px] font-medium whitespace-nowrap text-[#3D3338] transition-colors ${id === theme.id ? "bg-[#1F1B16] !text-white" : "hover:bg-black/5"}`}>

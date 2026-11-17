@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/access";
+import { bustProfile, requireUser } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dbError, fail, type ActionResult } from "@/lib/result";
@@ -19,6 +19,7 @@ export async function updateProfile(fd: FormData): Promise<ActionResult> {
     phone,
     notify_email: fd.get("notify_email") === "on",
   }).eq("id", user.id);
+  bustProfile(user.id);
   revalidatePath("/akun");
   return error ? dbError(error) : { ok: true, message: "Profil tersimpan." };
 }

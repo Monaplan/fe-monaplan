@@ -3,7 +3,7 @@ import { RowHighlight } from "@/components/app/row-highlight";
 import { SidebarShell, type NavGroup, type NavItem } from "@/components/app/sidebar-shell";
 import { AccessStatusCard } from "@/components/app/access-card";
 import { ReadOnlyBanner } from "@/components/app/read-only-banner";
-import { getProjectContext, peekProject } from "@/lib/access";
+import { bustProfile, getProjectContext, peekProject, workspaceRpcMissing } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateCompact, todayISO } from "@/lib/format";
 import { after } from "next/server";
@@ -32,14 +32,17 @@ async function loadExtras(projectId: string, timezone: string) {
 export default async function WorkspaceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ projectId: string }> }) {
   const { t, lang } = await getI18n();
   const { projectId: ref } = await params;
-  // Lencana, notifikasi, dan undangan tidak bergantung pada hasil konteks. Bila proyek sudah dikenal di memori,
-  // semuanya dimulai bersamaan dengan konteks sehingga satu putaran ke database terhemat.
+  // Lencana, notifikasi, dan undangan ikut dikembalikan konteks proyek (satu panggilan workspace_context). Kueri terpisah
+  // hanya dipakai bila fungsi itu belum ada di database; saat itu bila proyek sudah dikenal di memori, kueri dimulai
+  // bersamaan dengan konteks sehingga satu putaran ke database terhemat.
   const hint = peekProject(ref);
   const ctxPromise = getProjectContext(ref);
-  const extrasPromise = hint
-    ? loadExtras(hint.projectId, hint.timezone)
-    : ctxPromise.then((c) => loadExtras(c.projectId, c.project.timezone));
-  const [ctx, extras] = await Promise.all([ctxPromise, extrasPromise]);
+  const legacyPromise = workspaceRpcMissing()
+    ? (hint ? loadExtras(hint.projectId, hint.timezone) : ctxPromise.then((c) => loadExtras(c.projectId, c.project.timezone)))
+    : null;
+  legacyPromise?.catch(() => {});
+  const ctx = await ctxPromise;
+  const extras = ctx.extras ?? await (legacyPromise ?? loadExtras(ctx.projectId, ctx.project.timezone));
   const { supabase, project, projectId, session, access, isOwner, role, members } = ctx;
 
   // Alamat lama (UUID atau slug yang sudah diganti) dialihkan ke slug terbaru dengan sisa path yang sama
@@ -53,6 +56,7 @@ export default async function WorkspaceLayout({ children, params }: { children: 
   if (session.profile?.last_active_project_id !== projectId) {
     after(async () => {
       await supabase.from("profiles").update({ last_active_project_id: projectId }).eq("id", session.user.id);
+      bustProfile(session.user.id);
     });
   }
 

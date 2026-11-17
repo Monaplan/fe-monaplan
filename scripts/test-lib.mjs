@@ -11,11 +11,13 @@ const ts = require("typescript");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "mp-lib-"));
 
-for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts", "src/lib/support.ts", "src/lib/finance.ts", "src/lib/links.ts"]) {
+for (const rel of ["src/lib/pricing.ts", "src/lib/constants.ts", "src/lib/format.ts", "src/lib/google/events.ts", "src/lib/google/crypto.ts", "src/lib/email/templates.ts", "src/lib/files-token.ts", "src/lib/paths.ts", "src/lib/search-terms.ts", "src/lib/sort.ts", "src/lib/budget.ts", "src/lib/checkin.ts", "src/lib/idle.ts", "src/lib/support.ts", "src/lib/finance.ts", "src/lib/links.ts", "src/lib/url.ts", "src/lib/paginate.ts", "src/lib/invite-key.ts"]) {
   // "server-only" hanya berlaku di bundel Next, jadi dilepas untuk uji ini
   const src = fs.readFileSync(path.join(ROOT, rel), "utf8").replace('import "server-only";', "");
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
-    .replace(/from "(\.{1,2}\/[^"]+)"/g, 'from "$1.mjs"');
+    .replace(/from "(\.{1,2}\/[^"]+)"/g, 'from "$1.mjs"')
+    // Alias @/ diubah menjadi alamat berkas sementara
+    .replace(/from "@\/([^"]+)"/g, (_, p) => `from "${pathToFileURL(path.join(OUT, "src", p)).href}.mjs"`);
   const dest = path.join(OUT, rel.replace(/\.ts$/, ".mjs"));
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, js);
@@ -31,6 +33,9 @@ const { parseTerms, cleanQuery } = await load("src/lib/search-terms.mjs");
 const { normalizeWhatsapp, whatsappLink, normalizeInstagram, instagramUrl } = await load("src/lib/support.mjs");
 const { normalizeSlug, isValidSlug, randomSlug, cleanTargetUrl, isBot, linkState, shortUrl, moveId, BIO_ICONS, buildBioTree, dedicatedHost, routeByHost } = await load("src/lib/links.mjs");
 const { isMonthKey, monthKeyOf, shiftMonth, monthRange, wibDate, buildLedger, summarize, deltaPct, csvCell, ledgerCsv, buyerMessage } = await load("src/lib/finance.mjs");
+const { cleanHttpUrl, safeHref } = await load("src/lib/url.mjs");
+const { fetchAll } = await load("src/lib/paginate.mjs");
+const { keyMatches, normalizeKey } = await load("src/lib/invite-key.mjs");
 const { buildDesiredEvents, eventIdFor, planSync } = await load("src/lib/google/events.mjs");
 process.env.TOKEN_ENCRYPTION_KEY = "kunci-uji";
 const { encryptToken, decryptToken, signState, verifyState } = await load("src/lib/google/crypto.mjs");
@@ -473,6 +478,28 @@ check("pilihan ikon tombol tersedia", BIO_ICONS.includes("link") && BIO_ICONS.in
   const onlyTs = [...ts].filter((x) => !list.has(x)), onlySql = [...list].filter((x) => !ts.has(x));
   check("slug dicadangkan: TypeScript dan SQL sama", onlyTs.length === 0 && onlySql.length === 0, `hanya di TS: ${onlyTs} | hanya di SQL: ${onlySql}`);
 }
+
+console.log("\nTautan pengguna dan paginasi");
+check("https biasa diterima", cleanHttpUrl("https://maps.app.goo.gl/abc") === "https://maps.app.goo.gl/abc");
+check("tanpa skema ditambah https", cleanHttpUrl("www.contoh.com/toko") === "https://www.contoh.com/toko");
+check("javascript: ditolak", cleanHttpUrl("javascript:alert(1)") === null);
+check("javascript: berhuruf besar dan spasi ditolak", cleanHttpUrl("  JaVaScRiPt:alert(1)") === null && cleanHttpUrl("java\nscript:alert(1)") === null);
+check("data: dan file: ditolak", cleanHttpUrl("data:text/html,<script>1</script>") === null && cleanHttpUrl("file:///etc/passwd") === null);
+check("host tanpa titik ditolak", cleanHttpUrl("https://localhost") === null && cleanHttpUrl("https://") === null);
+check("kosong dan terlalu panjang ditolak", cleanHttpUrl("") === null && cleanHttpUrl("https://a.com/" + "x".repeat(600)) === null);
+check("safeHref menyaring baris lama yang berbahaya", safeHref("javascript:alert(1)") === undefined && safeHref("https://a.com") === "https://a.com/");
+const rows = Array.from({ length: 2500 }, (_, i) => i);
+let calls = 0;
+const fakePage = (a, b) => { calls++; return Promise.resolve({ data: rows.slice(a, b + 1), error: null }); };
+const all = await fetchAll(fakePage);
+check("fetchAll menggabung semua halaman (2500 baris, 3 permintaan)", all.data.length === 2500 && calls === 3 && all.data[0] === 0 && all.data[2499] === 2499);
+const exact = await fetchAll((a, b) => Promise.resolve({ data: rows.slice(a, Math.min(b + 1, 2000)), error: null }));
+check("fetchAll berhenti tepat di kelipatan halaman", exact.data.length === 2000);
+const failing = await fetchAll((a) => Promise.resolve(a === 0 ? { data: rows.slice(0, 1000), error: null } : { data: null, error: { message: "boom" } }));
+check("fetchAll meneruskan galat halaman berikutnya", failing.error?.message === "boom" && failing.data === null);
+check("kunci tamu cocok (huruf kecil dan pemisah diabaikan)", keyMatches("ab3k-9xz2m", "AB3K9XZ2M") === true);
+check("kunci tamu salah, kosong, atau tanpa kode ditolak", !keyMatches("AB3K9XZ2N", "AB3K9XZ2M") && !keyMatches("", "AB3K9XZ2M") && !keyMatches(undefined, "AB3K9XZ2M") && !keyMatches("AB3K9XZ2M", null) && !keyMatches("AB3K", "AB3K9XZ2M"));
+check("normalizeKey membuang karakter selain huruf dan angka", normalizeKey("a-b c<script>") === "ABCSCRIPT");
 fs.rmSync(OUT, { recursive: true, force: true });
 console.log(`\n${pass} lulus, ${bad} gagal`);
 process.exit(bad ? 1 : 0);

@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   if (!plan || plan.code === "TRIAL" || plan.price_idr <= 0) return NextResponse.json({ error: "PLAN_NOT_FOUND" }, { status: 404 });
 
   // Promo dihitung ulang di server; nominal dari browser tidak pernah dipercaya
-  const { promoEnabled, promos } = await getPricingContext(auth.user.id);
+  const { promoEnabled, promos } = await getPricingContext(auth.user.id, true);
   const admin = createAdminClient();
 
   // Pemilik akses selamanya hanya boleh membeli paket bertingkat lebih tinggi, dan membayar selisihnya

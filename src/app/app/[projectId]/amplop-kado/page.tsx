@@ -1,5 +1,6 @@
 import { CircleAlert } from "lucide-react";
 import { withProjectData } from "@/lib/access";
+import { fetchAll } from "@/lib/paginate";
 import { getI18n } from "@/i18n/server";
 import { ReceiptsClient } from "./receipts-client";
 
@@ -13,7 +14,7 @@ export default async function ReceiptsPage({ params }: { params: Promise<{ proje
   const { projectId: ref } = await params;
   const [{ canWrite, projectId, project }, [receipts, guests]] = await withProjectData(ref, (pid, supabase) => Promise.all([
     supabase.from("gift_receipts").select("*").eq("project_id", pid).order("received_on", { ascending: false }).order("created_at", { ascending: false }).limit(3000),
-    supabase.from("guests").select("id, name, side, phone_e164").eq("project_id", pid).order("name").limit(5000),
+    fetchAll((a, b) => supabase.from("guests").select("id, name, side, phone_e164").eq("project_id", pid).order("name").order("id").range(a, b)),
   ]));
 
   // Migrasi belum dijalankan: tampilkan petunjuk, bukan galat kosong

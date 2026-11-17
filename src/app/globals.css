@@ -255,6 +255,31 @@ body {
 .animate-float { animation: float 5.5s ease-in-out infinite; will-change: transform; }
 .animate-float-slow { animation: float 7.5s ease-in-out -2s infinite; will-change: transform; }
 
+/* Maskot Mona: berkedip, melambai, dan bernapas pelan */
+@keyframes mona-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes mona-wave { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(-14deg); } 20%, 40% { transform: rotate(8deg); } }
+@keyframes mona-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px); } }
+.mona-eyes { transform-box: fill-box; transform-origin: center; animation: mona-blink 4.5s ease-in-out infinite; }
+.mona-wave { animation: mona-wave 3.2s ease-in-out 0.6s infinite; }
+.mona-body { animation: mona-breathe 3.6s ease-in-out infinite; }
+
+/* Ilustrasi halaman masuk: uap cangkir, awan, kilau, catatan melayang, daun bergoyang */
+@keyframes auth-steam { 0% { transform: translateY(6px); opacity: 0; } 30% { opacity: 0.9; } 100% { transform: translateY(-14px); opacity: 0; } }
+@keyframes auth-twinkle { 0%, 100% { transform: translateY(0) scale(0.85); opacity: 0.7; } 50% { transform: translateY(-6px) scale(1.05); opacity: 1; } }
+@keyframes auth-drift { from { transform: translateX(-10px); } to { transform: translateX(12px); } }
+@keyframes auth-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2.5deg); } }
+.auth-steam { animation: auth-steam 3s ease-out infinite; }
+.auth-steam-2 { animation: auth-steam 3s ease-out 1.2s infinite; }
+.auth-steam-heart { transform-box: fill-box; transform-origin: center; animation: auth-steam 3.6s ease-out 0.6s infinite; }
+.auth-twinkle, .auth-twinkle-2, .auth-twinkle-3 { transform-box: fill-box; transform-origin: center; animation: auth-twinkle 2.8s ease-in-out infinite; }
+.auth-twinkle-2 { animation-delay: -0.9s; }
+.auth-twinkle-3 { animation-delay: -1.8s; }
+.auth-cloud { animation: auth-drift 9s ease-in-out infinite alternate; }
+.auth-cloud-slow { animation: auth-drift 13s ease-in-out -4s infinite alternate-reverse; }
+.auth-float { animation: float 5s ease-in-out infinite; }
+.auth-sway { transform-box: fill-box; transform-origin: top center; animation: auth-sway 5s ease-in-out infinite; }
+.auth-gem { transform-box: fill-box; transform-origin: center; animation: auth-twinkle 2.4s ease-in-out infinite; }
+
 /* Tiket bonus: takik setengah lingkaran di garis sobekan (jarak dari kanan = lebar stub), tanpa gambar */
 .ticket {
   --stub: 112px; --r: 11px;

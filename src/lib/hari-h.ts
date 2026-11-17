@@ -1,4 +1,5 @@
 import "server-only";
+import { fetchAll } from "@/lib/paginate";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Data Mode Hari H. Dipakai halaman anggota (klien Supabase dengan RLS) dan tautan panitia (service role setelah token cocok).
@@ -24,7 +25,7 @@ export async function loadDayData(db: SupabaseClient, project: ProjectLite): Pro
     db.from("rundown_items").select("id, event_id, start_time, end_time, title, description, pic_name, location, vendor_id").eq("project_id", pid).order("start_time").order("sort_order"),
     db.from("vendors").select("id, name, category, phone_e164, contact_person").eq("project_id", pid).eq("status", "deal").order("category").order("name"),
     db.from("tasks").select("id, title, status").eq("project_id", pid).eq("phase_key", "hari_h").order("sort_order").order("created_at"),
-    db.from("guests").select("rsvp_status, pax_confirmed, checked_in_at, checked_in_pax").eq("project_id", pid).limit(5000),
+    fetchAll((a, b) => db.from("guests").select("rsvp_status, pax_confirmed, checked_in_at, checked_in_pax").eq("project_id", pid).order("id").range(a, b)),
   ]);
 
   let attendance: Attendance | null = null;

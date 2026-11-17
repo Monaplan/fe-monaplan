@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchAll } from "@/lib/paginate";
 
 export type CheckinGuest = {
   id: string; name: string; category: string; group: string | null; pax_invited: number; pax_confirmed: number; rsvp_status: string;
@@ -17,9 +18,9 @@ export function extractCode(raw: string): string | null {
 }
 
 export async function listCheckinGuests(db: SupabaseClient, projectId: string): Promise<CheckinGuest[]> {
-  const { data, error } = await db.from("guests")
+  const { data, error } = await fetchAll((a, b) => db.from("guests")
     .select("id, name, category, side, pax_invited, pax_confirmed, rsvp_status, checkin_code, checked_in_at, checked_in_pax, checked_in_by, guest_groups(name)")
-    .eq("project_id", projectId).order("name").limit(5000);
+    .eq("project_id", projectId).order("name").order("id").range(a, b));
   if (error) return [];
   return (data ?? []).map((g: any) => ({ ...g, group: g.guest_groups?.name ?? null, guest_groups: undefined }));
 }
@@ -47,9 +48,9 @@ export async function walkInGuest(admin: SupabaseClient, projectId: string, rawN
 
 // Tamu yang sudah check-in, urut waktu masuk. null bila kolom check-in belum ada (migrasi 20261013000006 belum dijalankan).
 export async function listArrivedGuests(db: SupabaseClient, projectId: string): Promise<CheckinGuest[] | null> {
-  const { data, error } = await db.from("guests")
+  const { data, error } = await fetchAll((a, b) => db.from("guests")
     .select("id, name, category, side, pax_invited, pax_confirmed, rsvp_status, checkin_code, checked_in_at, checked_in_pax, checked_in_by, guest_groups(name)")
-    .eq("project_id", projectId).not("checked_in_at", "is", null).order("checked_in_at", { ascending: true }).limit(5000);
+    .eq("project_id", projectId).not("checked_in_at", "is", null).order("checked_in_at", { ascending: true }).order("id").range(a, b));
   if (error) return null;
   return (data ?? []).map((g: any) => ({ ...g, group: g.guest_groups?.name ?? null, guest_groups: undefined }));
 }

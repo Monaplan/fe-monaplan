@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIp } from "@/lib/codes";
 import { rateLimited } from "@/lib/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { keyMatches } from "@/lib/invite-key";
 
 const Body = z.object({
   slug: z.string().min(3).max(60),
@@ -13,6 +14,8 @@ const Body = z.object({
   pax: z.number().int().min(0).max(20),
   message: z.string().max(500).optional().default(""),
   captcha: z.string().max(2048).optional(),
+  // Kunci tamu dari tautan pribadi (?k=); tanpa kunci hanya jawaban pertama yang bisa dikirim
+  key: z.string().max(40).optional(),
 });
 
 const MESSAGES: Record<string, string> = {
@@ -43,6 +46,19 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
+
+  // Nama mudah ditebak, jadi jawaban yang sudah tersimpan hanya bisa diubah oleh pemegang tautan pribadinya (kunci tamu).
+  // Tamu yang belum menjawab, atau belum ada di daftar, tetap bisa menjawab dengan nama saja.
+  const { data: pre } = await admin.rpc("rsvp_lookup", { p_slug: d.slug, p_name: d.name });
+  const preGuest = (pre as { matches?: number; guest?: { id: string; rsvp_status: string } } | null)?.matches === 1 ? (pre as { guest: { id: string; rsvp_status: string } }).guest : null;
+  let keyOk = false;
+  if (preGuest) {
+    const { data: row } = await admin.from("guests").select("checkin_code").eq("id", preGuest.id).maybeSingle();
+    keyOk = keyMatches(d.key, (row as { checkin_code?: string } | null)?.checkin_code);
+    if (preGuest.rsvp_status !== "belum_respon" && !keyOk) {
+      return NextResponse.json({ error: "KEY_REQUIRED", message: "Jawaban untuk nama ini sudah tersimpan. Untuk mengubahnya, buka tautan undangan pribadi dari pengantin." }, { status: 403 });
+    }
+  }
   const { error } = await admin.rpc("submit_rsvp_by_name", {
     p_slug: d.slug,
     p_name: d.name,
@@ -59,7 +75,8 @@ export async function POST(request: Request) {
   let checkinCode: string | null = null;
   const { data: project } = await admin.from("wedding_projects").select("id, slug, title").eq("slug", d.slug).maybeSingle();
   if (project) {
-    if (d.status === "hadir") {
+    // QR masuk hanya untuk pemegang kunci, atau tamu baru yang baru saja mendaftar sendiri lewat permintaan ini
+    if (d.status === "hadir" && (keyOk || !preGuest)) {
       // Pencocokan nama memakai aturan yang sama dengan submit_rsvp_by_name (sapaan dan spasi diabaikan)
       const { data: lookup } = await admin.rpc("rsvp_lookup", { p_slug: d.slug, p_name: d.name });
       const guestId = (lookup as { matches?: number; guest?: { id: string } } | null)?.matches === 1 ? (lookup as { guest: { id: string } }).guest.id : null;

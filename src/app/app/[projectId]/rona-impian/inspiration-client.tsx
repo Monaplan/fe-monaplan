@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/url";
 import { useMemo, useState, useTransition } from "react";
 import { Brush, ExternalLink, Flower2, ImagePlus, Landmark, Pencil, Plus, PartyPopper, Shapes, Shirt, Star, Trash2, UtensilsCrossed, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -135,7 +136,7 @@ export function InspirationClient({ projectId, items, canWrite }: { projectId: s
                   <p className="mt-0.5 text-[15px] font-semibold text-neutral-900">{i.title}</p>
                   {i.note && <p className="mt-1 line-clamp-3 text-[13px] leading-5 text-neutral-600">{i.note}</p>}
                   {i.link_url && (
-                    <a href={i.link_url} target="_blank" rel="noopener noreferrer nofollow" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-plum-700 hover:underline">
+                    <a href={safeHref(i.link_url)} target="_blank" rel="noopener noreferrer nofollow" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-plum-700 hover:underline">
                       {t("Buka sumber")}<ExternalLink className="size-3" />
                     </a>
                   )}

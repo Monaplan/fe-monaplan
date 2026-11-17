@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { getAuthUser } from "@/lib/access";
+import { bustProfile, getAuthUser } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 import { LANG_COOKIE, isLang } from "@/i18n/config";
 
@@ -12,7 +12,7 @@ export async function setLanguage(lang: string): Promise<{ ok: boolean }> {
   (await cookies()).set(LANG_COOKIE, lang, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
   try {
     const user = await getAuthUser();
-    if (user) await (await createClient()).from("profiles").update({ language: lang }).eq("id", user.id);
+    if (user) { await (await createClient()).from("profiles").update({ language: lang }).eq("id", user.id); bustProfile(user.id); }
   } catch {
     // kolom language belum ada (migrasi 5 belum dijalankan): cookie tetap berlaku
   }

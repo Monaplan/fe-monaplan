@@ -13,7 +13,7 @@ import { diffDays, formatDateLong, formatTime, isoDateInTz, waLink } from "@/lib
 import { useI18n } from "@/i18n/client";
 import type { DayData, DayRundown } from "@/lib/hari-h";
 
-const REFRESH_MS = 30_000;
+const REFRESH_MS = 45_000;
 
 // Tanggal dan menit saat ini di zona waktu proyek
 function nowIn(tz: string) {

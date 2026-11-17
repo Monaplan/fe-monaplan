@@ -15,5 +15,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ code
   if (!project?.slug) return NextResponse.redirect(home);
   const target = new URL(`/${project.slug}`, request.url);
   target.searchParams.set("to", guest.name);
+  target.searchParams.set("k", code.toUpperCase());
   return NextResponse.redirect(target, { headers: { "X-Robots-Tag": "noindex, nofollow", "Referrer-Policy": "no-referrer" } });
 }

@@ -153,8 +153,8 @@ export default async function LandingPage() {
   const startHref = loggedIn ? "/mulai" : "/login?mode=daftar";
   const paymentOff = !payment.enabled;
   const viaStore = paymentOff && !!payment.storeUrl;
-  // Pembayaran di website mati: tombol beli menuju toko (tab baru). Tanpa tautan toko, tetap ke Aktivasi agar tidak ada tombol mati.
-  const buyHref = viaStore ? payment.storeUrl! : loggedIn ? "/aktivasi" : `/login?mode=daftar&next=${encodeURIComponent("/aktivasi")}`;
+  // Tombol beli selalu ke halaman Aktivasi (tautan toko dan WhatsApp ada di sana); yang belum masuk diarahkan proxy ke login lalu kembali
+  const buyHref = "/aktivasi";
   const contact = await getContact();
   const wa = whatsappLink(contact.whatsapp, "Halo, saya mau tanya soal Monaplan.");
 
@@ -508,7 +508,7 @@ export default async function LandingPage() {
       </footer>
       <AnimationGate />
       <BackToTop />
-      <Suspense fallback={null}><PromoPopupLoader plans={plans} externalHref={viaStore ? payment.storeUrl : null} /></Suspense>
+      <Suspense fallback={null}><PromoPopupLoader plans={plans} /></Suspense>
     </div>
   );
 }

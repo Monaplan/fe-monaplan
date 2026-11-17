@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/url";
 import { useState } from "react";
 import { ExternalLink, Gift, ImagePlus, Pencil, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,7 @@ export function GiftsClient({ projectId, items, canWrite }: { projectId: string;
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
                   <StatusPill tone={tone(i.status)}>{t(labelOf(PURCHASE_STATUS, i.status))}</StatusPill>
                   {i.purchase_url && (
-                    <a href={i.purchase_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-plum-600 hover:underline">
+                    <a href={safeHref(i.purchase_url)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-plum-600 hover:underline">
                       <ShoppingBag className="size-3.5" />{i.store_name ?? t("Toko")}<ExternalLink className="size-3" />
                     </a>
                   )}

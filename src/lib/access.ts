@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UUID_RE } from "@/lib/paths";
+import { bustKey, ttl } from "@/lib/ttl-cache";
 
 export type LicenseStateKey = "lifetime" | "timed" | "expired" | "revoked" | "none";
 export type AccessState = { state: LicenseStateKey; endsAt: string | null; startsAt: string | null; isTrial?: boolean };
@@ -72,11 +73,16 @@ export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
   return c?.sub ? { id: c.sub, email: typeof c.email === "string" ? c.email : undefined } : null;
 });
 
-export const getProfile = cache(async (userId: string) => {
+// Profil dibaca di setiap permintaan halaman, jadi disimpan 30 detik di memori (kunci per pengguna; hanya profil milik
+// pemanggil sendiri yang pernah dimuat lewat klien ber-RLS). Pengubahnya memanggil bustProfile; perubahan peran oleh admin
+// membersihkan seluruh cache. Instance lain paling lambat ikut berubah setelah 30 detik.
+const PROFILE_TTL_MS = 30_000;
+export const bustProfile = (userId: string) => bustKey(`profile:${userId}`);
+export const getProfile = cache((userId: string) => ttl(`profile:${userId}`, PROFILE_TTL_MS, async () => {
   const supabase = await createClient();
   const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
   return data as Profile | null;
-});
+}));
 
 export const getSession = cache(async () => {
   const user = await getAuthUser();
@@ -206,18 +212,46 @@ export async function getProjectContext(ref: string) {
   return ctx;
 }
 
+// Lencana dan notifikasi layout ikut dikembalikan oleh workspace_context (migrasi 20261117000002), jadi layout tidak perlu
+// kueri sendiri. null bila fungsinya belum ada di database.
+export type WorkspaceExtras = {
+  overdue: number; rsvpNew: number; pendingInv: number;
+  notifications: { id: string; type: string; title: string; body: string | null; link_path: string | null; read_at: string | null; created_at: string }[];
+};
+type WorkspaceRpc = { project: Project | null; members: Member[] | null; access: unknown; overdue?: number; rsvp_new?: number; pending_inv?: number; notifications?: WorkspaceExtras["notifications"] };
+
+// Fungsi belum dijalankan di database: jalur lama dipakai dan fungsi tidak dicoba lagi selama 5 menit
+let rpcMissingUntil = 0;
+export const workspaceRpcMissing = () => Date.now() < rpcMissingUntil;
+
 const loadProjectContext = cache(async (projectId: string) => {
   const user = await getAuthUser();
   if (!user) redirect("/login");
   const supabase = await createClient();
 
-  // Profil, proyek, anggota, dan status akses diambil serentak: satu putaran ke database, bukan empat berurutan
-  const [profile, { data: project }, { data: members }, { data: accessRaw }] = await Promise.all([
-    getProfile(user.id),
-    supabase.from("wedding_projects").select("*").eq("id", projectId).maybeSingle(),
-    supabase.from("project_members").select("user_id, role, profiles!project_members_user_id_fkey(full_name, email, avatar_url)").eq("project_id", projectId),
-    supabase.rpc("project_access_state", { p_project_id: projectId }),
-  ]);
+  let project: unknown, members: unknown, accessRaw: unknown, extras: WorkspaceExtras | null = null;
+  const profilePromise = getProfile(user.id);
+  // Satu panggilan untuk proyek, anggota, status akses, lencana, dan notifikasi (sebelumnya tujuh sampai delapan kueri)
+  if (!workspaceRpcMissing()) {
+    const { data, error } = await supabase.rpc("workspace_context", { p_project_id: projectId });
+    if (!error && data) {
+      const w = data as WorkspaceRpc;
+      project = w.project; members = w.members ?? []; accessRaw = w.access;
+      extras = { overdue: w.overdue ?? 0, rsvpNew: w.rsvp_new ?? 0, pendingInv: w.pending_inv ?? 0, notifications: w.notifications ?? [] };
+    } else if (error && (error.code === "PGRST202" || /workspace_context/.test(error.message) && /could not find|does not exist/i.test(error.message))) {
+      rpcMissingUntil = Date.now() + 5 * 60_000;
+    }
+  }
+  // Jalur lama (fungsi belum ada, atau panggilannya gagal): kueri terpisah yang diambil serentak
+  if (!extras) {
+    const [{ data: p0 }, { data: m0 }, { data: a0 }] = await Promise.all([
+      supabase.from("wedding_projects").select("*").eq("id", projectId).maybeSingle(),
+      supabase.from("project_members").select("user_id, role, profiles!project_members_user_id_fkey(full_name, email, avatar_url)").eq("project_id", projectId),
+      supabase.rpc("project_access_state", { p_project_id: projectId }),
+    ]);
+    project = p0; members = m0; accessRaw = a0;
+  }
+  const profile = await profilePromise;
   if (!project) notFound();
 
   const memberList = (members ?? []) as unknown as Member[];
@@ -229,7 +263,7 @@ const loadProjectContext = cache(async (projectId: string) => {
   const p = project as Project;
   const canWrite = (role === "owner" || role === "editor") && isActive(access) && !p.archived_at;
 
-  return { session, supabase, projectId, project: p, role, members: memberList, access, canWrite, isOwner: role === "owner" };
+  return { session, supabase, projectId, project: p, role, members: memberList, access, canWrite, isOwner: role === "owner", extras };
 });
 
 export async function requireAdmin() {

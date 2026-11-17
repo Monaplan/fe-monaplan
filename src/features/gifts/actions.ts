@@ -5,6 +5,7 @@ import { getProjectContext } from "@/lib/access";
 import { dbError, fail, type ActionResult } from "@/lib/result";
 import { parseIDR } from "@/lib/format";
 import { deleteObjects, isProjectKey } from "@/lib/storage";
+import { cleanHttpUrl, URL_ERROR } from "@/lib/url";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const STATUS = ["rencana", "dipesan", "dibeli", "diterima"];
@@ -20,6 +21,10 @@ export async function saveGift(projectId: string, fd: FormData): Promise<ActionR
   const imagePath = str(fd.get("image_path"));
   if (imagePath && !isProjectKey(imagePath, project, "gifts")) return fail("Lokasi foto tidak valid.");
 
+  const purchaseRaw = str(fd.get("purchase_url"));
+  const purchaseUrl = purchaseRaw ? cleanHttpUrl(purchaseRaw) : null;
+  if (purchaseRaw && !purchaseUrl) return fail(URL_ERROR);
+
   const id = str(fd.get("id"));
   const row: Record<string, unknown> = {
     project_id: projectId,
@@ -29,7 +34,7 @@ export async function saveGift(projectId: string, fd: FormData): Promise<ActionR
     quantity: Math.max(1, Number(fd.get("quantity") ?? 1) || 1),
     estimated_price_idr: est ? parseIDR(est) : null,
     actual_price_idr: act ? parseIDR(act) : null,
-    purchase_url: str(fd.get("purchase_url")),
+    purchase_url: purchaseUrl,
     store_name: str(fd.get("store_name")),
     status,
     notes: str(fd.get("notes")),

@@ -1,4 +1,5 @@
 import { withProjectData } from "@/lib/access";
+import { fetchAll } from "@/lib/paginate";
 import { appUrl, DEFAULT_TEMPLATE } from "@/lib/constants";
 import { GuestsClient } from "./guests-client";
 import { getT } from "@/i18n/server";
@@ -11,10 +12,10 @@ export async function generateMetadata() {
 export default async function GuestsPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: ref } = await params;
   const [{ project, canWrite, projectId }, [{ data: guests }, { data: groups }, { data: events }, { data: invites }, { data: templates }]] = await withProjectData(ref, (pid, supabase) => Promise.all([
-    supabase.from("guests").select("*").eq("project_id", pid).order("created_at", { ascending: true }).limit(5000),
+    fetchAll((a, b) => supabase.from("guests").select("*").eq("project_id", pid).order("created_at", { ascending: true }).order("id").range(a, b)),
     supabase.from("guest_groups").select("id, name, side").eq("project_id", pid).order("name"),
     supabase.from("wedding_events").select("id, name, starts_at, ends_at, venue_name, venue_address, maps_url").eq("project_id", pid).order("sort_order").order("starts_at"),
-    supabase.from("guest_event_invites").select("guest_id, event_id").eq("project_id", pid).limit(20000),
+    fetchAll((a, b) => supabase.from("guest_event_invites").select("guest_id, event_id").eq("project_id", pid).order("guest_id").order("event_id").range(a, b)),
     supabase.from("message_templates").select("*").eq("project_id", pid).order("is_default", { ascending: false }).limit(1),
   ]));
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/url";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, AtSign, CircleCheck, FileText, Globe, Handshake, Mail, MapPin, Package, Pencil, Phone, Plus, Trash2 } from "lucide-react";
@@ -57,7 +58,7 @@ export function VendorDetailClient({ projectId, tz, vendor, packages, payments, 
               {vendor.contact_person && <div className="flex items-center gap-2"><Phone className="size-4 text-neutral-400" />{vendor.contact_person}{vendor.phone_e164 && ` · ${formatPhone(vendor.phone_e164)}`}</div>}
               {vendor.email && <div className="flex items-center gap-2"><Mail className="size-4 text-neutral-400" /><a href={`mailto:${vendor.email}`} className="hover:underline">{vendor.email}</a></div>}
               {vendor.instagram && <div className="flex items-center gap-2"><AtSign className="size-4 text-neutral-400" /><a href={`https://instagram.com/${vendor.instagram}`} target="_blank" rel="noreferrer" className="hover:underline">@{vendor.instagram}</a></div>}
-              {vendor.website && <div className="flex items-center gap-2"><Globe className="size-4 text-neutral-400" /><a href={vendor.website} target="_blank" rel="noreferrer" className="truncate hover:underline">{vendor.website}</a></div>}
+              {vendor.website && <div className="flex items-center gap-2"><Globe className="size-4 text-neutral-400" /><a href={safeHref(vendor.website)} target="_blank" rel="noreferrer" className="truncate hover:underline">{vendor.website}</a></div>}
               {vendor.address && <div className="flex items-center gap-2 sm:col-span-2"><MapPin className="size-4 shrink-0 text-neutral-400" />{vendor.address}</div>}
             </dl>
             {vendor.notes && <p className="mt-3 rounded-md bg-neutral-50 px-3 py-2 text-[13px] whitespace-pre-line text-neutral-700">{vendor.notes}</p>}

@@ -2,7 +2,8 @@ import Link from "next/link";
 import {
   ArrowDown, ArrowRight, ArrowUp, BookOpen, CalendarDays, FileText, Heart, ListChecks, PartyPopper, PiggyBank, Target, Users, Wallet,
 } from "lucide-react";
-import { withProjectData } from "@/lib/access";
+import { getAuthUser, withProjectData } from "@/lib/access";
+import { ttl } from "@/lib/ttl-cache";
 import { guideFrom } from "@/lib/guide";
 import { Card, CardHeader, IconTile, StatCard } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
@@ -37,7 +38,21 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
     const today = todayISO(tz);
     const in14 = addDaysISO(today, 14);
     const head = { count: "exact" as const, head: true };
-    const [tasks, items, payments, guests, docs, events, feed, vendors, allocated, templates, rundown, manual, push] = await Promise.all([
+    // Lima kueri kecil hanya untuk kartu Panduan. Hasilnya berubah jarang, jadi disimpan 60 detik per pengguna dan proyek
+    // (kunci memuat ID pengguna karena jumlah perangkat push dibatasi RLS per pengguna). Dashboard yang dibuka berulang,
+    // atau dimuat ulang setelah setiap perubahan, tidak mengulang lima kueri itu.
+    const user = await getAuthUser();
+    const guideExtras = ttl(`dash-guide:${user?.id ?? "-"}:${pid}`, 60_000, async () => {
+      const [allocated, templates, rundown, manual, push] = await Promise.all([
+        supabase.from("budget_categories").select("*", head).eq("project_id", pid).gt("allocated_idr", 0),
+        supabase.from("message_templates").select("created_at, updated_at").eq("project_id", pid),
+        supabase.from("rundown_items").select("*", head).eq("project_id", pid),
+        supabase.from("guide_progress").select("step_key").eq("project_id", pid),
+        supabase.from("push_subscriptions").select("*", head),
+      ]);
+      return { allocated: allocated.count ?? 0, templates: templates.data ?? [], rundown: rundown.count ?? 0, manual: (manual.data ?? []).map((m) => m.step_key as string), push: push.count ?? 0 };
+    });
+    const [tasks, items, payments, guests, docs, events, feed, vendors, extra] = await Promise.all([
       supabase.from("tasks").select("phase_key, status").eq("project_id", pid),
       supabase.from("budget_items").select("id, name, actual_idr, estimated_idr").eq("project_id", pid),
       supabase.from("expense_payments").select("id, label, kind, amount_idr, due_date, status, paid_at, budget_item_id, vendors(name)").eq("project_id", pid),
@@ -46,13 +61,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ proj
       supabase.from("wedding_events").select("name, type, starts_at, venue_name").eq("project_id", pid).order("sort_order").order("starts_at"),
       supabase.from("calendar_feed").select("*").eq("project_id", pid).gte("starts_at", addDaysISO(today, -1)).lte("starts_at", addDaysISO(in14, 1)).order("starts_at"),
       supabase.from("vendors").select("id, name").eq("project_id", pid),
-      supabase.from("budget_categories").select("*", head).eq("project_id", pid).gt("allocated_idr", 0),
-      supabase.from("message_templates").select("created_at, updated_at").eq("project_id", pid),
-      supabase.from("rundown_items").select("*", head).eq("project_id", pid),
-      supabase.from("guide_progress").select("step_key").eq("project_id", pid),
-      supabase.from("push_subscriptions").select("*", head),
+      guideExtras,
     ]);
-    return { today, in14, tasks: tasks.data, items: items.data, payments: payments.data, guests: guests.data, docs: docs.data, events: events.data, feed: feed.data, vendors: vendors.data, allocated: allocated.count ?? 0, templates: templates.data ?? [], rundown: rundown.count ?? 0, manual: (manual.data ?? []).map((m) => m.step_key as string), push: push.count ?? 0 };
+    return { today, in14, tasks: tasks.data, items: items.data, payments: payments.data, guests: guests.data, docs: docs.data, events: events.data, feed: feed.data, vendors: vendors.data, ...extra };
   });
   const { today, tasks, items, payments, guests, docs, events, feed, vendors } = d;
   const tz = project.timezone;
